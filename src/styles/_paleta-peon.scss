@@ -1,0 +1,14 @@
+/* Paleta de la marca (IDENTIDAD-VISUAL.md §4): verde 140/78/27, amarillo 45/100/48. Regla 60/30/10:
+   60 % superficie (blanco y derivados del kit), 30 % verde (marca, activos, botón principal), 10 % amarillo
+   (foco, acción destacada, «pendiente»). Solo tokens --iswc-*: los tintes los calcula el kit. */
+/* `html[...]` sube la especificidad: palettes.min.css (que carga después) declara semillas por defecto en :root,[data-palette]. */
+html[data-palette="peon"] {
+  --iswc-brand-h: 140;
+  --iswc-brand-s: 78%;
+  --iswc-brand-b: 27%;
+  --iswc-contrast-h: 45;
+  --iswc-contrast-s: 100%;
+  --iswc-contrast-l: 48%;
+  --iswc-tint: 0.6;
+  --iswc-font-tint: 0.4;
+}

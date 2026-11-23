@@ -1,0 +1,42 @@
+@use "vista";
+@use "tokens" as t;
+
+.fila iswc-person { flex: 1; min-width: 0; }
+
+.lado {
+  display: flex;
+  gap: t.esp(2);
+  align-items: center;
+  white-space: nowrap;
+
+  small { opacity: 0.7; }
+}
+
+.ficha { --width: min(46em, 96vw); }
+
+.cargando { display: grid; place-items: center; min-height: 8em; }
+
+.cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.esp(2);
+  align-items: center;
+  margin-bottom: t.esp(2);
+}
+
+.mapa {
+  display: inline-flex;
+  gap: t.esp(1);
+  align-items: center;
+  color: var(--iswc-brand-text, var(--iswc-brand));
+}
+
+.linea {
+  display: grid;
+  gap: t.esp(2);
+  margin: 0;
+  padding-left: t.esp(5);
+
+  li { display: grid; }
+  span { font-size: 0.9em; opacity: 0.7; }
+}

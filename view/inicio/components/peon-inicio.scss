@@ -1,0 +1,8 @@
+@use "vista";
+@use "tokens" as t;
+
+.resumen, .recientes { display: grid; gap: t.esp(4); padding-top: t.esp(4); }
+.saludo { margin: 0; font-size: 1.05em; }
+.cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(13em, 1fr)); gap: t.esp(3); }
+.avisos { display: grid; gap: t.esp(2); }
+.accion { justify-self: start; }

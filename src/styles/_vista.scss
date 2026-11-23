@@ -1,0 +1,164 @@
+// _vista.scss — piezas comunes de las vistas (listas de filas, cajas, cifras, formularios en rejilla).
+// Uso: `@use "vista";` dentro del .scss de una vista. Colores solo por tokens --iswc-*; medidas en em.
+@use "tokens" as t;
+@use "mixins" as m;
+
+:host { @include m.host-bloque; }
+
+.caja {
+  display: grid;
+  gap: t.esp(4);
+  padding-top: t.esp(4);
+}
+
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12em, 1fr));
+  gap: t.esp(3);
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15em, 1fr));
+  gap: t.esp(3) t.esp(4);
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.esp(2);
+  align-items: center;
+}
+
+.lista {
+  display: grid;
+  gap: t.esp(2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: t.esp(3);
+  width: 100%;
+  padding: t.esp(3) t.esp(4);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: t.radio(md);
+  background: var(--iswc-bg);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover { border-color: var(--iswc-brand); }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); }
+}
+
+.quien {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+
+  strong, small { @include m.una-linea; }
+  small { opacity: 0.7; }
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: t.esp(2) t.esp(4);
+  margin: 0;
+
+  dt { opacity: 0.65; }
+  dd { margin: 0; overflow-wrap: anywhere; }
+}
+
+.oculto {
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.nota {
+  margin: 0;
+  font-size: 0.9em;
+  opacity: 0.75;
+}
+
+h2 {
+  margin: 0;
+  font-family: t.$titulos;
+  font-size: 1.15em;
+}
+
+/* Tarjeta del puesto de votación (core/ui.ts → tarjetaPuesto). */
+.puesto {
+  display: grid;
+  gap: t.esp(1);
+  min-height: 3.5em;
+  padding: t.esp(3) t.esp(4);
+  border-radius: t.radio(md);
+  background: var(--iswc-bg-soft);
+  border-left: 0.3em solid var(--iswc-border);
+
+  strong { font-size: 1.05em; }
+  span { opacity: 0.8; }
+
+  .cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    gap: t.esp(2);
+    align-items: center;
+
+    small { opacity: 0.6; }
+  }
+
+  &[data-estado="verificado"] { border-left-color: var(--iswc-brand); }
+  /* el amarillo (10 %) se gana: solo lo «pendiente» que exige atención */
+  &[data-estado="pendiente"] { border-left-color: var(--iswc-color-contrast); }
+  &[data-estado="error"] { border-left-color: var(--iswc-danger, crimson); }
+
+  &.vacio,
+  &.cargando {
+    display: flex;
+    align-items: center;
+    gap: t.esp(2);
+    opacity: 0.75;
+  }
+}
+
+/* Nada desborda a lo ancho: las pestañas y sus paneles se encogen con el contenido. */
+.pestanas,
+iswc-tab-panel {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
+iswc-data-grid {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Campos compactos: el texto fluido ya escala; los controles un punto por debajo del cuerpo. */
+iswc-input,
+iswc-masked-input,
+iswc-select,
+iswc-textarea,
+iswc-checkbox,
+iswc-switch,
+iswc-button {
+  font-size: 0.9em;
+}
+
+/* Badges: algo secundario, siempre pequeños. */
+iswc-tag {
+  font-size: 0.72em;
+  vertical-align: middle;
+}
+
+/* Pestañas: rótulo en una línea (el kit da flechas de desplazamiento si no caben). */
+iswc-tab { white-space: nowrap; }

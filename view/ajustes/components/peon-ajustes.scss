@@ -1,0 +1,17 @@
+@use "vista";
+@use "tokens" as t;
+
+.angosta { max-width: 30em; }
+
+.permisos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.esp(2);
+}
+
+.fila-tema {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: t.esp(3);
+}

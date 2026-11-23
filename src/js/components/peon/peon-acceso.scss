@@ -1,0 +1,92 @@
+@use "tokens" as t;
+@use "mixins" as m;
+
+/* peon-acceso — pantalla completa: superficie blanca (60), franja verde de marca (30), acento amarillo (10). */
+:host {
+  @include m.host-bloque;
+}
+
+.pantalla {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100dvh;
+  overflow-y: auto;
+  padding: t.esp(8) t.esp(4) t.esp(4);
+  background:
+    linear-gradient(180deg, var(--iswc-brand) 0 34%, transparent 34%),
+    var(--iswc-bg);
+}
+
+.tarjeta {
+  display: grid;
+  justify-items: center;
+  gap: t.esp(2);
+  width: min(25em, 100%);
+  padding: t.esp(8) t.esp(6) t.esp(6);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: t.radio(lg);
+  background: var(--iswc-bg);
+  box-shadow: var(--iswc-shadow-md, 0 0.5em 1.5em rgb(0 0 0 / 15%));
+}
+
+.logo {
+  width: 8.25em;
+  height: 8.25em;
+  margin-top: -5em;
+  object-fit: contain;
+  border-radius: 50%;
+  border: 0.25em solid var(--iswc-bg);
+  background: var(--iswc-bg);
+}
+
+.titulo {
+  margin: 0;
+  font-family: t.$titulos;
+  font-size: 1.6em;
+  color: var(--iswc-brand-text, var(--iswc-brand));
+
+  .peon { color: var(--iswc-color-contrast); text-shadow: 0 0 0.04em var(--iswc-text); }
+}
+
+.lema {
+  margin: 0 0 t.esp(3);
+  font-style: italic;
+  opacity: 0.75;
+  text-align: center;
+}
+
+.campos {
+  display: grid;
+  gap: t.esp(3);
+  width: 100%;
+}
+
+.explica,
+.ayuda {
+  margin: 0;
+  font-size: 0.9em;
+  opacity: 0.8;
+  text-align: center;
+}
+
+.tema {
+  position: absolute;
+  top: t.esp(3);
+  right: t.esp(3);
+}
+
+/* Campos compactos: el texto fluido ya escala; los controles un punto por debajo del cuerpo. */
+iswc-input,
+iswc-masked-input,
+iswc-select,
+iswc-textarea,
+iswc-button {
+  font-size: 0.9em;
+}
+
+/* Badges: algo secundario, siempre pequeños. */
+iswc-tag {
+  font-size: 0.72em;
+  vertical-align: middle;
+}

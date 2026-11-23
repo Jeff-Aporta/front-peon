@@ -1,0 +1,1 @@
+import{z as e}from"zod";var i=e.object({cedula:e.string(),ref:e.string(),nombre:e.string(),whatsapp:e.string(),rol:e.enum(["ADMIN","LIDER","REGISTRADOR","LECTURA"]),rolNombre:e.string(),lider:e.string().nullable(),claveTemporal:e.boolean(),permisos:e.record(e.string(),e.boolean()),alcance:e.string(),escribe:e.boolean()});export{i as UsuarioSchema};

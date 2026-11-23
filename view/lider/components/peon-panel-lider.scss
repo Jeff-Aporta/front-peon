@@ -1,0 +1,18 @@
+@use "vista";
+@use "tokens" as t;
+
+.miembro {
+  cursor: default;
+
+  iswc-person { flex: 1; min-width: 0; }
+  &[data-inactivo] { opacity: 0.55; }
+}
+
+.conteo {
+  white-space: nowrap;
+  font-size: 0.9em;
+
+  strong { font-size: 1.2em; color: var(--iswc-brand-text, var(--iswc-brand)); }
+}
+
+.nota iswc-icon { color: var(--iswc-brand); }

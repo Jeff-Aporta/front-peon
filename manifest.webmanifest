@@ -1,0 +1,14 @@
+{
+  "name": "La Fuerza del Peón en Marcha",
+  "short_name": "Peón en Marcha",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0F7A38",
+  "icons": [
+    { "src": "assets/logo-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/logo-512.webp", "sizes": "512x512", "type": "image/webp" }
+  ]
+}

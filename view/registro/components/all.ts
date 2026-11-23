@@ -1,0 +1,1 @@
+import './peon-registro.js';

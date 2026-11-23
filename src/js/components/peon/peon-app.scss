@@ -1,0 +1,235 @@
+@use "tokens" as t;
+@use "mixins" as m;
+
+/* peon-app — grid: panel izquierdo (marca · nav plana · usuario) + contenido. Sin barra superior.
+   60/30/10: superficie blanca, verde en marca/activo, amarillo solo en el acento «Peón» y el foco. */
+:host {
+  @include m.host-bloque;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--iswc-bg);
+  color: var(--iswc-text);
+}
+
+.cargando {
+  display: grid;
+  place-items: center;
+  gap: t.esp(4);
+  min-height: 100dvh;
+  align-content: center;
+
+  img { border-radius: 50%; }
+}
+
+.marco {
+  display: grid;
+  grid-template-columns: var(--ancho, 16.5em) 0 minmax(0, 1fr);
+  height: 100dvh;
+  overflow: hidden;
+
+  &[data-colapsado] { grid-template-columns: 4.25em minmax(0, 1fr); }
+  &[data-angosto] { grid-template-columns: minmax(0, 1fr); }
+  &[data-arrastrando] { cursor: col-resize; user-select: none; }
+}
+
+/* Tirador del ancho del panel (13–26 em). Zona de agarre ancha, línea fina. */
+.tirador {
+  position: relative;
+  z-index: 2;
+  width: 0;
+  cursor: col-resize;
+  touch-action: none;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 -0.35em;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0 -0.1em;
+    background: transparent;
+    transition: background 0.15s;
+  }
+
+  &:hover::after,
+  &:focus-visible::after,
+  [data-arrastrando] > &::after { background: var(--iswc-brand); }
+
+  &:focus-visible { outline: none; }
+}
+
+.lateral {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--iswc-bg-soft);
+  border-right: 1px solid var(--iswc-border-soft);
+}
+
+.marca {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: t.esp(3);
+  width: 100%;
+  padding: t.esp(4) t.esp(3);
+  border: 0;
+  border-bottom: 1px solid var(--iswc-border-soft);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover { background: var(--iswc-brand-soft); }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); outline-offset: -0.15em; }
+
+  .logo {
+    flex: none;
+    width: 2.5em;
+    height: 2.5em;
+    object-fit: contain;
+    border-radius: 50%;
+  }
+
+  .nombre {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    line-height: 1.15;
+
+    strong { @include m.una-linea; font-family: t.$titulos; font-size: 1.05em; color: var(--iswc-brand-text, var(--iswc-brand)); }
+    small { @include m.una-linea; opacity: 0.65; font-size: 0.75em; }
+    .peon { color: var(--iswc-color-contrast); text-shadow: 0 0 0.05em var(--iswc-text); }
+  }
+}
+
+.icono {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.25em;
+  height: 2.25em;
+  padding: 0;
+  border: 0;
+  border-radius: t.radio(md);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1em;
+  cursor: pointer;
+
+  &:hover { background: var(--iswc-brand-soft); }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); outline-offset: 0.1em; }
+}
+
+.nav {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: t.esp(1);
+  padding: t.esp(3) t.esp(2);
+  overflow-y: auto;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: t.esp(3);
+  min-height: 2.6em;
+  padding: 0 t.esp(3);
+  border: 0;
+  border-radius: t.radio(md);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  iswc-icon { flex: none; font-size: 1.3em; color: var(--iswc-text-soft, inherit); }
+  .texto { @include m.una-linea; }
+
+  &:hover { background: var(--iswc-brand-soft); }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); outline-offset: -0.15em; }
+
+  &[data-actual] {
+    background: var(--iswc-brand);
+    color: var(--iswc-on-brand, #fff);
+    font-weight: 600;
+
+    iswc-icon { color: inherit; }
+  }
+}
+
+.pie {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: t.esp(2);
+  padding: t.esp(3);
+  border-top: 1px solid var(--iswc-border-soft);
+
+  .usuario { flex: 1; min-width: 0; overflow: hidden; }
+}
+
+/* Colapsado: SOLO iconos (nada de texto cortado ni filas a la mitad). */
+.lateral[data-colapsado] {
+  .marca { justify-content: center; padding: t.esp(3) t.esp(1); }
+  .marca .logo { width: 2em; height: 2em; }
+  .texto { display: none; }
+  .item { justify-content: center; padding: 0; }
+  .pie { flex-direction: column; padding: t.esp(2) t.esp(1); }
+}
+
+/* El scroll vive en las secciones, nunca en html/body. */
+.trabajo {
+  min-width: 0;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: t.esp(5) t.esp(6) t.esp(10);
+}
+
+.titulo-vista {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: t.esp(3);
+  margin: 0 0 t.esp(4);
+  font-family: t.$titulos;
+  font-size: 1.35em;
+
+  iswc-icon { color: var(--iswc-brand); }
+}
+
+[data-angosto] .trabajo { padding: t.esp(4) t.esp(3) t.esp(10); }
+
+.fab {
+  position: fixed;
+  left: t.esp(4);
+  bottom: t.esp(4);
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 3.25em;
+  height: 3.25em;
+  border: 0;
+  border-radius: 50%;
+  background: var(--iswc-brand);
+  color: var(--iswc-on-brand, #fff);
+  box-shadow: var(--iswc-shadow-md, 0 0.25em 0.75em rgb(0 0 0 / 25%));
+  font-size: 1.1em;
+  cursor: pointer;
+
+  &:focus-visible { outline: 0.2em solid var(--iswc-color-contrast); outline-offset: 0.15em; }
+}
+
+.cajon {
+  .lateral { position: static; height: 100%; border-right: 0; }
+}

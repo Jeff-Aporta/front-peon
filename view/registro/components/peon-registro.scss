@@ -1,0 +1,30 @@
+@use "vista";
+@use "tokens" as t;
+@use "mixins" as m;
+
+.formulario {
+  display: grid;
+  gap: t.esp(5);
+  padding-top: t.esp(4);
+  max-width: 60em;
+}
+
+.bloque {
+  display: grid;
+  gap: t.esp(3);
+  padding: t.esp(4);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: t.radio(lg);
+}
+
+.fila-cedula {
+  display: grid;
+  grid-template-columns: minmax(12em, 18em) minmax(0, 1fr);
+  gap: t.esp(4);
+  align-items: end;
+
+  @media (max-width: 40rem) { grid-template-columns: minmax(0, 1fr); }
+}
+
+.ancho { grid-column: 1 / -1; }
+

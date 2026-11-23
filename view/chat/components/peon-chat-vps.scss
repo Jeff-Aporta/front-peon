@@ -1,0 +1,47 @@
+@use "vista";
+@use "tokens" as t;
+
+.chat {
+  display: grid;
+  grid-template-rows: auto minmax(16em, 1fr) auto;
+  gap: t.esp(3);
+  height: calc(100dvh - 11em);
+  padding-top: t.esp(3);
+  max-width: 52em;
+}
+
+.lineas {
+  display: flex;
+  flex-direction: column;
+  gap: t.esp(2);
+  padding: t.esp(3);
+  overflow-y: auto;
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: t.radio(lg);
+  background: var(--iswc-bg-soft);
+}
+
+.burbuja {
+  max-width: 80%;
+  padding: t.esp(2) t.esp(3);
+  border-radius: t.radio(lg);
+  background: var(--iswc-bg);
+  border: 1px solid var(--iswc-border-soft);
+
+  p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  small { opacity: 0.6; font-size: 0.75em; }
+
+  &[data-autor="usuario"] {
+    align-self: flex-end;
+    background: var(--iswc-brand);
+    color: var(--iswc-on-brand, #fff);
+    border-color: transparent;
+  }
+}
+
+.escribir {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: t.esp(2);
+  align-items: end;
+}
