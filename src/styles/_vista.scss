@@ -162,3 +162,73 @@ iswc-tag {
 
 /* Pestañas: rótulo en una línea (el kit da flechas de desplazamiento si no caben). */
 iswc-tab { white-space: nowrap; }
+
+/* Avisos secundarios: compactos, una línea, todos de la misma altura; el color solo en el borde e ícono. */
+.avisos {
+  display: grid;
+  gap: t.esp(1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: t.esp(2);
+  height: 2.25em;
+  padding: 0 t.esp(3);
+  border: 1px solid var(--iswc-border-soft);
+  border-left: 0.2em solid var(--iswc-border);
+  border-radius: t.radio(sm);
+  background: var(--iswc-bg);
+  font-size: 0.85em;
+
+  iswc-icon { flex: none; opacity: 0.8; }
+  .texto { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  button {
+    flex: none;
+    padding: 0 t.esp(1);
+    border: 0;
+    background: none;
+    color: var(--iswc-brand-text, var(--iswc-brand));
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  &[data-tipo="warning"] { border-left-color: var(--iswc-color-contrast); iswc-icon { color: var(--iswc-color-contrast-strong, var(--iswc-color-contrast)); } }
+  &[data-tipo="success"] { border-left-color: var(--iswc-brand); iswc-icon { color: var(--iswc-brand); } }
+  &[data-tipo="brand"] { border-left-color: var(--iswc-brand); iswc-icon { color: var(--iswc-brand); } }
+}
+
+/* Barra de herramientas (chips) — chat con el VPS e Inicio. */
+.herramientas {
+  display: flex;
+  gap: t.esp(2);
+  overflow-x: auto;
+  padding-bottom: t.esp(1);
+  scrollbar-width: thin;
+}
+
+.herramienta {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: t.esp(1);
+  height: 2.2em;
+  padding: 0 t.esp(3);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: 999px;
+  background: var(--iswc-bg);
+  color: inherit;
+  font: inherit;
+  font-size: 0.85em;
+  white-space: nowrap;
+  cursor: pointer;
+
+  iswc-icon { color: var(--iswc-brand); }
+  &:hover { border-color: var(--iswc-brand); background: var(--iswc-brand-soft); }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); }
+}

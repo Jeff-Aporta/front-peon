@@ -40,3 +40,24 @@
   li { display: grid; }
   span { font-size: 0.9em; opacity: 0.7; }
 }
+
+/* Árbol de creación: el organigrama desplaza dentro de su propio marco (nunca la página). */
+.barra-arbol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.esp(2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lienzo {
+  max-height: calc(100dvh - 15em);
+  min-height: 18em;
+  overflow: auto;
+  padding: t.esp(3);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: t.radio(lg);
+  background: var(--iswc-bg-soft);
+
+  iswc-org-chart { display: block; min-width: max-content; }
+}

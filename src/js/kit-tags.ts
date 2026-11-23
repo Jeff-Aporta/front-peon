@@ -27,6 +27,7 @@ export const KIT_TAGS = [
   'iswc-icon',
   'iswc-input',
   'iswc-masked-input',
+  'iswc-org-chart',
   'iswc-person',
   'iswc-select',
   'iswc-spinner',

@@ -39,6 +39,19 @@ class PeonFichaPersona extends Componente<PeonFichaPersonaProps> {
     return { ref: '', abierta: false };
   }
 
+  override onConnected(): void {
+    super.onConnected();
+    window.addEventListener('peon:datos', this.#alCambiar);
+  }
+
+  override onDisconnected(): void {
+    window.removeEventListener('peon:datos', this.#alCambiar);
+  }
+
+  #alCambiar = (): void => {
+    if (this.props.abierta && this.props.ref && !this.#cargando) void this.#cargar(this.props.ref);
+  };
+
   async #cargar(ref: string): Promise<void> {
     this.#cargando = ref;
     try {

@@ -8,8 +8,8 @@ import css from 'iswc:css';
 import { Componente, html } from '../../../src/js/base/componente.js';
 import type { VistaProps } from '../../../src/js/consts/schemas/componentes.schemas.js';
 import type { PersonaFila } from '../../../src/js/consts/schemas/api.schemas.js';
-import { api, sesion } from '../../../src/js/core/api.js';
-import { fecha } from '../../../src/js/core/catalogos.js';
+import { api, puede, sesion } from '../../../src/js/core/api.js';
+import { HERRAMIENTAS_CHAT, fecha } from '../../../src/js/core/catalogos.js';
 import { grupoPestanas } from '../../../src/js/core/pestanas.js';
 import { abrirFicha, estadoPuesto, ir, textoError } from '../../../src/js/core/ui.js';
 
@@ -24,6 +24,19 @@ class PeonInicio extends Componente<VistaProps> {
     return { pestana: '' };
   }
 
+  override onConnected(): void {
+    super.onConnected();
+    window.addEventListener('peon:datos', this.#alCambiar);
+  }
+
+  override onDisconnected(): void {
+    window.removeEventListener('peon:datos', this.#alCambiar);
+  }
+
+  #alCambiar = (): void => {
+    this.props = {};
+  };
+
   #resumen(): Node {
     const caja = document.createElement('div');
     caja.className = 'resumen';
@@ -37,15 +50,35 @@ class PeonInicio extends Componente<VistaProps> {
           <iswc-stat label="Mis pendientes" value=${String(r.misPendientes)} icon="mdi:timer-sand" color=${r.misPendientes ? 'warning' : 'success'} helper="puesto por verificar"></iswc-stat>
           ${u.alcance !== 'propio' ? html`<iswc-stat label=${u.alcance === 'todo' ? 'Registros en total' : 'Registros de mi escuadra'} value=${String(r.visibles)} icon="mdi:account-group-outline" helper=${`${r.verificados} verificados`}></iswc-stat>` : null}
         </div>
-        <div class="avisos">
+        ${puede('chat_con_vps') ? this.#promoChat() : null}
+        <ul class="avisos" aria-label="Avisos">
           ${r.avisos.length
-            ? r.avisos.map((a) => html`<iswc-callout color=${a.tipo} icon="mdi:bell-outline">${a.texto}${a.ir ? html` <iswc-button size="small" variant="text" onclick=${() => { const [v, p] = a.ir!.split(':'); ir(v!, p); }}>Ver</iswc-button>` : null}</iswc-callout>`)
-            : html`<iswc-callout color="success" icon="mdi:check-circle-outline">Todo al día: no hay avisos.</iswc-callout>`}
-        </div>
+            ? r.avisos.map((a) => html`<li class="aviso" data-tipo=${a.tipo}><iswc-icon icon=${a.tipo === 'warning' ? 'mdi:alert-circle-outline' : 'mdi:bell-outline'}></iswc-icon><span class="texto" title=${a.texto}>${a.texto}</span>${a.ir ? html`<button type="button" onclick=${() => { const [v, p] = a.ir!.split(':'); ir(v!, p); }}>Ver</button>` : null}</li>`)
+            : html`<li class="aviso" data-tipo="success"><iswc-icon icon="mdi:check-circle-outline"></iswc-icon><span class="texto">Todo al día: no hay avisos.</span></li>`}
+        </ul>
         ${u.escribe ? html`<iswc-button class="accion" color="brand" onclick=${() => ir('registro')}><iswc-icon slot="start" icon="mdi:account-plus-outline"></iswc-icon>Registrar una persona</iswc-button>` : null}
       `);
     }).catch((e) => caja.replaceChildren(html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`));
     return caja;
+  }
+
+  /** Acceso destacado al chat con el VPS (solo con el permiso): se promueve su uso con herramientas de un toque. */
+  #promoChat(): DocumentFragment {
+    const usar = (texto: string) => {
+      try {
+        sessionStorage.setItem('peon:chat-borrador', texto);
+      } catch { /* sin almacenamiento */ }
+      ir('chat');
+    };
+    return html`
+      <section class="promo-chat">
+        <div class="cabeza-promo">
+          <iswc-icon icon="mdi:robot-outline"></iswc-icon>
+          <div><strong>Pregúntale al VPS</strong><small>Resúmenes, informes, ideas y análisis de archivos en segundos.</small></div>
+          <iswc-button size="small" color="brand" onclick=${() => ir('chat')}>Abrir chat</iswc-button>
+        </div>
+        <div class="herramientas">${HERRAMIENTAS_CHAT.slice(0, 4).map((h) => html`<button type="button" class="herramienta" title=${h.ayuda} onclick=${() => usar(h.texto)}><iswc-icon icon=${h.icono}></iswc-icon>${h.titulo}</button>`)}</div>
+      </section>`;
   }
 
   #recientes(): Node {

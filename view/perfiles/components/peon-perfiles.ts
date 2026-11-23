@@ -32,9 +32,24 @@ class PeonPerfiles extends Componente<VistaProps> {
   static css = css;
   static deps = ['iswc-tab-group', 'iswc-input', 'iswc-masked-input', 'iswc-select', 'iswc-switch', 'iswc-button', 'iswc-callout', 'iswc-card', 'iswc-person', 'iswc-tag', 'iswc-empty-state', 'iswc-data-grid'];
 
+  #recargas = new Set<() => void>();
+
   protected override inicial(): VistaProps {
     return { pestana: '' };
   }
+
+  override onConnected(): void {
+    super.onConnected();
+    window.addEventListener('peon:datos', this.#alCambiar);
+  }
+
+  override onDisconnected(): void {
+    window.removeEventListener('peon:datos', this.#alCambiar);
+  }
+
+  #alCambiar = (): void => {
+    for (const r of this.#recargas) r();
+  };
 
   #rolesPermitidos(): string[] {
     return Object.keys(ROLES).filter((r) => (r === 'ADMIN' ? puede('agregar_admins') : puede('crear_perfiles')));
@@ -53,6 +68,7 @@ class PeonPerfiles extends Componente<VistaProps> {
       const lideres = ps.filter((p) => p.rol === 'LIDER' || p.rol === 'ADMIN');
       lista.replaceChildren(...ps.map((p) => this.#tarjetaPerfil(p, lideres, cargar)));
     }).catch((e) => lista.replaceChildren(fallo(e)));
+    this.#recargas.add(cargar);
     cargar();
     return caja;
   }
@@ -166,6 +182,7 @@ class PeonPerfiles extends Componente<VistaProps> {
             ${m.estado === 'enviado' ? html`<iswc-tag color="success" pill>enviado</iswc-tag>` : html`<iswc-button size="small" variant="outlined" onclick=${async () => { await api('PUT', `mensajes/${m.id}`).catch((e) => avisar(textoError(e), 'danger')); cargar(); }}>Marcar enviado</iswc-button>`}</li>`)}</ul>`
         : html`<iswc-empty-state icono="mdi:whatsapp" titulo="Sin mensajes"></iswc-empty-state>`);
     }).catch((e) => caja.replaceChildren(fallo(e)));
+    this.#recargas.add(cargar);
     cargar();
     return caja;
   }
@@ -196,6 +213,7 @@ class PeonPerfiles extends Componente<VistaProps> {
             })}</div>`
           : html`<iswc-empty-state icono="mdi:shield-check-outline" titulo="Nada por verificar"></iswc-empty-state>`);
     }).catch((e) => caja.replaceChildren(fallo(e)));
+    this.#recargas.add(cargar);
     cargar();
     return caja;
   }
@@ -220,13 +238,16 @@ class PeonPerfiles extends Componente<VistaProps> {
       { field: 'ip', headerName: 'Desde', width: 140 },
     ];
     caja.append(grid);
-    void api<Evento[]>('GET', 'bitacora?limite=500').then((ev) => {
+    const cargar = () => void api<Evento[]>('GET', 'bitacora?limite=500').then((ev) => {
       grid.rows = ev.map((e) => ({ id: e.id, fecha: fecha(e.creado), actor: e.actorNombre, texto: e.texto, objeto: e.objeto ?? '', ip: e.ip ?? '' }));
     }).catch((e) => caja.replaceChildren(fallo(e)));
+    this.#recargas.add(cargar);
+    cargar();
     return caja;
   }
 
   protected override pintar(root: ShadowRoot, props: VistaProps): void {
+    this.#recargas.clear();
     const visibles = (id: string) => (id === 'crear' ? this.#rolesPermitidos().length > 0 : true);
     root.append(grupoPestanas('perfiles', props.pestana, (p) => {
       if (p === 'crear') return this.#crear();

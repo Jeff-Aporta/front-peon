@@ -3,6 +3,8 @@
  * <peon-miembros> — listado de TODOS los miembros (permiso `ver_miembros`, encendido por defecto) con búsqueda;
  * al entrar a uno, su ficha completa: datos, cédula y contacto (si hay permiso; si no, ocultos por el backend),
  * puesto de votación, ubicación (lat/lon del puesto), equipo y toda su actividad (qué, cuándo y desde dónde).
+ * Pestaña Árbol: organigrama de CREACIÓN (quién creó a quién) desde la raíz, con `iswc-org-chart` (dendrograma
+ * vertical): las ramas se colapsan y expanden; un clic en un nodo abre su ficha. Se refresca en vivo (`peon:datos`).
  */
 import { define } from '@jeff-aporta/iswc-base/core/iswc-element.min.mjs';
 import css from 'iswc:css';
@@ -13,6 +15,8 @@ import { api } from '../../../src/js/core/api.js';
 import { ROLES, fecha } from '../../../src/js/core/catalogos.js';
 import { grupoPestanas } from '../../../src/js/core/pestanas.js';
 import { estadoPuesto, tarjetaPuesto, textoError } from '../../../src/js/core/ui.js';
+
+type Nodo = { id: string; parent: string | null; name: string; rol: string; activo: boolean; registros: number; creados: number; creado: string; yo: boolean };
 
 const oculto = (v: string | null) => v ?? html`<span class="oculto">oculto</span>`;
 
@@ -30,14 +34,78 @@ function dispositivo(ua: string | null): string {
 class PeonMiembros extends Componente<VistaProps> {
   static tag = 'peon-miembros';
   static css = css;
-  static deps = ['iswc-tab-group', 'iswc-input', 'iswc-person', 'iswc-tag', 'iswc-button', 'iswc-callout', 'iswc-empty-state', 'iswc-dialog', 'iswc-spinner'];
+  static deps = ['iswc-tab-group', 'iswc-input', 'iswc-person', 'iswc-tag', 'iswc-button', 'iswc-callout', 'iswc-empty-state', 'iswc-dialog', 'iswc-spinner', 'iswc-org-chart'];
 
   #miembros: Miembro[] = [];
   #ficha: FichaMiembro | null = null;
   #abriendo = '';
 
+  #recargas = new Set<() => void>();
+
   protected override inicial(): VistaProps {
     return { pestana: '' };
+  }
+
+  override onConnected(): void {
+    super.onConnected();
+    window.addEventListener('peon:datos', this.#alCambiar);
+  }
+
+  override onDisconnected(): void {
+    window.removeEventListener('peon:datos', this.#alCambiar);
+  }
+
+  /** En vivo: refresca listas y árbol; si hay una ficha abierta, la recarga. */
+  #alCambiar = (): void => {
+    for (const r of this.#recargas) r();
+    if (this.#abriendo && this.#ficha) void this.#abrir(this.#abriendo);
+  };
+
+  #arbol(): Node {
+    const caja = document.createElement('div');
+    caja.className = 'caja';
+    const lienzo = document.createElement('div');
+    lienzo.className = 'lienzo';
+    const org = document.createElement('iswc-org-chart') as HTMLElement & { payload?: unknown; expand?(id: string): void; collapse?(id: string): void };
+    org.setAttribute('node-width', '190');
+    org.setAttribute('node-height', '74');
+    org.setAttribute('gap', '22');
+    org.addEventListener('iswc-select', (e) => {
+      const id = (e as CustomEvent<{ id?: string }>).detail?.id;
+      if (id) void this.#abrir(id);
+    });
+    lienzo.append(org);
+    const resumen = document.createElement('p');
+    resumen.className = 'nota';
+    let ids: string[] = [];
+    const accion = (abrir: boolean) => {
+      for (const id of ids) (abrir ? org.expand : org.collapse)?.call(org, id);
+    };
+    caja.append(html`
+      <div class="barra-arbol">
+        ${resumen}
+        <span class="acciones">
+          <iswc-button size="small" variant="outlined" onclick=${() => accion(true)}><iswc-icon slot="start" icon="mdi:arrow-expand-vertical"></iswc-icon>Expandir todo</iswc-button>
+          <iswc-button size="small" variant="outlined" onclick=${() => accion(false)}><iswc-icon slot="start" icon="mdi:arrow-collapse-vertical"></iswc-icon>Colapsar todo</iswc-button>
+        </span>
+      </div>
+      ${lienzo}
+    `);
+    const cargar = () => void api<Nodo[]>('GET', 'miembros/arbol').then((ns) => {
+      ids = ns.filter((n) => n.creados > 0).map((n) => n.id);
+      const raiz = ns.find((n) => n.parent === null);
+      resumen.textContent = `${ns.length} miembro(s) desde ${raiz?.name ?? 'la raíz'}. Toca un nodo para ver su ficha; usa los botones de cada nodo para abrir o cerrar su rama.`;
+      org.payload = ns.map((n) => ({
+        id: n.id,
+        parent: n.parent,
+        name: `${n.name}${n.yo ? ' (tú)' : ''}`,
+        title: ROLES[n.rol] ?? n.rol,
+        detail: `${n.registros} registro(s) · creó ${n.creados} perfil(es)${n.activo ? '' : ' · inactivo'} · desde ${fecha(n.creado, false)}`,
+      }));
+    }).catch((e) => caja.replaceChildren(html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`));
+    this.#recargas.add(cargar);
+    cargar();
+    return caja;
   }
 
   async #abrir(ref: string): Promise<void> {
@@ -74,10 +142,12 @@ class PeonMiembros extends Componente<VistaProps> {
       ${lista}
     `);
     lista.append(html`<iswc-empty-state estado="cargando"></iswc-empty-state>`);
-    void api<Miembro[]>('GET', 'miembros').then((ms) => {
+    const cargar = () => void api<Miembro[]>('GET', 'miembros').then((ms) => {
       this.#miembros = ms;
-      pintar();
+      pintar(String((caja.querySelector('iswc-input') as (HTMLElement & { value?: string }) | null)?.value ?? ''));
     }).catch((e) => lista.replaceChildren(html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`));
+    this.#recargas.add(cargar);
+    cargar();
     return caja;
   }
 
@@ -121,7 +191,8 @@ class PeonMiembros extends Componente<VistaProps> {
   }
 
   protected override pintar(root: ShadowRoot, props: VistaProps): void {
-    root.append(grupoPestanas('miembros', props.pestana, () => this.#lista()));
+    this.#recargas.clear();
+    root.append(grupoPestanas('miembros', props.pestana, (p) => (p === 'arbol' ? this.#arbol() : this.#lista())));
     if (!this.#abriendo) return;
     const m = this.#ficha;
     root.append(html`

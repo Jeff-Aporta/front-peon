@@ -48,27 +48,27 @@
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/lib/zod.min.mjs">
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/media/icon.min.mjs">
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/media/person.min.mjs">
-<link rel="modulepreload" href="./dist/cdn/_chunks/chunk-BW42JYE5.mjs">
+<link rel="modulepreload" href="./dist/cdn/_chunks/chunk-COE25RJ5.mjs">
 <link rel="modulepreload" href="./dist/cdn/_chunks/chunk-FWBWSRYW.mjs">
-<link rel="modulepreload" href="./dist/cdn/_chunks/chunk-QHVSWZUR.mjs">
-<link rel="modulepreload" href="./dist/cdn/_chunks/chunk-ZEXAJPLB.mjs">
-<link rel="modulepreload" href="./dist/cdn/js/components/peon/peon-acceso.min.mjs?v=1qe7s6">
-<link rel="modulepreload" href="./dist/cdn/js/components/peon/peon-app.min.mjs?v=2o7u8z">
-<link rel="modulepreload" href="./dist/cdn/js/components/peon/peon-ficha-persona.min.mjs?v=9da944">
-<link rel="modulepreload" href="./dist/cdn/view/ajustes/components/peon-ajustes.min.mjs?v=55csv6">
-<link rel="modulepreload" href="./dist/cdn/view/chat/components/peon-chat-vps.min.mjs?v=2rghw4">
-<link rel="modulepreload" href="./dist/cdn/view/inicio/components/peon-inicio.min.mjs?v=xpzrt5">
-<link rel="modulepreload" href="./dist/cdn/view/lider/components/peon-panel-lider.min.mjs?v=akwapk">
-<link rel="modulepreload" href="./dist/cdn/view/listado/components/peon-listado.min.mjs?v=8f72kz">
-<link rel="modulepreload" href="./dist/cdn/view/miembros/components/peon-miembros.min.mjs?v=xygnij">
-<link rel="modulepreload" href="./dist/cdn/view/perfiles/components/peon-perfiles.min.mjs?v=3lm7np">
-<link rel="modulepreload" href="./dist/cdn/view/registro/components/peon-registro.min.mjs?v=6zjzzt">
+<link rel="modulepreload" href="./dist/cdn/_chunks/chunk-OQ3HFOEG.mjs">
+<link rel="modulepreload" href="./dist/cdn/_chunks/chunk-VRIA653G.mjs">
+<link rel="modulepreload" href="./dist/cdn/js/components/peon/peon-acceso.min.mjs?v=ouu7wt">
+<link rel="modulepreload" href="./dist/cdn/js/components/peon/peon-app.min.mjs?v=dzll3t">
+<link rel="modulepreload" href="./dist/cdn/js/components/peon/peon-ficha-persona.min.mjs?v=5ankdn">
+<link rel="modulepreload" href="./dist/cdn/view/ajustes/components/peon-ajustes.min.mjs?v=5qrqx7">
+<link rel="modulepreload" href="./dist/cdn/view/chat/components/peon-chat-vps.min.mjs?v=toiw1r">
+<link rel="modulepreload" href="./dist/cdn/view/inicio/components/peon-inicio.min.mjs?v=ui80ue">
+<link rel="modulepreload" href="./dist/cdn/view/lider/components/peon-panel-lider.min.mjs?v=yez4bz">
+<link rel="modulepreload" href="./dist/cdn/view/listado/components/peon-listado.min.mjs?v=gdt1lu">
+<link rel="modulepreload" href="./dist/cdn/view/miembros/components/peon-miembros.min.mjs?v=tbb3y7">
+<link rel="modulepreload" href="./dist/cdn/view/perfiles/components/peon-perfiles.min.mjs?v=9asv4a">
+<link rel="modulepreload" href="./dist/cdn/view/registro/components/peon-registro.min.mjs?v=dpwkt2">
 <link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/is-base.min.css" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/is-base.min.css"></noscript>
 <link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/palettes.min.css" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/palettes.min.css"></noscript>
 <script type="module" src="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/core/loader.min.mjs"></script>
-<script type="module" src="./dist/cdn/peonLoader.min.mjs?v=cgm6mz"></script>
+<script type="module" src="./dist/cdn/peonLoader.min.mjs?v=5xismc"></script>
 <!-- iswc:precarga:fin -->
 <!-- 2) Arranque: tags del kit y de la app, marca de lista con watchdog. -->
 <script type="module">
@@ -77,7 +77,7 @@
   const watchdog = setTimeout(() => { console.warn('[peon] el arranque excedió 6 s; se revela la página'); listo(); }, 6000);
   try {
     if (!L) throw new Error('falta iswcLoader');
-    const { KIT_TAGS, tagsArranque } = await import('./dist/cdn/js/kit-tags.min.mjs?v=2h4brz');
+    const { KIT_TAGS, tagsArranque } = await import('./dist/cdn/js/kit-tags.min.mjs?v=by1etr');
     await L.load(...KIT_TAGS, ...tagsArranque());
   } catch (e) {
     console.warn('[peon] arranque', e);

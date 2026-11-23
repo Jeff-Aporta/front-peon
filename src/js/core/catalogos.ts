@@ -14,6 +14,10 @@ export const VISTAS: Vista[] = [
     pestanas: [{ id: 'resumen', titulo: 'Resumen', icono: 'mdi:view-dashboard-outline' }, { id: 'recientes', titulo: 'Mis registros', icono: 'mdi:history' }],
   },
   {
+    id: 'chat', titulo: 'Chat con el VPS', icono: 'mdi:robot-outline', tag: 'peon-chat-vps', visible: (u) => p(u, 'chat_con_vps'),
+    pestanas: [{ id: 'chat', titulo: 'Conversación', icono: 'mdi:chat-processing-outline' }],
+  },
+  {
     id: 'registro', titulo: 'Registrar', icono: 'mdi:account-plus-outline', tag: 'peon-registro', visible: (u) => u.escribe,
     pestanas: [{ id: 'persona', titulo: 'Nueva persona', icono: 'mdi:card-account-details-outline' }, { id: 'consulta', titulo: 'Consultar puesto', icono: 'mdi:map-marker-question-outline' }],
   },
@@ -27,15 +31,11 @@ export const VISTAS: Vista[] = [
   },
   {
     id: 'miembros', titulo: 'Miembros', icono: 'mdi:badge-account-horizontal-outline', tag: 'peon-miembros', visible: (u) => p(u, 'ver_miembros'),
-    pestanas: [{ id: 'lista', titulo: 'Lista', icono: 'mdi:account-search-outline' }],
+    pestanas: [{ id: 'lista', titulo: 'Lista', icono: 'mdi:account-search-outline' }, { id: 'arbol', titulo: 'Árbol', icono: 'mdi:family-tree' }],
   },
   {
     id: 'perfiles', titulo: 'Perfiles', icono: 'mdi:shield-account-outline', tag: 'peon-perfiles', visible: (u) => esAdmin(u) && (p(u, 'crear_perfiles') || p(u, 'editar_admins') || p(u, 'agregar_admins')),
     pestanas: [{ id: 'perfiles', titulo: 'Perfiles', icono: 'mdi:account-key-outline' }, { id: 'crear', titulo: 'Crear perfil', icono: 'mdi:account-plus' }, { id: 'mensajes', titulo: 'Mensajes', icono: 'mdi:whatsapp' }, { id: 'captchas', titulo: 'Verificaciones', icono: 'mdi:shield-check-outline' }, { id: 'bitacora', titulo: 'Bitácora', icono: 'mdi:clipboard-text-clock-outline' }],
-  },
-  {
-    id: 'chat', titulo: 'Chat con el VPS', icono: 'mdi:robot-outline', tag: 'peon-chat-vps', visible: (u) => p(u, 'chat_con_vps'),
-    pestanas: [{ id: 'chat', titulo: 'Conversación', icono: 'mdi:chat-processing-outline' }],
   },
   {
     id: 'ajustes', titulo: 'Ajustes', icono: 'mdi:cog-outline', tag: 'peon-ajustes', visible: () => true,
@@ -50,6 +50,19 @@ export const VISTAS: Vista[] = [
     id: 'miembro', titulo: 'Ficha del miembro', icono: 'mdi:badge-account-horizontal-outline', tag: '', visible: () => false,
     pestanas: [{ id: 'datos', titulo: 'Datos', icono: 'mdi:account-details-outline' }, { id: 'votacion', titulo: 'Puesto y ubicación', icono: 'mdi:map-marker-radius-outline' }, { id: 'actividad', titulo: 'Actividad', icono: 'mdi:timeline-clock-outline' }, { id: 'equipo', titulo: 'Equipo', icono: 'mdi:account-group-outline' }],
   },
+];
+
+/**
+ * Herramientas del chat con el VPS (barra tipo NotebookLM): un toque deja la instrucción lista para enviar.
+ * Se muestran en el chat y, para quien tiene el permiso, también en Inicio (para promover su uso).
+ */
+export const HERRAMIENTAS_CHAT: { id: string; titulo: string; icono: string; texto: string; ayuda: string }[] = [
+  { id: 'resumen', titulo: 'Resumen del día', icono: 'mdi:text-box-search-outline', texto: 'Hazme un resumen de los registros de hoy: cuántos, quién registró más y qué puestos se repiten.', ayuda: 'Cifras del día en un párrafo' },
+  { id: 'pendientes', titulo: 'Pendientes', icono: 'mdi:timer-sand', texto: '¿Qué registros tienen el puesto pendiente de verificar y por qué? Propón cómo resolverlos.', ayuda: 'Qué falta verificar y cómo' },
+  { id: 'escuadra', titulo: 'Informe de escuadra', icono: 'mdi:account-group-outline', texto: 'Prepara un informe por escuadra: miembros, registros de la semana y quién necesita apoyo.', ayuda: 'Avance por equipo' },
+  { id: 'ideas', titulo: 'Ideas para registrar', icono: 'mdi:lightbulb-on-outline', texto: 'Dame 5 ideas concretas para registrar más personas esta semana en Armenia, según los barrios con menos registros.', ayuda: 'Barrios y estrategias' },
+  { id: 'archivo', titulo: 'Analizar archivo', icono: 'mdi:file-search-outline', texto: 'Analiza el archivo adjunto y dime qué personas o datos útiles contiene para la escuadra.', ayuda: 'Adjunta un Excel, PDF o foto' },
+  { id: 'servidor', titulo: 'Estado del servidor', icono: 'mdi:server-network', texto: '¿Cómo está el servidor? Dime si la API, la base de datos y la consulta del puesto funcionan bien.', ayuda: 'Salud de la app' },
 ];
 
 export const vista = (id: string): Vista => VISTAS.find((v) => v.id === id) ?? VISTAS[0]!;

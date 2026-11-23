@@ -1,19 +1,22 @@
 @use "vista";
 @use "tokens" as t;
+@use "mixins" as m;
 
+/* El chat ocupa el alto disponible: solo desplaza la lista de mensajes. */
 .chat {
   display: grid;
-  grid-template-rows: auto minmax(16em, 1fr) auto;
-  gap: t.esp(3);
-  height: calc(100dvh - 11em);
+  grid-template-rows: auto auto minmax(10em, 1fr) auto;
+  gap: t.esp(2);
+  height: calc(100dvh - 9.5em);
   padding-top: t.esp(3);
-  max-width: 52em;
+  max-width: 56em;
 }
 
 .lineas {
   display: flex;
   flex-direction: column;
   gap: t.esp(2);
+  min-height: 0;
   padding: t.esp(3);
   overflow-y: auto;
   border: 1px solid var(--iswc-border-soft);
@@ -22,14 +25,16 @@
 }
 
 .burbuja {
-  max-width: 80%;
+  display: grid;
+  gap: t.esp(1);
+  max-width: min(80%, 40em);
   padding: t.esp(2) t.esp(3);
+  border: 1px solid var(--iswc-border-soft);
   border-radius: t.radio(lg);
   background: var(--iswc-bg);
-  border: 1px solid var(--iswc-border-soft);
 
   p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-  small { opacity: 0.6; font-size: 0.75em; }
+  > small { opacity: 0.6; font-size: 0.75em; }
 
   &[data-autor="usuario"] {
     align-self: flex-end;
@@ -39,9 +44,91 @@
   }
 }
 
-.escribir {
+.adjuntos { display: flex; flex-wrap: wrap; gap: t.esp(1); }
+
+.adjunto,
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: t.esp(1);
+  max-width: 100%;
+  height: 2em;
+  padding: 0 t.esp(2);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: t.radio(sm);
+  background: var(--iswc-bg-soft);
+  color: var(--iswc-text);
+  font: inherit;
+  font-size: 0.8em;
+
+  span { @include m.una-linea; max-width: 16em; }
+  small { opacity: 0.6; }
+}
+
+.adjunto { cursor: pointer; }
+
+.chip button {
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.chips { display: flex; flex-wrap: wrap; gap: t.esp(1); }
+.chips:empty { display: none; }
+
+.escribir { display: grid; gap: t.esp(2); }
+
+.fila-escribir {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: t.esp(2);
   align-items: end;
+}
+
+.clip {
+  display: grid;
+  place-items: center;
+  width: 2.5em;
+  height: 2.5em;
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: 50%;
+  background: var(--iswc-bg);
+  color: var(--iswc-brand);
+  font-size: 1em;
+  cursor: pointer;
+
+  &:hover { background: var(--iswc-brand-soft); }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); }
+}
+
+/* Recomendaciones (conversación vacía). */
+.recomendaciones { display: grid; gap: t.esp(3); margin: auto 0; }
+
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13em), 1fr));
+  gap: t.esp(2);
+}
+
+.tarjeta {
+  display: grid;
+  gap: t.esp(1);
+  justify-items: start;
+  padding: t.esp(3);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: t.radio(md);
+  background: var(--iswc-bg);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  iswc-icon { font-size: 1.3em; color: var(--iswc-brand); }
+  small { opacity: 0.7; font-size: 0.8em; }
+  &:hover { border-color: var(--iswc-brand); }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); }
 }

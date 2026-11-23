@@ -37,14 +37,19 @@ class PeonPanelLider extends Componente<VistaProps> {
     this.#soltar = escuchar('registro', (d) => {
       const x = d as { por?: string; nombre?: string };
       avisar(`${x.por ?? 'Alguien'} registró a ${x.nombre ?? 'una persona'}`, 'brand');
-      void this.#cargar();
     });
+    window.addEventListener('peon:datos', this.#alCambiar);
     void this.#cargar();
   }
 
   override onDisconnected(): void {
     this.#soltar?.();
+    window.removeEventListener('peon:datos', this.#alCambiar);
   }
+
+  #alCambiar = (): void => {
+    void this.#cargar();
+  };
 
   async #cargar(): Promise<void> {
     try {

@@ -133,15 +133,51 @@ export function puede(permiso: string): boolean {
   return sesion.usuario?.permisos[permiso] === true;
 }
 
-/** Eventos en vivo del API (SSE). Devuelve la función para soltar la suscripción. */
-export function escuchar(tipo: string, fn: (datos: unknown) => void): () => void {
-  if (!sesion.token || !baseApi()) return () => {};
-  const fuente = new EventSource(`${baseApi()}/eventos?token=${encodeURIComponent(sesion.token)}`);
-  const manejador = (e: MessageEvent) => {
+/* ── Tiempo real: UNA conexión SSE compartida (`GET /api/eventos`) para toda la app ── */
+
+let fuente: EventSource | null = null;
+let tokenFuente: string | null = null;
+const oyentes = new Map<string, Set<(datos: unknown) => void>>();
+const enganchados = new WeakMap<EventSource, Set<string>>();
+
+function engancharTipo(tipo: string): void {
+  if (!fuente) return;
+  const ya = enganchados.get(fuente) ?? new Set<string>();
+  if (ya.has(tipo)) return;
+  ya.add(tipo);
+  enganchados.set(fuente, ya);
+  fuente.addEventListener(tipo, ((e: MessageEvent) => {
+    let datos: unknown = null;
     try {
-      fn(JSON.parse(String(e.data)));
+      datos = JSON.parse(String(e.data));
     } catch { /* evento ilegible */ }
-  };
-  fuente.addEventListener(tipo, manejador as EventListener);
-  return () => fuente.close();
+    for (const fn of oyentes.get(tipo) ?? []) fn(datos);
+  }) as EventListener);
 }
+
+function conectar(): void {
+  if (fuente && tokenFuente === sesion.token) return;
+  fuente?.close();
+  fuente = null;
+  tokenFuente = sesion.token;
+  if (!sesion.token || !baseApi()) return;
+  fuente = new EventSource(`${baseApi()}/eventos?token=${encodeURIComponent(sesion.token)}`);
+  for (const tipo of oyentes.keys()) engancharTipo(tipo);
+}
+
+/** Escucha un tipo de evento en vivo (`registro`, `cambio`, `chat`…). Devuelve la función para soltarlo. */
+export function escuchar(tipo: string, fn: (datos: unknown) => void): () => void {
+  const set = oyentes.get(tipo) ?? new Set();
+  set.add(fn);
+  oyentes.set(tipo, set);
+  conectar();
+  engancharTipo(tipo);
+  return () => set.delete(fn);
+}
+
+window.addEventListener('peon:sesion', () => {
+  if (sesion.token) return conectar();
+  fuente?.close();
+  fuente = null;
+  tokenFuente = null;
+});

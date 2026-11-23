@@ -19,7 +19,7 @@ import css from 'iswc:css';
 import { Componente, html } from '../../base/componente.js';
 import type { PeonAppProps } from '../../consts/schemas/componentes.schemas.js';
 import type { Vista } from '../../consts/schemas/api.schemas.js';
-import { cargarSesion, salir, sesion } from '../../core/api.js';
+import { cargarSesion, escuchar, salir, sesion } from '../../core/api.js';
 import { VISTAS, vista } from '../../core/catalogos.js';
 import { MEDIO_ANGOSTO, angosto } from '../../core/ui.js';
 
@@ -52,6 +52,7 @@ class PeonApp extends Componente<PeonAppProps> {
   static deps = ['iswc-icon', 'iswc-person', 'iswc-drawer', 'iswc-spinner', 'peon-acceso'];
 
   #listo = false;
+  #soltarCambios: (() => void) | null = null;
   #ancho = anchoGuardado();
   #pestana = '';
   #medio = matchMedia(MEDIO_ANGOSTO);
@@ -69,11 +70,18 @@ class PeonApp extends Componente<PeonAppProps> {
       this.#listo = true;
       this.props = {};
     });
+    // Tiempo real: cualquier escritura (de otra sesión o de esta) llega como «cambio» y las vistas refrescan sus datos.
+    let espera: ReturnType<typeof setTimeout> | undefined;
+    this.#soltarCambios = escuchar('cambio', (d) => {
+      clearTimeout(espera);
+      espera = setTimeout(() => window.dispatchEvent(new CustomEvent('peon:datos', { detail: d })), 350);
+    });
   }
 
   override onDisconnected(): void {
     window.removeEventListener('peon:sesion', this.#alCambiarSesion);
     window.removeEventListener('peon:ir', this.#alIr);
+    this.#soltarCambios?.();
     this.#medio.removeEventListener('change', this.#alCambiarMedio);
   }
 

@@ -6,3 +6,23 @@
 .cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(13em, 1fr)); gap: t.esp(3); }
 .avisos { display: grid; gap: t.esp(2); }
 .accion { justify-self: start; }
+
+.promo-chat {
+  display: grid;
+  gap: t.esp(3);
+  padding: t.esp(3) t.esp(4);
+  border: 1px solid var(--iswc-border-soft);
+  border-left: 0.25em solid var(--iswc-brand);
+  border-radius: t.radio(md);
+  background: var(--iswc-bg-soft);
+}
+
+.cabeza-promo {
+  display: flex;
+  align-items: center;
+  gap: t.esp(3);
+
+  > iswc-icon { flex: none; font-size: 1.6em; color: var(--iswc-brand); }
+  div { display: grid; flex: 1; min-width: 0; }
+  small { opacity: 0.75; }
+}
