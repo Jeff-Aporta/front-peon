@@ -61,6 +61,23 @@ function textoEnLineas(c: CanvasRenderingContext2D, texto: string, x: number, y:
   return yy + alto;
 }
 
+/** Imagen en círculo con aro (verde · amarillo): el logo es cuadrado con fondo blanco y así no se ve el cuadro. */
+function enCirculo(c: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, lado: number, aro: string): void {
+  const r = lado / 2;
+  c.save();
+  c.beginPath();
+  c.arc(x + r, y + r, r + lado * 0.035, 0, Math.PI * 2);
+  c.fillStyle = aro;
+  c.fill();
+  c.beginPath();
+  c.arc(x + r, y + r, r, 0, Math.PI * 2);
+  c.fillStyle = '#ffffff';
+  c.fill();
+  c.clip();
+  c.drawImage(img, x, y, lado, lado);
+  c.restore();
+}
+
 /** Dibuja la pieza en un canvas nuevo. */
 export async function dibujarPieza(f: Formato): Promise<HTMLCanvasElement> {
   const lienzo = document.createElement('canvas');
@@ -100,7 +117,8 @@ export async function dibujarPieza(f: Formato): Promise<HTMLCanvasElement> {
   if (f.id === 'banner') {
     const img = foto ?? logo;
     const lado = f.alto * 0.78;
-    if (img) c.drawImage(img, f.alto * 0.12, (f.alto - lado) / 2 - cinta / 2, lado, lado * (img.height / img.width));
+    if (img && foto) c.drawImage(img, f.alto * 0.12, (f.alto - lado) / 2 - cinta / 2, lado, lado * (img.height / img.width));
+    else if (img) enCirculo(c, img, f.alto * 0.12, (f.alto - lado) / 2 - cinta / 2, lado, k.amarillo);
     c.textAlign = 'left';
     const x = f.alto * 0.12 + lado + f.alto * 0.12;
     const max = f.ancho - x - f.alto * 0.12;
@@ -133,7 +151,8 @@ export async function dibujarPieza(f: Formato): Promise<HTMLCanvasElement> {
     const lado = base * (foto ? 0.62 : 0.46);
     const alto = lado * (img.height / img.width);
     y += base * 0.05;
-    c.drawImage(img, (f.ancho - lado) / 2, y, lado, alto);
+    if (foto) c.drawImage(img, (f.ancho - lado) / 2, y, lado, alto);
+    else enCirculo(c, img, (f.ancho - lado) / 2, y, lado, k.amarillo);
     y += alto + base * 0.08;
   }
   c.font = fuente(800, base * 0.095);

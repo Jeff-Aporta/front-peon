@@ -11,7 +11,9 @@
  *   Herramientas (estilo NotebookLM), adjuntos (máx. 4 × 8 MB, clip o arrastrar), y VOZ:
  *     · Nota de voz: `<iswc-media-recorder source="mic">` del kit graba (audio/webm → adjunto) y, si el navegador
  *       trae la Web Speech API, se transcribe a la vez (es-CO): archivo + voz + transcripción viajan al VPS.
- *     · Dictar: la voz se escribe en el campo (mismo reconocimiento que el dictado del puesto, core/voz.ts).
+ *   Diseño de WhatsApp: clip (archivo) a la izquierda · campo con cámara (imagen o foto) · botón redondo que es
+ *   micrófono con el campo vacío y enviar cuando hay algo. Arrastrar archivos al chat los adjunta. Sin rótulos:
+ *   solo `title`/`aria-label`.
  *   Respuestas del VPS en Markdown (md-lite + md-hydrate del kit, saneado). Con `publicar_noticias`: «Guardar como
  *   noticia» y, si se citó una noticia, «Aplicar a la noticia» (reemplaza el fragmento citado). En vivo por SSE `chat`.
  */
@@ -83,7 +85,6 @@ class PeonChat extends Componente<PeonChatProps> {
   #campo: (HTMLElement & { value?: string }) | null = null;
   #grabadora: Grabadora | null = null;
   #oyendo: { parar(): Promise<string> } | null = null;
-  #dictando: { parar(): Promise<string>; fin: Promise<string> } | null = null;
   #inicioGrabacion = 0;
   #reloj: ReturnType<typeof setInterval> | undefined;
   #borradorPendiente = '';
@@ -104,7 +105,6 @@ class PeonChat extends Componente<PeonChatProps> {
     this.#soltar?.();
     this.#grabadora?.stop();
     void this.#oyendo?.parar();
-    void this.#dictando?.parar();
     clearInterval(this.#reloj);
   }
 
@@ -123,6 +123,7 @@ class PeonChat extends Componente<PeonChatProps> {
     }
     this.#campo.value = texto;
     this.#campo.focus();
+    this.#actualizarAccion();
   }
 
   #pintarCita(): void {
@@ -194,6 +195,7 @@ class PeonChat extends Componente<PeonChatProps> {
   }
 
   #pintarChips(): void {
+    queueMicrotask(() => this.#actualizarAccion());
     this.#chips?.replaceChildren(...this.#pendientes.map((p, i) => html`<span class="chip" ?data-voz=${!!p.voz}><iswc-icon icon=${p.voz ? 'mdi:microphone' : 'mdi:paperclip'}></iswc-icon><span>${p.voz ? 'Nota de voz' : p.nombre}</span><small>${peso(p.tamano)}</small><button type="button" title="Quitar" onclick=${() => {
       if (p.voz) this.#transcripcion = '';
       this.#pendientes.splice(i, 1);
@@ -240,12 +242,14 @@ class PeonChat extends Componente<PeonChatProps> {
     this.#transcripcion = '';
     const alParar = () => {
       boton.removeAttribute('data-grabando');
+      this.#actualizarAccion();
       clearInterval(this.#reloj);
       const oyendo = this.#oyendo;
       this.#oyendo = null;
       void oyendo?.parar().then((t) => {
         this.#transcripcion = t;
         this.#pintarEstadoVoz(t);
+        this.#actualizarAccion();
       });
     };
     g.addEventListener('iswc-stop', (e) => {
@@ -260,6 +264,7 @@ class PeonChat extends Componente<PeonChatProps> {
       avisar(`Micrófono: ${(e as CustomEvent<{ message: string }>).detail.message}`, 'warning');
     }, { once: true });
     boton.setAttribute('data-grabando', '');
+    this.#actualizarAccion();
     this.#inicioGrabacion = Date.now();
     this.#pintarEstadoVoz('', true);
     this.#reloj = setInterval(() => {
@@ -270,27 +275,32 @@ class PeonChat extends Componente<PeonChatProps> {
     this.#oyendo = escucharVoz((t) => this.#pintarEstadoVoz(t, true));
   }
 
-  /** Dictar: la voz se escribe en el campo. */
-  #dictar(boton: HTMLElement): void {
-    if (this.#dictando) {
-      void this.#dictando.parar();
-      return;
-    }
-    const base = String(this.#campo?.value ?? '').trim();
-    this.#dictando = escucharVoz((t) => {
-      if (this.#campo) this.#campo.value = [base, t].filter(Boolean).join(' ');
-    }, (msg) => avisar(`Dictado: ${msg}`, 'warning'));
-    if (!this.#dictando) return avisar('Este navegador no permite dictado. Prueba con Chrome o Edge.', 'warning');
-    boton.setAttribute('data-oyendo', '');
-    // Termina al segundo toque o cuando el navegador corta (silencio largo): en ambos casos se suelta el botón.
-    void this.#dictando.fin.then(() => {
-      boton.removeAttribute('data-oyendo');
-      this.#dictando = null;
-    });
+  /** ¿Hay algo que enviar? (texto, adjuntos o transcripción). */
+  #hayAlgo(): boolean {
+    return !!String(this.#campo?.value ?? '').trim() || this.#pendientes.length > 0 || !!this.#transcripcion;
+  }
+
+  /** El botón de la derecha es micrófono (campo vacío y se puede grabar), enviar, o detener mientras graba. */
+  #actualizarAccion(): void {
+    const b = this.shadow?.querySelector('[data-accion]');
+    if (!b) return;
+    const grabando = b.hasAttribute('data-grabando');
+    const modo = grabando ? 'detener' : !this.#hayAlgo() && this.#grabadora ? 'voz' : 'enviar';
+    b.setAttribute('data-modo', modo);
+    const t = modo === 'detener' ? 'Terminar la nota de voz' : modo === 'voz' ? (Dictado ? 'Nota de voz (se graba y se transcribe)' : 'Nota de voz') : 'Enviar';
+    b.setAttribute('title', t);
+    b.setAttribute('aria-label', t);
+    b.querySelector('iswc-icon')?.setAttribute('icon', modo === 'detener' ? 'mdi:stop' : modo === 'voz' ? 'mdi:microphone' : 'mdi:send');
+  }
+
+  #alAccion(boton: HTMLElement): void {
+    const modo = boton.getAttribute('data-modo') ?? 'enviar';
+    if (modo === 'voz' || modo === 'detener') void this.#voz(boton);
+    else void this.#enviar(boton);
   }
 
   async #enviar(boton: HTMLElement): Promise<void> {
-    if (this.#grabadora && this.shadow?.querySelector('[data-grabando]')) return avisar('Termina la nota de voz antes de enviar', 'warning');
+    if (this.shadow?.querySelector('[data-grabando]')) return avisar('Termina la nota de voz antes de enviar', 'warning');
     const campo = this.#campo;
     const texto = String(campo?.value ?? '').trim();
     if (!texto && !this.#pendientes.length && !this.#transcripcion) return;
@@ -310,6 +320,7 @@ class PeonChat extends Componente<PeonChatProps> {
       this.#pintarChips();
       this.#pintarEstadoVoz('');
       this.#pintarLineas();
+      this.#actualizarAccion();
     } catch (e) {
       avisar(textoError(e), 'danger');
     } finally {
@@ -374,28 +385,53 @@ class PeonChat extends Componente<PeonChatProps> {
     this.#estadoVoz.hidden = true;
     this.#estadoVoz.setAttribute('aria-live', 'polite');
     const campo = document.createElement('iswc-textarea') as HTMLElement & { value?: string };
-    campo.setAttribute('placeholder', 'Escribe tu mensaje… (Enter envía, Mayús+Enter salta de línea)');
-    campo.setAttribute('rows', '2');
+    campo.className = 'campo';
+    campo.setAttribute('placeholder', 'Mensaje');
+    campo.setAttribute('aria-label', 'Mensaje (Enter envía, Mayús+Enter salta de línea)');
+    campo.setAttribute('rows', '1');
     campo.setAttribute('autosize', '');
     campo.setAttribute('max-rows', '6');
     this.#campo = campo;
-    const archivo = document.createElement('input');
-    archivo.type = 'file';
-    archivo.multiple = true;
-    archivo.hidden = true;
-    archivo.addEventListener('change', () => {
-      void this.#adjuntar(archivo.files);
-      archivo.value = '';
-    });
+    const selector = (accept: string) => {
+      const i = document.createElement('input');
+      i.type = 'file';
+      i.multiple = true;
+      i.hidden = true;
+      if (accept) i.accept = accept;
+      i.addEventListener('change', () => {
+        void this.#adjuntar(i.files);
+        i.value = '';
+      });
+      return i;
+    };
+    const archivo = selector('');
+    const imagen = selector('image/*');
     campo.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        void this.#enviar(caja.querySelector('[data-enviar]') as HTMLElement);
+        void this.#enviar(caja.querySelector('[data-accion]') as HTMLElement);
+      }
+    });
+    campo.addEventListener('iswc-input', () => this.#actualizarAccion());
+    campo.addEventListener('input', () => this.#actualizarAccion());
+    // Arrastrar y soltar archivos en cualquier parte del chat: se adjuntan (como en WhatsApp Web).
+    let arrastres = 0;
+    caja.addEventListener('dragenter', (e) => {
+      if (!e.dataTransfer?.types.includes('Files')) return;
+      arrastres++;
+      caja.setAttribute('data-soltar', '');
+    });
+    caja.addEventListener('dragleave', () => {
+      if (--arrastres <= 0) {
+        arrastres = 0;
+        caja.removeAttribute('data-soltar');
       }
     });
     caja.addEventListener('dragover', (e) => e.preventDefault());
     caja.addEventListener('drop', (e) => {
       e.preventDefault();
+      arrastres = 0;
+      caja.removeAttribute('data-soltar');
       void this.#adjuntar(e.dataTransfer?.files ?? null);
     });
     const grabadora = document.createElement('iswc-media-recorder') as Grabadora;
@@ -412,15 +448,15 @@ class PeonChat extends Componente<PeonChatProps> {
         ${this.#estadoVoz}
         ${this.#chips}
         <div class="fila-escribir">
-          <div class="botones-izq">
-            <button type="button" class="redondo" title="Adjuntar archivos (máx. 4 de 8 MB)" data-adjuntar onclick=${() => archivo.click()}><iswc-icon icon="mdi:paperclip"></iswc-icon></button>
-            ${PUEDE_GRABAR ? html`<button type="button" class="redondo" title=${Dictado ? 'Nota de voz (se graba y se transcribe)' : 'Nota de voz'} data-voz onclick=${(e: Event) => void this.#voz(e.currentTarget as HTMLElement)}><iswc-icon icon="mdi:microphone-outline"></iswc-icon></button>` : null}
-            ${Dictado ? html`<button type="button" class="redondo" title="Dictar: la voz se escribe en el campo" data-dictar onclick=${(e: Event) => this.#dictar(e.currentTarget as HTMLElement)}><iswc-icon icon="mdi:text-to-speech"></iswc-icon></button>` : null}
+          <button type="button" class="redondo plano" title="Adjuntar archivo (máx. 4 de 8 MB)" aria-label="Adjuntar archivo" data-adjuntar onclick=${() => archivo.click()}><iswc-icon icon="mdi:paperclip"></iswc-icon></button>
+          <div class="caja-campo">
+            ${campo}
+            <button type="button" class="en-campo" title="Adjuntar imagen o tomar foto" aria-label="Adjuntar imagen o tomar foto" data-imagen onclick=${() => imagen.click()}><iswc-icon icon="mdi:camera-outline"></iswc-icon></button>
           </div>
-          ${archivo}
-          ${campo}
-          <iswc-button data-enviar color="brand" onclick=${(e: Event) => void this.#enviar(e.currentTarget as HTMLElement)}><iswc-icon slot="start" icon="mdi:send"></iswc-icon><span class="texto-enviar">Enviar</span></iswc-button>
+          <button type="button" class="redondo accion" data-accion title="Enviar" aria-label="Enviar" onclick=${(e: Event) => void this.#alAccion(e.currentTarget as HTMLElement)}><iswc-icon icon="mdi:send"></iswc-icon></button>
+          ${archivo}${imagen}
         </div>
+        <p class="soltar" aria-hidden="true"><iswc-icon icon="mdi:tray-arrow-down"></iswc-icon>Suelta para adjuntar</p>
         ${this.#grabadora}
       </div>
     `);

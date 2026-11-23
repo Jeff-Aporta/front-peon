@@ -17,7 +17,7 @@ import type { PeonCampanaProps } from '../../consts/schemas/componentes.schemas.
 import type { Bandeja, Notificacion } from '../../consts/schemas/api.schemas.js';
 import { api } from '../../core/api.js';
 import { haceCuanto, iniciales } from '../../core/catalogos.js';
-import { avisarNuevas, pedirPermisoAvisos, permisoAvisos, tituloConContador } from '../../core/avisos-navegador.js';
+import { avisarNuevas, escucharIrDesdePush, pedirPermisoAvisos, permisoAvisos, suscribirPush, tituloConContador } from '../../core/avisos-navegador.js';
 import { irEnlace, textoError } from '../../core/ui.js';
 
 /** Ícono pequeño sobre el avatar según el tipo (como las insignias de FB: comentario, me gusta…). */
@@ -30,6 +30,8 @@ const INSIGNIAS: Record<string, string> = {
 
 /** Cuántas instancias hay montadas: el título y los avisos del sistema los maneja una sola (la primera). */
 let lider: PeonCampana | null = null;
+/** Una sola vez por carga: suscripción push y escucha del service worker. */
+let pushListo = false;
 
 class PeonCampana extends Componente<PeonCampanaProps> {
   static tag = 'peon-campana';
@@ -77,6 +79,11 @@ class PeonCampana extends Componente<PeonCampanaProps> {
     }
     if (lider === this || !lider?.isConnected) {
       lider = this;
+      if (!pushListo) {
+        pushListo = true;
+        escucharIrDesdePush((enlace) => irEnlace(enlace));
+        void suscribirPush(api);
+      }
       tituloConContador(this.#bandeja.noLeidas);
       avisarNuevas(this.#bandeja.items, (n) => this.#seguir(n));
     }
@@ -156,7 +163,8 @@ class PeonCampana extends Componente<PeonCampanaProps> {
 
   async #activarAvisos(): Promise<void> {
     const r = await pedirPermisoAvisos();
-    avisar(r === 'granted' ? 'Listo: te avisaremos en este navegador' : r === 'denied' ? 'El navegador bloqueó los avisos (puedes cambiarlo en el candado de la barra de direcciones)' : 'Avisos sin activar', r === 'granted' ? 'success' : 'warning');
+    const push = r === 'granted' ? await suscribirPush(api) : false;
+    avisar(r === 'granted' ? (push ? 'Listo: te avisaremos aunque cierres la app' : 'Listo: te avisaremos en este navegador') : r === 'denied' ? 'El navegador bloqueó los avisos (puedes cambiarlo en el candado de la barra de direcciones)' : 'Avisos sin activar', r === 'granted' ? 'success' : 'warning');
     this.#pintarLista();
   }
 

@@ -52,3 +52,44 @@ export function avisarNuevas(items: Notificacion[], alTocar: (n: Notificacion) =
     } catch { /* algunos navegadores móviles solo permiten avisos desde un service worker */ }
   }
 }
+
+/** Clave pública VAPID (base64url) → bytes para `pushManager.subscribe`. */
+function bytesDe(b64u: string): Uint8Array {
+  const b64 = b64u.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (b64u.length % 4)) % 4);
+  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+}
+
+/**
+ * Push con la app CERRADA (Web Push): si el permiso está dado y la API tiene VAPID, registra `sw.js` y guarda la
+ * suscripción de este navegador (`POST notificaciones/suscribir`). Silencioso: si algo falta, no hace nada.
+ * `pedir(metodo, ruta, cuerpo)` es el cliente de la API (se inyecta para no acoplar este módulo a la sesión).
+ */
+export async function suscribirPush(pedir: <T>(metodo: string, ruta: string, cuerpo?: unknown) => Promise<T>): Promise<boolean> {
+  if (permisoAvisos() !== 'granted' || !('serviceWorker' in navigator) || typeof PushManager === 'undefined') return false;
+  try {
+    const info = await pedir<{ activo: boolean; vapidPublica: string | null }>('GET', 'notificaciones/push');
+    if (!info.activo || !info.vapidPublica) return false;
+    const reg = await navigator.serviceWorker.register('./sw.js');
+    await navigator.serviceWorker.ready;
+    const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytesDe(info.vapidPublica) as BufferSource }));
+    const j = sub.toJSON() as { endpoint?: string; keys?: Record<string, string> };
+    if (!j.endpoint) return false;
+    await pedir('POST', 'notificaciones/suscribir', { canal: 'webpush', endpoint: j.endpoint, claves: j.keys ?? null });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Lo que pide el service worker al tocar una notificación con la app abierta (o `?ir=` si la abrió). */
+export function escucharIrDesdePush(seguir: (enlace: string) => void): void {
+  navigator.serviceWorker?.addEventListener('message', (e: MessageEvent) => {
+    const d = e.data as { tipo?: string; enlace?: string } | null;
+    if (d?.tipo === 'peon:ir' && d.enlace) seguir(d.enlace);
+  });
+  const ir = new URLSearchParams(location.search).get('ir');
+  if (ir) {
+    history.replaceState(null, '', location.pathname);
+    seguir(ir);
+  }
+}

@@ -216,6 +216,7 @@ audio { max-width: 100%; height: 2.25em; }
 
 @keyframes latido { 50% { opacity: 0.25; } }
 
+/* Barra de escribir como WhatsApp: clip · campo (con cámara dentro) · botón redondo (micrófono / enviar). */
 .fila-escribir {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -223,24 +224,80 @@ audio { max-width: 100%; height: 2.25em; }
   align-items: end;
 }
 
-.botones-izq { display: flex; gap: t.esp(1); }
+.caja-campo {
+  position: relative;
+  min-width: 0;
+
+  /* Campo en píldora (WhatsApp) con aire a la derecha para que el texto no pase por debajo de la cámara. */
+  .campo { width: 100%; --iswc-textarea-border-radius: 1.3em; }
+  .campo::part(base) { padding-inline: 0.9em 2.6em; }
+}
+
+.en-campo {
+  position: absolute;
+  right: 0.35em;
+  bottom: 0.3em;
+  display: grid;
+  place-items: center;
+  width: 2em;
+  height: 2em;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--iswc-text-muted, var(--iswc-text));
+  font-size: 1.05em;
+  cursor: pointer;
+
+  &:hover { color: var(--iswc-brand); background: var(--iswc-brand-soft); }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); }
+}
 
 .redondo {
   display: grid;
   place-items: center;
-  width: 2.5em;
-  height: 2.5em;
-  border: 1px solid var(--iswc-border-soft);
+  width: 2.6em;
+  height: 2.6em;
+  border: 0;
   border-radius: 50%;
-  background: var(--iswc-bg);
-  color: var(--iswc-brand);
-  font-size: 1em;
+  background: none;
+  color: var(--iswc-text-muted, var(--iswc-text));
+  font-size: 1.05em;
   cursor: pointer;
 
-  &:hover { background: var(--iswc-brand-soft); }
+  &:hover { background: var(--iswc-brand-soft); color: var(--iswc-brand); }
   &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); }
-  &[data-grabando] { background: var(--iswc-color-danger, var(--peon-morado)); border-color: transparent; color: var(--iswc-on-brand, #fff); }
-  &[data-oyendo] { background: var(--peon-morado); border-color: transparent; color: var(--peon-sobre-morado); }
+}
+
+/* El botón de la derecha: verde lleno (micrófono, enviar); rojo mientras graba. */
+.accion {
+  background: var(--iswc-brand);
+  color: var(--iswc-on-brand, #fff);
+  font-size: 1.15em;
+
+  &:hover { background: var(--iswc-brand); color: var(--iswc-on-brand, #fff); filter: brightness(1.08); }
+  &[data-grabando] { background: var(--iswc-color-danger, var(--peon-morado)); animation: latido 1.2s ease-in-out infinite; }
+}
+
+/* Soltar archivos sobre el chat. */
+.soltar { display: none; }
+
+.chat[data-soltar] {
+  outline: 0.15em dashed var(--iswc-brand);
+  outline-offset: 0.25em;
+  border-radius: t.radio(lg);
+
+  .soltar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: t.esp(2);
+    margin: 0;
+    padding: t.esp(2);
+    border-radius: t.radio(md);
+    background: var(--iswc-brand-soft);
+    color: var(--iswc-brand-text, var(--iswc-brand));
+    font-weight: 600;
+  }
 }
 
 /* La grabadora del kit trabaja sin verse: el control es el botón del micrófono. */
@@ -278,10 +335,3 @@ audio { max-width: 100%; height: 2.25em; }
 
 .chat[data-compacto] .tarjetas { grid-template-columns: 1fr 1fr; }
 .chat[data-compacto] .tarjeta small { display: none; }
-
-/* Anchos chicos (cajón, celular): los botones de voz suben sobre el campo y «Enviar» queda solo con su ícono. */
-@container (max-width: 30em) {
-  .fila-escribir { grid-template-columns: minmax(0, 1fr) auto; }
-  .botones-izq { grid-column: 1 / -1; }
-  .texto-enviar { display: none; }
-}

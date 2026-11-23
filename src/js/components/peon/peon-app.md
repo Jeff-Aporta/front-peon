@@ -1,23 +1,26 @@
 ---
 name: peon-app
-description: Shell de Peon en Marcha. Úsalo una sola vez, en index.html; monta la barra y el shell de la vista activa.
+description: Shell de Peón en Marcha. Úsalo una sola vez, en index.html: panel izquierdo (o barra inferior en el celular) y la vista activa.
 ---
 
 # `<peon-app>`
 
-Armazón de la app: barra superior (marca y conmutador de tema) y, debajo, el shell de la vista
-activa. La app solo conoce el shell de cada vista; las vistas se registran en `kit-tags.ts`.
+Shell de Peón en Marcha. Úsalo una sola vez, en index.html: panel izquierdo (o barra inferior en el celular) y la vista activa.
+
+- **Cuándo usarlo:** Una sola vez, en index.html.
+- **Cuándo no:** No lo montes dentro de otra vista.
 
 ## Anatomía
 
 ```
 <peon-app>
   #shadow-root
-    <header part="barra">
-      <strong class="marca">Peon en Marcha</strong>
-      <iswc-theme-toggle scope="root">
-    <main part="vista">
-      <peon-hola>        ← shell de la vista activa
+    <div class="marco">                      ← grid: panel · tirador · contenido (sm/xs: contenido · barra)
+      <aside class="lateral">                ← md+: marca (colapsa) · nav plana · <peon-campana> · usuario y salir
+      <div class="tirador" role="separator"> ← ancho del panel 13–26 em (se recuerda)
+      <main class="trabajo">                 ← título + vista activa (<peon-inicio>, <peon-noticias>…)
+      <nav class="barra">                    ← sm/xs: Inicio · Chat/Registros · Registrar/Noticias · Avisos · Menú
+    <iswc-drawer class="cajon">              ← sm/xs: «Menú» con todas las vistas, el usuario y salir
 ```
 
 ## Atributos observados
@@ -28,11 +31,16 @@ activa. La app solo conoce el shell de cada vista; las vistas se registran en `k
 
 | Prop | Tipo | Default | Qué hace |
 | --- | --- | --- | --- |
-| `vista` | `string` | `"hola"` | Vista activa; una clave sin shell cae en `hola`. |
+| `activo` | `string` | `"inicio"` | Vista activa (se recuerda en `localStorage['peon:vista']`). |
+| `colapsado` | `boolean` | `false` | Panel solo con íconos. |
+| `cajon` | `boolean` | `false` | Cajón del menú abierto (sm/xs). |
 
 ## Eventos
 
-<!-- exclude: Eventos -->
+| Evento | Detalle | Cuándo |
+| --- | --- | --- |
+| `peon:ir (ventana)` | `{ vista, pestana? }` | Otra vista pide cambiar de vista. |
+| `peon:datos (ventana)` | `{ entidad, accion }` | Lo emite: un cambio en vivo por entidad (SSE `cambio`). |
 
 ## Slots
 
@@ -43,6 +51,6 @@ activa. La app solo conoce el shell de cada vista; las vistas se registran en `k
 ```html
 <peon-app></peon-app>
 <script type="module">
-  document.querySelector('peon-app').props = { vista: 'hola' };
+  document.querySelector('peon-app').props = {"activo": "inicio", "colapsado": false};
 </script>
 ```
