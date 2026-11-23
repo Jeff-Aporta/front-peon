@@ -810,10 +810,14 @@
     }
   },
   "remote": {
+    "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/_chunks/chunk-2GHB5Y6L.mjs": "b585e2c3fa57e53af179783f22c59b465379747edd301c2fdf6583193872c556",
+    "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/_chunks/chunk-4KLEPXKB.mjs": "0074ad18e8b7fb233f8b8e57bce190c4a263bcb8bae96e8574ab8086cc646c7c",
     "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/_chunks/chunk-5XFYD3KA.mjs": "dbe15c2b9633a1b8567aa323eccc254657465c1d2b72ca7c663902e78b034204",
     "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/_chunks/chunk-7KABUODH.mjs": "3c038dba3710582371253fe89cb8581e3e4ad90e818662710ba64b005d97ee78",
     "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/_chunks/chunk-CMZVHIC2.mjs": "8bce1d3aa493e16931085499d11b51b9169c60048ccac5a3c4ca07fe72356f72",
     "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/_chunks/chunk-FZCPQKWI.mjs": "5a82b8b67989ff60dd809b27f370ef0d18b87487645dfd8210e79fc3e4f8ab59",
+    "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/_chunks/chunk-IRRE3ZS2.mjs": "ab6cae195f61eea57f8af4c94ac69f9d2ea342e78acd5f6c1f6138ce8ee7442d",
+    "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/_chunks/chunk-RHWT5CF7.mjs": "3bcd2fa414a0beb020db53096cf2ffa8579690b991ccfd96045fd0896d52d40e",
     "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/build/alias.ts": "a640f598b65fe7fe65aff2a05bbd8bce9a4ed6c73bae1e9d7c09e28f7655523d",
     "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/build/asset-url.ts": "7f44a653a57583a7dcb91265d8ed62b47ebf10c3a12e84174eec31c0423d7517",
     "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/build/bundle-kit.ts": "e81ed8c3dd5c799d9a7f8152d91373a305947bf60357fa5ed89e9e9a455b85b8",
@@ -825,6 +829,8 @@
     "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/build/lote-kit.ts": "0f322f544b3c9e2782167a0c9d5e4f88f0196ec38b7ae16966f21d4171cc7c0b",
     "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/build/stamp-hashes.ts": "71276bd7c75aab72addfa25d59208eb3cbe3d60155ba402df7a0828bce5a11b6",
     "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/core/iswc-element.min.mjs": "c6d81eba278f89e38dbe7c729b12798899ce69a8065a6c0d8400226797176aff",
+    "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/helpers/md-hydrate.min.mjs": "2308b92e1ca3057c6c45bf220aa78b90663875702d602615fe767a4bdbffa3ba",
+    "https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/helpers/md-lite.min.mjs": "79eacb4927985133ffdea8821d9e375607ed54e8c3402cae3b7c811598367271",
     "https://raw.githubusercontent.com/Jeff-Aporta/is-webcomponents/92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/src/cdn/schemas/loader.schemas.ts": "49bbafa826eedf7256ed59e5f811c99fb2c3757454b3cac9bd9f3d74252361d3",
     "https://raw.githubusercontent.com/Jeff-Aporta/is-webcomponents/92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/src/previews/_kit/schemas/anatomia.schemas.ts": "ba70924ded149108e62cac5b4e0bbe66af2f4ef7d6cd2b4fd46eca2d419b7ccf",
     "https://raw.githubusercontent.com/Jeff-Aporta/is-webcomponents/92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/src/previews/_kit/schemas/component.schemas.ts": "a4ebb8b074b04c999bda32af9ff89151a6c9a4f0269547b86909bf5e97e37f4c",
