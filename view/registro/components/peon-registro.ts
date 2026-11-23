@@ -2,7 +2,8 @@
 /**
  * <peon-registro> — una sola pantalla: cédula (máscara de dígitos) → el puesto se consulta SOLO al terminar de
  * escribirla → datos básicos → guardar. Si la fuente no responde, se guarda igual con «pendiente» (lo verificamos
- * después). Pestañas: Nueva persona · Consultar puesto (solo consulta, sin registrar).
+ * después). Si la fuente no lo resuelve (con la fuente `manual`, nunca), aparece la CONSULTA ASISTIDA: copiar cédula y
+ * abrir la Registraduría, pegar el resultado (se lee solo) y guardar con el registro. Pestañas: Nueva persona · Consultar puesto.
  */
 import { define } from '@jeff-aporta/iswc-base/core/iswc-element.min.mjs';
 import css from 'iswc:css';
@@ -11,15 +12,17 @@ import type { VistaProps } from '../../../src/js/consts/schemas/componentes.sche
 import type { ResultadoPuesto } from '../../../src/js/consts/schemas/api.schemas.js';
 import { api } from '../../../src/js/core/api.js';
 import { grupoPestanas } from '../../../src/js/core/pestanas.js';
+import { URL_REGISTRADURIA, bloquePuestoManual } from '../../../src/js/core/puesto-manual.js';
 import { abrirFicha, marcado, tarjetaPuesto, textoError, valor } from '../../../src/js/core/ui.js';
 
 class PeonRegistro extends Componente<VistaProps> {
   static tag = 'peon-registro';
   static css = css;
-  static deps = ['iswc-tab-group', 'iswc-masked-input', 'iswc-input', 'iswc-checkbox', 'iswc-button', 'iswc-callout', 'iswc-spinner', 'iswc-tag', 'iswc-icon'];
+  static deps = ['iswc-tab-group', 'iswc-masked-input', 'iswc-input', 'iswc-textarea', 'iswc-checkbox', 'iswc-button', 'iswc-callout', 'iswc-spinner', 'iswc-tag', 'iswc-icon'];
 
   #ultima = '';
   #resultado: ResultadoPuesto | null = null;
+  #alResultado: ((r: ResultadoPuesto | null) => void) | null = null;
 
   protected override inicial(): VistaProps {
     return { pestana: '' };
@@ -32,13 +35,16 @@ class PeonRegistro extends Componente<VistaProps> {
     destino.replaceChildren(tarjetaPuesto(null, true));
     try {
       this.#resultado = await api<ResultadoPuesto>('POST', 'puesto/consulta', { cedula });
-      if (cedula === this.#ultima) destino.replaceChildren(tarjetaPuesto(this.#resultado));
+      if (cedula === this.#ultima) {
+        destino.replaceChildren(tarjetaPuesto(this.#resultado));
+        this.#alResultado?.(this.#resultado);
+      }
     } catch (e) {
       destino.replaceChildren(html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`);
     }
   }
 
-  async #guardar(caja: HTMLElement, boton: HTMLElement, destino: HTMLElement): Promise<void> {
+  async #guardar(caja: HTMLElement, boton: HTMLElement, destino: HTMLElement, manual: ReturnType<typeof bloquePuestoManual>): Promise<void> {
     const cedula = valor(caja, 'cedula').replace(/\D/g, '');
     const datos = {
       cedula,
@@ -50,6 +56,7 @@ class PeonRegistro extends Componente<VistaProps> {
       barrio: valor(caja, 'barrio'),
       municipio: valor(caja, 'municipio') || 'Armenia',
       consentimiento: marcado(caja, 'consentimiento'),
+      puestoManual: manual.nodo.hidden ? null : manual.leer(),
     };
     if (cedula.length < 5) return avisar('Escribe la cédula', 'warning');
     if (!datos.nombres || !datos.apellidos) return avisar('Nombres y apellidos son obligatorios', 'warning');
@@ -58,7 +65,9 @@ class PeonRegistro extends Componente<VistaProps> {
     try {
       const r = await api<{ persona: { ref: string; puesto_estado: string }; puesto: ResultadoPuesto }>('POST', 'personas', datos);
       avisar(r.persona.puesto_estado === 'verificado' ? 'Persona registrada con su puesto verificado.' : 'Persona registrada. El puesto lo verificamos después.', r.persona.puesto_estado === 'verificado' ? 'success' : 'warning');
-      for (const campo of caja.querySelectorAll<HTMLElement & { value: string }>('[data-campo]')) if (campo.dataset.campo !== 'municipio') campo.value = '';
+      for (const campo of caja.querySelectorAll<HTMLElement & { value: string }>('[data-campo]')) if (campo.dataset.campo !== 'municipio' && !campo.dataset.campo?.startsWith('pm-')) campo.value = '';
+      manual.limpiar();
+      manual.nodo.hidden = true;
       const check = caja.querySelector<HTMLElement & { checked: boolean }>('[data-campo="consentimiento"]');
       if (check) check.checked = false;
       this.#ultima = '';
@@ -79,6 +88,12 @@ class PeonRegistro extends Componente<VistaProps> {
     caja.addEventListener('submit', (e) => e.preventDefault());
     const puesto = document.createElement('div');
     puesto.append(tarjetaPuesto(null));
+    const manual = bloquePuestoManual(() => valor(caja, 'cedula'));
+    manual.nodo.hidden = true;
+    // Sin puesto verificado (fuente manual, caída o no encontrada) → consulta asistida a la vista.
+    this.#alResultado = (r) => {
+      manual.nodo.hidden = !r || r.estado === 'verificado';
+    };
     let espera = 0;
     const alEscribir = () => {
       clearTimeout(espera);
@@ -91,6 +106,8 @@ class PeonRegistro extends Componente<VistaProps> {
           <iswc-masked-input data-campo="cedula" label="Cédula" pattern="000000999999" placeholder="Solo números" inputmode="numeric" required oniswc-input=${alEscribir} oniswc-change=${() => void this.#consultar(caja, puesto)}></iswc-masked-input>
           ${puesto}
         </div>
+        <button type="button" class="enlace" data-mostrar-manual onclick=${() => { manual.nodo.hidden = !manual.nodo.hidden; }}><iswc-icon icon="mdi:pencil-outline"></iswc-icon> Escribir o corregir el puesto a mano</button>
+        ${manual.nodo}
       </section>
       <section class="bloque">
         <h2>2 · Datos básicos</h2>
@@ -106,7 +123,7 @@ class PeonRegistro extends Componente<VistaProps> {
         <iswc-checkbox data-campo="consentimiento">La persona autoriza el tratamiento de sus datos personales (Ley 1581 de 2012).</iswc-checkbox>
       </section>
       <div class="acciones">
-        <iswc-button data-guardar color="brand" onclick=${(e: Event) => void this.#guardar(caja, e.currentTarget as HTMLElement, puesto)}><iswc-icon slot="start" icon="mdi:content-save-outline"></iswc-icon>Guardar registro</iswc-button>
+        <iswc-button data-guardar color="brand" onclick=${(e: Event) => void this.#guardar(caja, e.currentTarget as HTMLElement, puesto, manual)}><iswc-icon slot="start" icon="mdi:content-save-outline"></iswc-icon>Guardar registro</iswc-button>
         <span data-ultimo></span>
       </div>
     `);
@@ -119,7 +136,7 @@ class PeonRegistro extends Componente<VistaProps> {
     const puesto = document.createElement('div');
     puesto.append(tarjetaPuesto(null));
     caja.append(html`
-      <p class="nota">Consulta el puesto de votación de una cédula sin registrarla. Cada cédula se consulta una vez y queda en caché 7 días.</p>
+      <p class="nota">Consulta el puesto de votación de una cédula sin registrarla. Cada cédula se consulta una vez y queda en caché 7 días. Si no aparece, búscala en la <a href=${URL_REGISTRADURIA} target="_blank" rel="noopener noreferrer">página de la Registraduría</a>.</p>
       <div class="fila-cedula">
         <iswc-masked-input data-campo="cedula" label="Cédula" pattern="000000999999" inputmode="numeric" oniswc-enter=${() => void this.#consultar(caja, puesto, true)}></iswc-masked-input>
         <iswc-button color="brand" onclick=${() => void this.#consultar(caja, puesto, true)}><iswc-icon slot="start" icon="mdi:magnify"></iswc-icon>Consultar</iswc-button>

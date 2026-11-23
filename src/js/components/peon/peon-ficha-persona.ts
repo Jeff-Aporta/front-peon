@@ -13,6 +13,7 @@ import type { PersonaFila, ResultadoPuesto } from '../../consts/schemas/api.sche
 import { api, sesion } from '../../core/api.js';
 import { fecha } from '../../core/catalogos.js';
 import { grupoPestanas } from '../../core/pestanas.js';
+import { bloquePuestoManual } from '../../core/puesto-manual.js';
 import { estadoPuesto, tarjetaPuesto, textoError, valor } from '../../core/ui.js';
 
 type Evento = { id: number; accion: string; actor: string; detalle: unknown; creado: string };
@@ -30,7 +31,7 @@ const oculto = (v: string | null) => (v ? v : html`<span class="oculto">oculto</
 class PeonFichaPersona extends Componente<PeonFichaPersonaProps> {
   static tag = 'peon-ficha-persona';
   static css = css;
-  static deps = ['iswc-dialog', 'iswc-tab-group', 'iswc-input', 'iswc-button', 'iswc-callout', 'iswc-confirm-delete', 'iswc-empty-state', 'iswc-tag', 'iswc-spinner'];
+  static deps = ['iswc-dialog', 'iswc-tab-group', 'iswc-input', 'iswc-textarea', 'iswc-button', 'iswc-callout', 'iswc-confirm-delete', 'iswc-empty-state', 'iswc-tag', 'iswc-spinner'];
 
   #persona: PersonaFila | null = null;
   #cargando = '';
@@ -133,8 +134,29 @@ class PeonFichaPersona extends Componente<PeonFichaPersonaProps> {
     const r: ResultadoPuesto = { estado: p.puesto_estado, puesto: p.puestoDetalle ?? null, mesa: p.mesa, desdeCache: false, aviso: p.puesto_estado === 'pendiente' ? 'Pendiente de verificar en la fuente oficial.' : null, captcha: null };
     tarjeta.append(tarjetaPuesto(r));
     const lugar = p.puestoDetalle;
+    // Consulta asistida: sin puesto verificado (o para corregirlo) se trae de la Registraduría a mano.
+    const manual = bloquePuestoManual(() => p.cedula ?? '', { nombre: lugar?.nombre ?? '', direccion: lugar?.direccion ?? '', mesa: p.mesa ?? '' });
+    manual.nodo.hidden = p.puesto_estado === 'verificado';
+    const puedeEscribir = sesion.usuario?.escribe === true;
+    const guardarManual = async (b: HTMLElement) => {
+      const d = manual.leer();
+      if (!d) return avisar('Escribe al menos el puesto y el municipio', 'warning');
+      b.setAttribute('loading', '');
+      try {
+        const n = await api<ResultadoPuesto>('POST', `personas/${p.ref}/puesto`, d);
+        tarjeta.replaceChildren(tarjetaPuesto(n));
+        manual.nodo.hidden = true;
+        avisar('Puesto guardado y verificado.', 'success');
+      } catch (err) {
+        avisar(textoError(err), 'danger');
+      } finally {
+        b.removeAttribute('loading');
+      }
+    };
+    if (puedeEscribir && p.cedula) manual.nodo.append(html`<div class="acciones"><iswc-button size="small" color="brand" data-guardar-puesto onclick=${(e: Event) => void guardarManual(e.currentTarget as HTMLElement)}><iswc-icon slot="start" icon="mdi:content-save-outline"></iswc-icon>Guardar puesto</iswc-button></div>`);
     caja.append(html`
       ${tarjeta}
+      ${puedeEscribir && p.cedula ? html`<button type="button" class="enlace" onclick=${() => { manual.nodo.hidden = !manual.nodo.hidden; }}><iswc-icon icon="mdi:pencil-outline"></iswc-icon> Escribir o corregir el puesto a mano</button>${manual.nodo}` : null}
       ${lugar && lugar.lat != null
         ? html`<dl class="datos"><dt>Ubicación</dt><dd>${lugar.lat.toFixed(5)}, ${lugar.lon?.toFixed(5)} · ${lugar.municipio}</dd><dt>Fuente</dt><dd>${lugar.fuente === 'ejemplo' ? 'Dato de ejemplo (pendiente la lista oficial)' : lugar.fuente}</dd></dl>
           <a class="mapa" href=${`https://www.openstreetmap.org/?mlat=${lugar.lat}&mlon=${lugar.lon}#map=17/${lugar.lat}/${lugar.lon}`} target="_blank" rel="noopener noreferrer"><iswc-icon icon="mdi:map-outline"></iswc-icon> Ver en el mapa</a>`
