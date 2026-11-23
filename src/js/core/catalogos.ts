@@ -11,11 +11,15 @@ const esAdmin = (u: Usuario) => u.rol === 'ADMIN';
 export const VISTAS: Vista[] = [
   {
     id: 'inicio', titulo: 'Inicio', icono: 'mdi:home-outline', tag: 'peon-inicio', visible: () => true,
-    pestanas: [{ id: 'resumen', titulo: 'Resumen', icono: 'mdi:view-dashboard-outline' }, { id: 'recientes', titulo: 'Mis registros', icono: 'mdi:history' }],
+    pestanas: [{ id: 'campana', titulo: 'Campaña', icono: 'mdi:flag-variant-outline' }, { id: 'resumen', titulo: 'Mi resumen', icono: 'mdi:view-dashboard-outline' }, { id: 'recientes', titulo: 'Mis registros', icono: 'mdi:history' }],
   },
   {
     id: 'chat', titulo: 'Chat con el VPS', icono: 'mdi:robot-outline', tag: 'peon-chat-vps', visible: (u) => p(u, 'chat_con_vps'),
     pestanas: [{ id: 'chat', titulo: 'Conversación', icono: 'mdi:chat-processing-outline' }],
+  },
+  {
+    id: 'noticias', titulo: 'Noticias', icono: 'mdi:newspaper-variant-outline', tag: 'peon-noticias', visible: () => true,
+    pestanas: [{ id: 'noticias', titulo: 'Noticias', icono: 'mdi:newspaper-variant-outline' }, { id: 'candidato', titulo: 'El candidato', icono: 'mdi:account-star-outline' }, { id: 'votar', titulo: 'Cómo votar', icono: 'mdi:vote-outline' }, { id: 'publicidad', titulo: 'Publicidad', icono: 'mdi:download-outline' }, { id: 'privacidad', titulo: 'Privacidad', icono: 'mdi:shield-lock-outline' }],
   },
   {
     id: 'registro', titulo: 'Registrar', icono: 'mdi:account-plus-outline', tag: 'peon-registro', visible: (u) => u.escribe,
@@ -65,6 +69,15 @@ export const HERRAMIENTAS_CHAT: { id: string; titulo: string; icono: string; tex
   { id: 'servidor', titulo: 'Estado del servidor', icono: 'mdi:server-network', texto: '¿Cómo está el servidor? Dime si la API, la base de datos y la consulta del puesto funcionan bien.', ayuda: 'Salud de la app' },
 ];
 
+/** Secciones de las noticias y páginas de la campaña (`categoria` de la entidad `noticias`). */
+export const CATEGORIAS_NOTICIA: Record<string, { titulo: string; icono: string }> = {
+  noticia: { titulo: 'Noticia', icono: 'mdi:newspaper-variant-outline' },
+  biografia: { titulo: 'Biografía', icono: 'mdi:account-star-outline' },
+  trayectoria: { titulo: 'Trayectoria', icono: 'mdi:timeline-text-outline' },
+  tutorial: { titulo: 'Cómo votar', icono: 'mdi:vote-outline' },
+  privacidad: { titulo: 'Privacidad', icono: 'mdi:shield-lock-outline' },
+};
+
 export const vista = (id: string): Vista => VISTAS.find((v) => v.id === id) ?? VISTAS[0]!;
 
 export const ESTADOS: Record<string, { texto: string; color: string; icono: string }> = {
@@ -82,6 +95,7 @@ export const PERMISOS_TEXTO: Record<string, string> = {
   ver_miembros: 'Ver miembros',
   chat_con_vps: 'Chat con el VPS',
   ver_todos_los_registros: 'Ver todos los datos de contacto',
+  publicar_noticias: 'Publicar noticias',
 };
 
 /** Fecha corta legible (es-CO). */

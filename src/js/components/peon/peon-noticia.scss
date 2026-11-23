@@ -1,0 +1,125 @@
+@use "tokens" as t;
+@use "mixins" as m;
+@use "md";
+
+:host { @include m.host-bloque; }
+
+.caja-noticia { display: grid; gap: t.esp(3); min-width: 0; }
+
+.noticia { display: grid; gap: t.esp(3); min-width: 0; }
+
+.cabeza { display: grid; gap: t.esp(1); min-width: 0; }
+
+.etiquetas { display: flex; flex-wrap: wrap; gap: t.esp(1); }
+
+iswc-tag { font-size: 0.72em; }
+iswc-tag.cat { --iswc-tag-bg: var(--peon-morado-suave); color: var(--peon-morado-texto); }
+
+.titulo {
+  margin: 0;
+  font-family: t.$titulos;
+  font-size: clamp(1.25em, 1.1em + 0.8vw, 1.7em);
+  line-height: 1.15;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.resumen { margin: 0; font-size: 1.02em; opacity: 0.85; }
+.fecha { opacity: 0.6; font-size: 0.8em; }
+
+/* La cinta de la bandera (verde · blanco · amarillo), como filete fino. */
+.cinta {
+  height: 0.28em;
+  border-radius: 999px;
+  background: var(--peon-cinta);
+  box-shadow: 0 0 0 1px var(--iswc-border-soft);
+}
+
+.portada {
+  width: 100%;
+  max-height: 22em;
+  object-fit: cover;
+  border-radius: t.radio(lg);
+}
+
+.cuerpo {
+  font-size: 1em;
+  -webkit-touch-callout: none;
+
+  &[data-presionado] { user-select: none; }
+  :is(p, li, h2, h3, blockquote):hover { background: var(--iswc-bg-soft); border-radius: t.radio(sm); }
+}
+
+.pista {
+  display: flex;
+  align-items: center;
+  gap: t.esp(2);
+  margin: 0;
+  opacity: 0.6;
+  font-size: 0.78em;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.esp(2);
+  align-items: center;
+}
+
+/* Acción de campaña (publicar): morado, el 10 % que se gana. */
+iswc-button.morado {
+  @include m.boton-morado;
+}
+
+.menu-fragmento {
+  max-width: 18em;
+  padding: t.esp(1) t.esp(2);
+  opacity: 0.65;
+  font-size: 0.78em;
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+/* Editor: campos arriba; contenido y vista previa lado a lado si hay ancho. */
+.editor { display: grid; gap: t.esp(3); min-width: 0; }
+
+.rejilla-editor {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15em), 1fr));
+  gap: t.esp(2) t.esp(3);
+}
+
+.dos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20em), 1fr));
+  gap: t.esp(3);
+  min-width: 0;
+
+  iswc-textarea { width: 100%; }
+}
+
+.previa {
+  display: grid;
+  align-content: start;
+  gap: t.esp(1);
+  min-width: 0;
+  max-height: 28em;
+  overflow-y: auto;
+  padding: t.esp(3);
+  border: 1px dashed var(--iswc-border-soft);
+  border-radius: t.radio(md);
+}
+
+.rotulo { @include m.rotulo; font-size: 0.72em; }
+
+.ayuda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: t.esp(1);
+  margin: 0;
+  opacity: 0.7;
+  font-size: 0.8em;
+
+  code { padding: 0 0.3em; border-radius: t.radio(sm); background: var(--iswc-bg-soft); }
+}

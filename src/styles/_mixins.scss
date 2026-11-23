@@ -33,3 +33,15 @@
   opacity: $opacidad;
   text-transform: uppercase;
 }
+
+/// Botón del kit (`iswc-button color="brand"`) teñido con el morado de campaña: reasigna los tonos que lee
+/// `brand-tones` del kit. Para acciones de campaña (publicar, redactar con el VPS): el 10 % que se gana.
+@mixin boton-morado {
+  --iswc-accent: var(--peon-morado);
+  --iswc-color-brand: var(--peon-morado);
+  --iswc-color-brand-strong: var(--peon-morado);
+  --iswc-color-brand-stronger: var(--peon-morado-hondo);
+  --iswc-color-brand-strongest: var(--peon-morado-hondo);
+  --iswc-brand-text: var(--peon-morado-texto);
+  --iswc-on-brand: var(--peon-sobre-morado);
+}

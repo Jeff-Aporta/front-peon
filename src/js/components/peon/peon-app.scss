@@ -170,6 +170,13 @@
   }
 }
 
+/* Campana (notificaciones) justo encima del usuario. */
+.avisos-panel {
+  flex: none;
+  padding: t.esp(1) t.esp(2);
+  border-top: 1px solid var(--iswc-border-soft);
+}
+
 .pie {
   display: flex;
   flex: none;

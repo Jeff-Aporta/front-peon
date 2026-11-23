@@ -49,7 +49,7 @@ const anchoGuardado = (): number => {
 class PeonApp extends Componente<PeonAppProps> {
   static tag = 'peon-app';
   static css = css;
-  static deps = ['iswc-icon', 'iswc-person', 'iswc-drawer', 'iswc-spinner', 'peon-acceso'];
+  static deps = ['iswc-icon', 'iswc-person', 'iswc-drawer', 'iswc-spinner', 'peon-acceso', 'peon-campana'];
 
   #listo = false;
   #soltarCambios: (() => void) | null = null;
@@ -71,10 +71,19 @@ class PeonApp extends Componente<PeonAppProps> {
       this.props = {};
     });
     // Tiempo real: cualquier escritura (de otra sesión o de esta) llega como «cambio» y las vistas refrescan sus datos.
+    // Se agrupan las ráfagas (350 ms) pero sin perder entidades: sale UN `peon:datos` por entidad distinta
+    // (p. ej. publicar una noticia trae «noticia» y «notificacion»; cada vista atiende la suya).
     let espera: ReturnType<typeof setTimeout> | undefined;
+    const pendientes = new Map<string, unknown>();
     this.#soltarCambios = escuchar('cambio', (d) => {
+      const entidad = d && typeof d === 'object' && 'entidad' in d ? String((d as { entidad: unknown }).entidad) : '';
+      pendientes.set(entidad, d);
       clearTimeout(espera);
-      espera = setTimeout(() => window.dispatchEvent(new CustomEvent('peon:datos', { detail: d })), 350);
+      espera = setTimeout(() => {
+        const lote = [...pendientes.values()];
+        pendientes.clear();
+        for (const detalle of lote) window.dispatchEvent(new CustomEvent('peon:datos', { detail: detalle }));
+      }, 350);
     });
   }
 
@@ -168,11 +177,19 @@ class PeonApp extends Componente<PeonAppProps> {
         <nav class="nav" aria-label="Vistas">
           ${this.#visibles().map((v) => html`<button class="item" type="button" title=${v.titulo} data-vista=${v.id} ?data-actual=${v.id === actual} aria-current=${v.id === actual ? 'page' : 'false'} onclick=${() => this.#abrir(v.id)}><iswc-icon icon=${v.icono}></iswc-icon><span class="texto">${v.titulo}</span></button>`)}
         </nav>
+        <div class="avisos-panel">${this.#campana(colapsado)}</div>
         <footer class="pie" part="pie">
           <iswc-person class="usuario" nombre=${u.nombre} detalle=${u.rolNombre} ?compacto=${colapsado}></iswc-person>
           <button class="icono salir" type="button" title="Cerrar sesión" data-salir onclick=${() => void salir()}><iswc-icon icon="mdi:logout"></iswc-icon></button>
         </footer>
       </aside>`;
+  }
+
+  /** Campana con contador (plugin `notificaciones` de DER). Una por panel; en el cajón (sm/xs) va desplegada. */
+  #campana(compacta: boolean): HTMLElement {
+    const c = document.createElement('peon-campana');
+    Object.assign(c, { props: { compacta } });
+    return c;
   }
 
   protected override pintar(root: ShadowRoot, props: PeonAppProps): void {

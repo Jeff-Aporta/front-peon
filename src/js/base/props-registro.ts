@@ -6,7 +6,7 @@
  * registra AQUÍ con una línea. Todo setter de `props` pasa por `revisarProps`.
  */
 import { avisarPropsNoIdentificadas, clavesDe, instalarVigilanciaAtributos } from './zod.js';
-import { PeonAccesoPropsSchema, PeonAppPropsSchema, PeonFichaPersonaPropsSchema, VistaPropsSchema } from '../consts/schemas/componentes.schemas.js';
+import { PeonAccesoPropsSchema, PeonAppPropsSchema, PeonCampanaPropsSchema, PeonChatPropsSchema, PeonFichaPersonaPropsSchema, PeonNoticiaPropsSchema, VistaPropsSchema } from '../consts/schemas/componentes.schemas.js';
 import { VIEW_TAGS } from '../kit-tags.js';
 
 const MAPA = new Map<string, ReadonlySet<string>>();
@@ -18,6 +18,9 @@ export function registrarClaves(tag: string, esquema: { shape: object }): void {
 registrarClaves('peon-app', PeonAppPropsSchema);
 registrarClaves('peon-acceso', PeonAccesoPropsSchema);
 registrarClaves('peon-ficha-persona', PeonFichaPersonaPropsSchema);
+registrarClaves('peon-chat', PeonChatPropsSchema);
+registrarClaves('peon-campana', PeonCampanaPropsSchema);
+registrarClaves('peon-noticia', PeonNoticiaPropsSchema);
 for (const tags of Object.values(VIEW_TAGS)) for (const tag of tags) registrarClaves(tag, VistaPropsSchema);
 
 export function revisarProps(tag: string, valor: unknown): void {

@@ -29,3 +29,22 @@ export type Actividad = { id: number; accion: string; texto: string; creado: str
 export type FichaMiembro = Miembro & { puesto: Puesto | null; mesa: string | null; puestoEstado: string; ubicacion: { lat: number; lon: number; municipio: string } | null; equipo: { ref: string; nombre: string; rol: string; registros: number }[]; actividad: Actividad[] };
 export type PerfilAdmin = Miembro & { lider: string | null; permisos: Record<string, boolean>; creado_por: string | null; mensajeDisponible: boolean };
 export type Catalogo = { permisos: { clave: string; texto: string }[]; roles: { clave: string; nombre: string; alcance: string; escribe: boolean }[] };
+
+/** Noticias y páginas de la campaña (`GET /api/noticias`): Markdown con HTML y componentes iswc-*. */
+export type CategoriaNoticia = 'noticia' | 'biografia' | 'trayectoria' | 'tutorial' | 'privacidad';
+export type NoticiaFila = { id: number; categoria: CategoriaNoticia; titulo: string; resumen: string | null; imagen: string | null; estado: 'borrador' | 'publicada' | 'archivada'; destacada: boolean; orden: number; autor: string | null; creado: string; actualizado: string | null; publicada: string | null; adelanto: string };
+export type Noticia = Omit<NoticiaFila, 'adelanto'> & { cuerpo_md: string };
+
+/** Campana (plugin `notificaciones` de DER): bandeja de la sesión y contador. */
+export type Notificacion = { id: string; iusuario: string; titulo: string; texto: string | null; tipo: string; enlace: string | null; leida: string | null; fhcre: string };
+export type Bandeja = { items: Notificacion[]; noLeidas: number };
+
+/** Contexto con que se abre el chat desde otra pantalla (noticia y fragmento citado, o la vista). */
+export const ContextoChatSchema = z.object({
+  tipo: z.string(),
+  id: z.union([z.string(), z.number()]).nullable().default(null),
+  titulo: z.string().nullable().default(null),
+  fragmento: z.string().nullable().default(null),
+  pantalla: z.string().nullable().default(null),
+});
+export type ContextoChat = z.infer<typeof ContextoChatSchema>;

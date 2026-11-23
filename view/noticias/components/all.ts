@@ -1,0 +1,1 @@
+import './peon-noticias.js';

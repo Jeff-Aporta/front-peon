@@ -1,5 +1,6 @@
 @use "vista";
 @use "tokens" as t;
+@use "mixins" as m;
 
 .resumen, .recientes { display: grid; gap: t.esp(4); padding-top: t.esp(4); }
 .saludo { margin: 0; font-size: 1.05em; }
@@ -25,4 +26,278 @@
   > iswc-icon { flex: none; font-size: 1.6em; color: var(--iswc-brand); }
   div { display: grid; flex: 1; min-width: 0; }
   small { opacity: 0.75; }
+}
+
+/* ── Campaña: portada «wow» + accesos ─────────────────────────────────────────────────────────────
+   La portada es la excepción del 60/30/10 (IDENTIDAD-VISUAL §3): la pieza de campaña va sobre el morado del
+   candidato; debajo vuelve el blanco. Nada de 100dvh: alturas por contenido. */
+.campana {
+  display: grid;
+  gap: t.esp(5);
+  padding-top: t.esp(4);
+  container-type: inline-size;
+}
+
+.portada {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: t.esp(4);
+  padding: t.esp(6) t.esp(4) t.esp(8);
+  overflow: hidden;
+  border-radius: calc(var(--iswc-radius) * 2.5);
+  background:
+    radial-gradient(120% 90% at 20% 0%, hsl(var(--peon-morado-h) 80% 55% / 55%), transparent 60%),
+    linear-gradient(150deg, var(--peon-morado-hondo), var(--peon-morado) 55%, var(--peon-morado-hondo));
+  color: #fff;
+  text-align: center;
+  isolation: isolate;
+  animation: aparecer 0.6s ease-out both;
+}
+
+.brillo {
+  position: absolute;
+  inset: -30% -10% auto auto;
+  z-index: -1;
+  width: 70%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, hsl(var(--iswc-contrast-h) 100% 60% / 28%), transparent 65%);
+  animation: flotar 9s ease-in-out infinite alternate;
+}
+
+.foto {
+  position: relative;
+  width: min(15em, 62%);
+  height: auto;
+  align-self: center;
+  margin: 0;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, rgb(255 255 255 / 30%), rgb(255 255 255 / 6%) 70%);
+  box-shadow: 0 0 0 0.35em rgb(255 255 255 / 85%), 0 0 0 0.7em var(--peon-amarillo), 0 1.5em 3em rgb(0 0 0 / 35%);
+  animation: aparecer 0.7s 0.1s ease-out both;
+
+  img { display: block; box-sizing: border-box; width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 50%; }
+  &[data-logo] img { object-fit: contain; padding: 12%; }
+}
+
+.quien { display: grid; justify-items: center; gap: t.esp(2); min-width: 0; animation: aparecer 0.7s 0.2s ease-out both; }
+
+.movimiento { @include m.rotulo(0.9); font-size: 0.78em; }
+
+.nombre {
+  margin: 0;
+  font-family: t.$titulos;
+  font-size: clamp(2em, 1.4em + 3.4cqi, 3.4em);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  text-shadow: 0 0.08em 0.4em rgb(0 0 0 / 30%);
+  overflow-wrap: anywhere;
+}
+
+.lema {
+  margin: 0;
+  color: var(--peon-amarillo);
+  font-size: clamp(1em, 0.9em + 0.8cqi, 1.3em);
+  font-style: italic;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.lugar { display: inline-flex; align-items: center; gap: t.esp(1); opacity: 0.85; }
+
+.llamados { display: flex; flex-wrap: wrap; justify-content: center; gap: t.esp(2); margin-top: t.esp(2); }
+
+.llamado {
+  display: inline-flex;
+  align-items: center;
+  gap: t.esp(2);
+  min-height: 2.6em;
+  padding: 0 t.esp(5);
+  border: 1px solid rgb(255 255 255 / 60%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: transform 0.15s ease, background 0.15s ease;
+
+  &:hover { transform: translateY(-0.1em); background: rgb(255 255 255 / 20%); }
+  &:focus-visible { outline: 0.18em solid var(--peon-amarillo); outline-offset: 0.15em; }
+
+  /* El llamado principal se gana el amarillo (el 10 % que pide atención). */
+  &.principal { border-color: transparent; background: var(--peon-amarillo); color: hsl(var(--peon-morado-h) 60% 14%); }
+}
+
+.redes {
+  display: flex;
+  gap: t.esp(2);
+
+  a {
+    display: grid;
+    place-items: center;
+    width: 2.4em;
+    height: 2.4em;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 14%);
+    color: #fff;
+    font-size: 1.05em;
+
+    &:hover { background: rgb(255 255 255 / 26%); }
+  }
+}
+
+/* La cinta de la bandera, como en la pieza de campaña. */
+.portada .cinta {
+  position: absolute;
+  inset: auto 0 0;
+  height: 0.55em;
+  background: var(--peon-cinta);
+}
+
+/* Con ancho, foto a la izquierda y texto a la derecha. */
+@container (min-width: 44em) {
+  .portada {
+    grid-template-columns: auto minmax(0, 1fr);
+    justify-items: start;
+    align-items: center;
+    gap: t.esp(8);
+    padding: t.esp(8) t.esp(10) t.esp(10);
+    text-align: start;
+  }
+  .foto { width: 14em; }
+  .quien { justify-items: start; }
+  .llamados { justify-content: flex-start; }
+}
+
+/* Accesos (las funciones de la campaña). */
+.accesos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 10.5em), 1fr));
+  gap: t.esp(3);
+}
+
+.acceso {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: t.esp(1);
+  min-width: 0;
+  padding: t.esp(4) t.esp(3);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: t.radio(lg);
+  background: var(--iswc-bg);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  animation: aparecer 0.45s calc(0.25s + var(--i, 0) * 0.04s) ease-out both;
+
+  iswc-icon {
+    display: grid;
+    place-items: center;
+    width: 2.2em;
+    height: 2.2em;
+    margin-bottom: t.esp(1);
+    border-radius: t.radio(md);
+    background: var(--iswc-brand-soft);
+    color: var(--iswc-brand);
+    font-size: 1.15em;
+  }
+  strong { font-size: 0.95em; line-height: 1.2; overflow-wrap: anywhere; }
+  small { opacity: 0.65; font-size: 0.78em; }
+  &:hover { transform: translateY(-0.12em); border-color: var(--iswc-brand); box-shadow: 0 0.6em 1.4em rgb(0 0 0 / 8%); }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); }
+
+  /* Los accesos «de campaña» llevan el morado (noticias, publicidad, biografía). */
+  &[data-acceso="noticias"], &[data-acceso="publicidad"], &[data-acceso="biografia"] {
+    iswc-icon { background: var(--peon-morado-suave); color: var(--peon-morado-texto); }
+    &:hover { border-color: var(--peon-morado-borde); }
+  }
+}
+
+/* Últimas noticias. */
+.bloque-noticias { display: grid; gap: t.esp(3); }
+
+.cabeza-bloque {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: t.esp(2);
+
+  h3 { margin: 0; font-family: t.$titulos; font-size: 1.15em; }
+}
+
+.ver-todo, .enlace {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--peon-morado-texto);
+  font: inherit;
+  font-size: 0.88em;
+  cursor: pointer;
+}
+
+.ultimas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15em), 1fr));
+  gap: t.esp(3);
+}
+
+.noticia-mini {
+  display: grid;
+  align-content: start;
+  gap: t.esp(1);
+  min-width: 0;
+  padding: t.esp(3) t.esp(4);
+  border: 1px solid var(--iswc-border-soft);
+  border-inline-start: 0.25em solid var(--peon-morado);
+  border-radius: t.radio(md);
+  background: var(--iswc-bg);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  small { opacity: 0.6; font-size: 0.78em; }
+  strong { font-family: t.$titulos; line-height: 1.2; overflow-wrap: anywhere; }
+  span { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; opacity: 0.75; font-size: 0.88em; }
+  &:hover { border-color: var(--peon-morado-borde); }
+}
+
+.vacio { display: flex; align-items: center; gap: t.esp(2); margin: 0; opacity: 0.65; }
+
+/* Aviso legal y versión. */
+.legal {
+  display: grid;
+  gap: t.esp(1);
+  padding: t.esp(3) 0 t.esp(2);
+  border-top: 1px solid var(--iswc-border-soft);
+  opacity: 0.75;
+  font-size: 0.8em;
+
+  p { display: flex; gap: t.esp(2); margin: 0; }
+  iswc-icon { flex: none; margin-top: 0.15em; }
+}
+
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(0.8em); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes flotar {
+  to { transform: translate(-12%, 18%) scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portada, .foto, .quien, .acceso, .brillo { animation: none; }
 }

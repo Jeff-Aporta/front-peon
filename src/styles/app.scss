@@ -34,3 +34,17 @@ peon-app {
 html:not([data-app-ready]) body {
   visibility: hidden;
 }
+
+/* Cajones de la derecha (chat con el VPS y lectura de noticias): viven en light DOM, montados por core/ui.ts.
+   Ancho cómodo en escritorio, pantalla completa en celular; el chat llena el alto del cajón. */
+iswc-drawer.peon-cajon-chat,
+iswc-drawer.peon-cajon-noticia {
+  --iswc-drawer-size: min(34em, 100vw);
+}
+
+iswc-drawer.peon-cajon-noticia { --iswc-drawer-size: min(46em, 100vw); }
+
+iswc-drawer.peon-cajon-chat peon-chat {
+  height: calc(100vh - 6em);
+  height: calc(100svh - 6em);
+}

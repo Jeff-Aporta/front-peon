@@ -1,0 +1,38 @@
+// _md.scss — contenido Markdown pintado con md-lite del kit (noticias, páginas, respuestas del VPS).
+// Uso: `@use "md";` y la clase `.md` en el contenedor. Nada rebasa: imágenes, tablas y código se ajustan al ancho.
+@use "tokens" as t;
+
+.md {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.55;
+
+  > :first-child { margin-top: 0; }
+  > :last-child { margin-bottom: 0; }
+
+  h1, h2, h3, h4 {
+    margin: 1.1em 0 0.4em;
+    font-family: t.$titulos;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+  h1 { font-size: 1.45em; }
+  h2 { font-size: 1.2em; }
+  h3 { font-size: 1.05em; }
+  p, ul, ol, table, blockquote, iswc-callout, iswc-scroller { margin: 0 0 0.75em; }
+  ul, ol { padding-inline-start: 1.3em; }
+  li + li { margin-top: 0.25em; }
+  a { color: var(--peon-morado-texto, var(--iswc-brand)); }
+  img, video, iswc-theme-img { max-width: 100%; height: auto; border-radius: t.radio(md); }
+  blockquote {
+    padding: 0.4em 0.9em;
+    border-inline-start: 0.25em solid var(--peon-morado, var(--iswc-brand));
+    background: var(--peon-morado-suave, var(--iswc-bg-soft));
+    border-radius: 0 t.radio(sm) t.radio(sm) 0;
+    font-style: italic;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92em; }
+  th, td { padding: 0.35em 0.6em; border-bottom: 1px solid var(--iswc-border-soft); text-align: start; }
+  pre, code { max-width: 100%; overflow-x: auto; }
+  iswc-callout { display: block; }
+}

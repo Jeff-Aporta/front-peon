@@ -11,6 +11,8 @@
  */
 import { avisar, html } from '../base/componente.js';
 import { copiar, valor } from './ui.js';
+import { Dictado, errorVoz } from './voz.js';
+import type { Reconocimiento } from './voz.js';
 
 export const URL_REGISTRADURIA = 'https://wsp.registraduria.gov.co/censo/consultar/';
 
@@ -115,9 +117,7 @@ async function textoDeImagen(archivo: File): Promise<string> {
 }
 type Reconocer = (img: File, idioma: string) => Promise<{ data: { text: string } }>;
 
-type Reconocimiento = { lang: string; interimResults: boolean; continuous: boolean; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: ((e: { error: string }) => void) | null };
-const Dictado = (globalThis as { SpeechRecognition?: new () => Reconocimiento; webkitSpeechRecognition?: new () => Reconocimiento }).SpeechRecognition ??
-  (globalThis as { webkitSpeechRecognition?: new () => Reconocimiento }).webkitSpeechRecognition;
+/* El reconocimiento de voz (es-CO) es compartido con las notas de voz del chat: core/voz.ts. */
 
 /**
  * Bloque de consulta asistida. `cedula()` da la cédula a copiar. `leer()` devuelve el puesto escrito (o `null` si
@@ -189,7 +189,7 @@ export function bloquePuestoManual(cedula: () => string, inicial: Partial<Puesto
     rec.onresult = (e) => {
       dicho = Array.from(e.results).map((r) => r[0]?.transcript ?? '').join(' ');
     };
-    rec.onerror = (e) => avisar(`Dictado: ${e.error === 'not-allowed' ? 'permite el micrófono' : e.error}`, 'warning');
+    rec.onerror = (e) => avisar(`Dictado: ${errorVoz(e.error)}`, 'warning');
     rec.onend = () => {
       oyendo = null;
       boton?.removeAttribute('data-oyendo');

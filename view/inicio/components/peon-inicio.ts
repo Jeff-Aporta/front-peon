@@ -1,17 +1,23 @@
 // @contexto PROMPT-CLAUDE.md §4 (vista 2 · Inicio)
 /**
- * <peon-inicio> — resumen del usuario: cuántos registros hizo, cuántos están pendientes de verificar y avisos.
- * Pestañas: Resumen · Mis registros (los últimos que hizo, con acceso a la ficha).
+ * <peon-inicio> — portada de la campaña y resumen del usuario. Pestañas:
+ *   Campaña       portada «wow» del candidato (foto, nombre, lema, cinta de la bandera, redes), accesos (inspirados en
+ *                 las FUNCIONES de RedCivika: noticias diarias, registro de amigos, publicidad descargable, puesto de
+ *                 votación, políticas de privacidad, versión) + biografía, trayectoria, cómo votar, últimas noticias y
+ *                 el aviso «no es una aplicación oficial del Gobierno».
+ *   Mi resumen    cuántos registros hizo, cuántos están pendientes de verificar y avisos (+ acceso al chat).
+ *   Mis registros los últimos que hizo, con acceso a la ficha.
  */
 import { define } from '@jeff-aporta/iswc-base/core/iswc-element.min.mjs';
 import css from 'iswc:css';
 import { Componente, html } from '../../../src/js/base/componente.js';
 import type { VistaProps } from '../../../src/js/consts/schemas/componentes.schemas.js';
-import type { PersonaFila } from '../../../src/js/consts/schemas/api.schemas.js';
+import type { NoticiaFila, PersonaFila } from '../../../src/js/consts/schemas/api.schemas.js';
 import { api, puede, sesion } from '../../../src/js/core/api.js';
 import { HERRAMIENTAS_CHAT, fecha } from '../../../src/js/core/catalogos.js';
+import { CAMPANA, VERSION_FRONT } from '../../../src/js/core/config.js';
 import { grupoPestanas } from '../../../src/js/core/pestanas.js';
-import { abrirFicha, estadoPuesto, ir, textoError } from '../../../src/js/core/ui.js';
+import { abrirChat, abrirFicha, abrirNoticia, estadoPuesto, ir, textoError } from '../../../src/js/core/ui.js';
 
 type Resumen = { misRegistros: number; misRegistrosHoy: number; misPendientes: number; visibles: number; pendientes: number; verificados: number; avisos: { tipo: string; texto: string; ir?: string }[] };
 
@@ -19,6 +25,8 @@ class PeonInicio extends Componente<VistaProps> {
   static tag = 'peon-inicio';
   static css = css;
   static deps = ['iswc-tab-group', 'iswc-stat', 'iswc-callout', 'iswc-button', 'iswc-empty-state', 'iswc-tag', 'peon-ficha-persona'];
+
+  #noticias: HTMLElement | null = null;
 
   protected override inicial(): VistaProps {
     return { pestana: '' };
@@ -33,9 +41,86 @@ class PeonInicio extends Componente<VistaProps> {
     window.removeEventListener('peon:datos', this.#alCambiar);
   }
 
-  #alCambiar = (): void => {
+  /** En la portada solo se refrescan las últimas noticias (la portada no parpadea); el resto se repinta. */
+  #alCambiar = (e: Event): void => {
+    const d = (e as CustomEvent<{ entidad?: string }>).detail;
+    if (this.#noticias?.isConnected && this.shadow?.querySelector('iswc-tab-group')?.getAttribute('active') === 'campana') {
+      if (d?.entidad === 'noticia') void this.#cargarNoticias();
+      return;
+    }
     this.props = {};
   };
+
+  /** Portada del candidato y accesos de la campaña. */
+  #campana(): Node {
+    const u = sesion.usuario!;
+    const caja = document.createElement('div');
+    caja.className = 'campana';
+    const redes = CAMPANA.redes.filter((r) => r.url);
+    const chat = puede('chat_con_vps');
+    const accesos: { id: string; icono: string; titulo: string; texto: string; ir: () => void; si?: boolean }[] = [
+      { id: 'noticias', icono: 'mdi:newspaper-variant-outline', titulo: 'Noticias diarias', texto: 'Lo último de la campaña', ir: () => ir('noticias', 'noticias') },
+      { id: 'registrar', icono: 'mdi:account-plus-outline', titulo: 'Registra a tus amigos', texto: 'Suma gente a la marcha', ir: () => ir('registro', 'persona'), si: u.escribe },
+      { id: 'puesto', icono: 'mdi:map-marker-radius-outline', titulo: 'Puesto de votación', texto: 'Dónde y en qué mesa', ir: () => ir('registro', 'consulta'), si: u.escribe },
+      { id: 'publicidad', icono: 'mdi:download-outline', titulo: 'Publicidad descargable', texto: 'Piezas para redes y WhatsApp', ir: () => ir('noticias', 'publicidad') },
+      { id: 'biografia', icono: 'mdi:account-star-outline', titulo: 'Biografía', texto: `Quién es ${CAMPANA.candidato.split(' ')[0]}`, ir: () => ir('noticias', 'candidato') },
+      { id: 'trayectoria', icono: 'mdi:timeline-text-outline', titulo: 'Trayectoria', texto: 'El camino recorrido', ir: () => ir('noticias', 'candidato') },
+      { id: 'votar', icono: 'mdi:vote-outline', titulo: 'Cómo votar', texto: 'Paso a paso, sin errores', ir: () => ir('noticias', 'votar') },
+      { id: 'chat', icono: 'mdi:robot-outline', titulo: 'Pregúntale al VPS', texto: 'Informes, ideas y noticias', ir: () => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: 'Inicio' }), si: chat },
+      { id: 'privacidad', icono: 'mdi:shield-lock-outline', titulo: 'Privacidad', texto: 'Cómo cuidamos tus datos', ir: () => ir('noticias', 'privacidad') },
+    ];
+    this.#noticias = document.createElement('div');
+    this.#noticias.className = 'ultimas';
+    const version = document.createElement('span');
+    version.textContent = `App ${VERSION_FRONT}`;
+    void api<{ version: string }>('GET', 'info').then((i) => (version.textContent = `App ${VERSION_FRONT} · API ${i.version}`)).catch(() => {});
+    caja.append(html`
+      <section class="portada" aria-label="El candidato">
+        <div class="brillo" aria-hidden="true"></div>
+        <figure class="foto" ?data-logo=${!CAMPANA.foto}>
+          <img src=${CAMPANA.foto || './assets/logo-512.webp'} alt=${CAMPANA.foto ? CAMPANA.candidato : CAMPANA.movimiento} width="320" height="320">
+        </figure>
+        <div class="quien">
+          <small class="movimiento">${CAMPANA.movimiento}</small>
+          <h2 class="nombre">${CAMPANA.candidato}</h2>
+          <p class="lema">«${CAMPANA.lema}»</p>
+          <small class="lugar"><iswc-icon icon="mdi:map-marker-outline"></iswc-icon>${CAMPANA.lugar}</small>
+          <div class="llamados">
+            ${u.escribe ? html`<button type="button" class="llamado principal" data-registrar onclick=${() => ir('registro', 'persona')}><iswc-icon icon="mdi:account-plus-outline"></iswc-icon>Registrar a un amigo</button>` : null}
+            <button type="button" class="llamado" data-ver-noticias onclick=${() => ir('noticias', 'noticias')}><iswc-icon icon="mdi:newspaper-variant-outline"></iswc-icon>Noticias</button>
+          </div>
+          ${redes.length ? html`<nav class="redes" aria-label="Redes sociales">${redes.map((r) => html`<a href=${r.url} target="_blank" rel="noopener noreferrer" title=${r.red} aria-label=${r.red}><iswc-icon icon=${r.icono}></iswc-icon></a>`)}</nav>` : null}
+        </div>
+        <div class="cinta" aria-hidden="true"></div>
+      </section>
+      <nav class="accesos" aria-label="Accesos de la campaña">
+        ${accesos.filter((a) => a.si !== false).map((a, i) => html`<button type="button" class="acceso" data-acceso=${a.id} style=${`--i:${i}`} onclick=${a.ir}><iswc-icon icon=${a.icono}></iswc-icon><strong>${a.titulo}</strong><small>${a.texto}</small></button>`)}
+      </nav>
+      <section class="bloque-noticias">
+        <header class="cabeza-bloque"><h3>Últimas noticias</h3><button type="button" class="ver-todo" onclick=${() => ir('noticias', 'noticias')}>Ver todas <iswc-icon icon="mdi:chevron-right"></iswc-icon></button></header>
+        ${this.#noticias}
+      </section>
+      <footer class="legal">
+        <p><iswc-icon icon="mdi:information-outline"></iswc-icon><span>${CAMPANA.aviso}</span></p>
+        <small>${version} · <button type="button" class="enlace" onclick=${() => ir('noticias', 'privacidad')}>Política de privacidad</button></small>
+      </footer>
+    `);
+    void this.#cargarNoticias();
+    return caja;
+  }
+
+  async #cargarNoticias(): Promise<void> {
+    const l = this.#noticias;
+    if (!l) return;
+    try {
+      const filas = await api<NoticiaFila[]>('GET', 'noticias?categoria=noticia&limite=3');
+      l.replaceChildren(filas.length
+        ? html`${filas.map((n) => html`<button type="button" class="noticia-mini" data-noticia=${String(n.id)} onclick=${() => abrirNoticia(n.id)}><small>${fecha(n.publicada ?? n.creado, false)}</small><strong>${n.titulo}</strong><span>${n.adelanto}</span></button>`)}`
+        : html`<p class="vacio"><iswc-icon icon="mdi:newspaper-variant-outline"></iswc-icon>Muy pronto, las noticias de la campaña.</p>`);
+    } catch (e) {
+      l.replaceChildren(html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`);
+    }
+  }
 
   #resumen(): Node {
     const caja = document.createElement('div');
@@ -100,7 +185,7 @@ class PeonInicio extends Componente<VistaProps> {
   }
 
   protected override pintar(root: ShadowRoot, props: VistaProps): void {
-    root.append(grupoPestanas('inicio', props.pestana, (p) => (p === 'recientes' ? this.#recientes() : this.#resumen())));
+    root.append(grupoPestanas('inicio', props.pestana, (p) => (p === 'recientes' ? this.#recientes() : p === 'resumen' ? this.#resumen() : this.#campana())));
   }
 }
 

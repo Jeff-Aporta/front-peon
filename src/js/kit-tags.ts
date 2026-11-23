@@ -15,11 +15,13 @@
  */
 export const KIT_TAGS = [
   'iswc-avatar',
+  'iswc-badge',
   'iswc-button',
   'iswc-callout',
   'iswc-card',
   'iswc-checkbox',
   'iswc-confirm-delete',
+  'iswc-context-menu',
   'iswc-data-grid',
   'iswc-dialog',
   'iswc-drawer',
@@ -27,9 +29,13 @@ export const KIT_TAGS = [
   'iswc-icon',
   'iswc-input',
   'iswc-masked-input',
+  'iswc-media-recorder',
   'iswc-org-chart',
   'iswc-person',
+  'iswc-popover',
+  'iswc-qrcode',
   'iswc-select',
+  'iswc-share-button',
   'iswc-spinner',
   'iswc-stat',
   'iswc-switch',
@@ -48,10 +54,11 @@ export const SHELL_CRITICO = ['iswc-icon', 'iswc-person', 'iswc-toast'] as const
 
 export const PREFIJO = 'peon';
 
-export const APP_TAGS = ['peon-acceso', 'peon-ficha-persona', 'peon-app'] as const;
+export const APP_TAGS = ['peon-acceso', 'peon-ficha-persona', 'peon-chat', 'peon-campana', 'peon-noticia', 'peon-app'] as const;
 
 export const VIEW_TAGS = {
   inicio: ['peon-inicio'],
+  noticias: ['peon-noticias'],
   registro: ['peon-registro'],
   listado: ['peon-listado'],
   lider: ['peon-panel-lider'],

@@ -1,6 +1,11 @@
-/* Paleta de la marca (IDENTIDAD-VISUAL.md §4): verde 140/78/27, amarillo 45/100/48. Regla 60/30/10:
-   60 % superficie (blanco y derivados del kit), 30 % verde (marca, activos, botón principal), 10 % amarillo
-   (foco, acción destacada, «pendiente»). Solo tokens --iswc-*: los tintes los calcula el kit. */
+/* Paleta de la marca (IDENTIDAD-VISUAL.md §2–4). Bandera de Armenia (verde, blanco, amarillo del logo) + MORADO, el
+   color del candidato. Regla 60/30/10:
+     60 % superficie (blanco y derivados del kit)
+     30 % verde de marca (marca, activos, botón principal)          → semilla brand del kit
+     10 % acentos: morado de campaña (~7 %: portada del candidato, noticias, llamados de campaña)
+                   + amarillo (~3 %: foco, «pendiente», lo que exige atención) → semilla contrast del kit
+   El kit solo tiene dos semillas (brand y contrast): el morado vive en tokens propios `--peon-morado*`, que se
+   derivan AQUÍ de una semilla HSL (nunca hex sueltos en los componentes). En oscuro sube la luminosidad. */
 /* `html[...]` sube la especificidad: palettes.min.css (que carga después) declara semillas por defecto en :root,[data-palette]. */
 html[data-palette="peon"] {
   --iswc-brand-h: 140;
@@ -11,4 +16,29 @@ html[data-palette="peon"] {
   --iswc-contrast-l: 48%;
   --iswc-tint: 0.6;
   --iswc-font-tint: 0.4;
+
+  /* Morado de campaña (el de la camisa del afiche): semilla y derivados. */
+  --peon-morado-h: 275;
+  --peon-morado-s: 70%;
+  --peon-morado-l: 38%;
+  --peon-morado: hsl(var(--peon-morado-h) var(--peon-morado-s) var(--peon-morado-l));
+  --peon-morado-hondo: hsl(var(--peon-morado-h) var(--peon-morado-s) calc(var(--peon-morado-l) - 14%));
+  --peon-morado-texto: var(--peon-morado);
+  --peon-morado-suave: hsl(var(--peon-morado-h) var(--peon-morado-s) var(--peon-morado-l) / 12%);
+  --peon-morado-borde: hsl(var(--peon-morado-h) var(--peon-morado-s) var(--peon-morado-l) / 35%);
+  --peon-sobre-morado: #fff;
+  /* Colores de la bandera (cinta verde · blanco · amarillo de la pieza de campaña). */
+  --peon-verde: hsl(var(--iswc-brand-h) var(--iswc-brand-s) 30%);
+  --peon-amarillo: hsl(var(--iswc-contrast-h) var(--iswc-contrast-s) var(--iswc-contrast-l));
+  --peon-cinta: linear-gradient(90deg, var(--peon-verde) 0 33.4%, #fff 33.4% 66.6%, var(--peon-amarillo) 66.6% 100%);
+}
+
+html[data-palette="peon"][data-theme="dark"] {
+  --peon-morado-l: 62%;
+  --peon-morado: hsl(var(--peon-morado-h) 75% 62%);
+  --peon-morado-hondo: hsl(var(--peon-morado-h) 60% 22%);
+  --peon-morado-texto: hsl(var(--peon-morado-h) 85% 78%);
+  --peon-morado-suave: hsl(var(--peon-morado-h) 70% 60% / 16%);
+  --peon-morado-borde: hsl(var(--peon-morado-h) 70% 65% / 40%);
+  --peon-sobre-morado: hsl(var(--peon-morado-h) 60% 10%);
 }

@@ -2,7 +2,7 @@
 /** ui.ts — utilidades de vista compartidas (sin estilos ni dominio). */
 import { html } from '../base/componente.js';
 import { ESTADOS } from './catalogos.js';
-import type { ResultadoPuesto } from '../consts/schemas/api.schemas.js';
+import type { ContextoChat, ResultadoPuesto } from '../consts/schemas/api.schemas.js';
 
 /** Valor de un campo del kit (`iswc-input`, `iswc-select`, `iswc-masked-input`…) por `data-campo`. */
 export function valor(raiz: ParentNode | null | undefined, campo: string): string {
@@ -62,4 +62,49 @@ export function tarjetaPuesto(r: ResultadoPuesto | null, cargando = false): Docu
         ? html`<strong>${r.puesto.nombre}</strong><span>${r.puesto.direccion ?? ''} · ${r.puesto.municipio}${r.mesa ? ` · Mesa ${r.mesa}` : ''}</span>`
         : html`<span>${r.aviso ?? 'Sin datos del puesto.'}</span>`}
     </div>`;
+}
+
+/** Un cajón lateral derecho único por clase (chat, noticia), montado en el documento y reutilizado. */
+function cajon(clase: string, etiqueta: string, tag: string): { cajon: HTMLElement & { open?: boolean }; hijo: HTMLElement } {
+  let c = document.querySelector(`iswc-drawer.${clase}`) as (HTMLElement & { open?: boolean }) | null;
+  if (!c) {
+    c = document.createElement('iswc-drawer') as HTMLElement & { open?: boolean };
+    c.className = clase;
+    c.setAttribute('placement', 'end');
+    c.setAttribute('label', etiqueta);
+    c.setAttribute('light-dismiss', '');
+    c.append(document.createElement(tag));
+    document.body.append(c);
+  }
+  return { cajon: c, hijo: c.querySelector(tag) as HTMLElement };
+}
+
+/**
+ * Abre el chat con el VPS en un cajón (desde cualquier pantalla), con el contexto citado: una noticia y el fragmento
+ * que se quiere editar, o la pantalla desde donde se pidió. Requiere el permiso `chat_con_vps` (lo filtra quien llama).
+ */
+export function abrirChat(contexto: ContextoChat | null = null, borrador = ''): void {
+  const { cajon: c, hijo } = cajon('peon-cajon-chat', 'Chat con el VPS', 'peon-chat');
+  Object.assign(hijo, { props: { contexto, compacto: true } });
+  if (borrador) (hijo as HTMLElement & { borrador?(t: string): void }).borrador?.(borrador);
+  c.setAttribute('open', '');
+}
+
+/** Abre una noticia o página de la campaña en el cajón de lectura. */
+export function abrirNoticia(id: number): void {
+  const { cajon: c, hijo } = cajon('peon-cajon-noticia', 'Noticia', 'peon-noticia');
+  Object.assign(hijo, { props: { id, categoria: '', sinTitulo: false } });
+  c.setAttribute('open', '');
+}
+
+/**
+ * Sigue el `enlace` de una notificación: `noticias:7` (abre la noticia), `ficha:<ref>` (ficha de la persona),
+ * `chat`, o el id de una vista (`inicio`, `registro:consulta`…).
+ */
+export function irEnlace(enlace: string | null): void {
+  if (!enlace) return;
+  const [tipo, valor = ''] = enlace.split(':');
+  if (tipo === 'noticias' && Number(valor)) return abrirNoticia(Number(valor));
+  if (tipo === 'ficha' && valor) return abrirFicha(valor);
+  ir(tipo ?? 'inicio', valor);
 }

@@ -1,0 +1,155 @@
+@use "vista";
+@use "tokens" as t;
+@use "mixins" as m;
+
+.paginas { max-width: 50em; }
+.pagina + .pagina { padding-top: t.esp(4); border-top: 1px solid var(--iswc-border-soft); }
+
+/* Nueva noticia (solo con publicar_noticias). */
+.nueva {
+  display: grid;
+  gap: t.esp(3);
+  padding: t.esp(3) t.esp(4);
+  border: 1px solid var(--peon-morado-borde);
+  border-inline-start: 0.25em solid var(--peon-morado);
+  border-radius: t.radio(md);
+  background: var(--peon-morado-suave);
+
+  &:empty { display: none; }
+}
+
+.cabeza-nueva {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0 t.esp(2);
+  align-items: center;
+
+  iswc-icon { grid-row: span 2; font-size: 1.5em; color: var(--peon-morado-texto); }
+  small { opacity: 0.75; }
+}
+
+.campos-nueva {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16em), 1fr));
+  gap: t.esp(2) t.esp(3);
+}
+
+iswc-button.morado {
+  @include m.boton-morado;
+}
+
+/* Tarjetas de noticias. */
+.tarjetas-noticias {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17em), 1fr));
+  gap: t.esp(3);
+}
+
+.tarjeta-noticia {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: t.radio(lg);
+  background: var(--iswc-bg);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+
+  &:hover { transform: translateY(-0.12em); border-color: var(--peon-morado-borde); }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); }
+  &[data-estado="borrador"] { border-style: dashed; }
+
+  .imagen {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 7;
+    background: linear-gradient(135deg, var(--peon-morado-hondo), var(--peon-morado)) center / cover;
+    color: var(--peon-sobre-morado);
+    font-size: 2em;
+
+    &[style*="background-image"] { background-size: cover; }
+  }
+
+  .texto { display: grid; align-content: start; gap: t.esp(1); padding: t.esp(3); min-width: 0; }
+  .etiquetas { display: flex; flex-wrap: wrap; align-items: center; gap: t.esp(1); }
+  iswc-tag { font-size: 0.72em; }
+  strong { font-family: t.$titulos; line-height: 1.2; overflow-wrap: anywhere; }
+  small { opacity: 0.65; font-size: 0.8em; }
+  .adelanto { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 3; -webkit-box-orient: vertical; opacity: 0.8; }
+}
+
+/* Llamado a consultar el puesto (Cómo votar). */
+.llamado {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: t.esp(3);
+  align-items: center;
+  padding: t.esp(3) t.esp(4);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: t.radio(md);
+  background: var(--iswc-bg-soft);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  > iswc-icon:first-child { font-size: 1.6em; color: var(--iswc-brand); }
+  span { display: grid; min-width: 0; }
+  small { opacity: 0.7; }
+  &:hover { border-color: var(--iswc-brand); }
+}
+
+/* Publicidad descargable. */
+.nota-publicidad { display: flex; align-items: center; gap: t.esp(2); margin: 0; opacity: 0.75; font-size: 0.85em; }
+
+.piezas, .extras {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15em), 1fr));
+  gap: t.esp(4);
+  align-items: start;
+}
+
+.pieza {
+  display: grid;
+  gap: t.esp(2);
+  margin: 0;
+  min-width: 0;
+  padding: t.esp(3);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: t.radio(lg);
+  background: var(--iswc-bg);
+
+  .lienzo {
+    aspect-ratio: var(--proporcion, 1);
+    overflow: hidden;
+    border-radius: t.radio(md);
+    background: var(--peon-morado-suave);
+
+    canvas { display: block; width: 100%; height: 100%; }
+  }
+
+  &[data-formato="historia"] .lienzo { max-height: 22em; justify-self: center; }
+  img { width: 100%; max-width: 12em; height: auto; justify-self: center; }
+  iswc-qrcode { justify-self: center; }
+  figcaption { display: grid; small { opacity: 0.65; font-size: 0.8em; } }
+}
+
+.enlace-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: t.esp(1);
+  height: 2.2em;
+  padding: 0 t.esp(3);
+  border: 1px solid var(--iswc-border);
+  border-radius: t.radio(md);
+  color: var(--iswc-brand-text, var(--iswc-brand));
+  font-size: 0.9em;
+  text-decoration: none;
+
+  &:hover { background: var(--iswc-brand-soft); }
+}
