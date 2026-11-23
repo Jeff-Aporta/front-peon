@@ -25,6 +25,12 @@ body {
 }
 
 /* La app se revela cuando el arranque marca `data-app-ready` (o el watchdog de 6 s). */
+/* El shell ocupa exactamente la ventana; dentro, cada sección desplaza lo suyo. */
+peon-app {
+  display: block;
+  height: 100%;
+}
+
 html:not([data-app-ready]) body {
   visibility: hidden;
 }

@@ -7,7 +7,8 @@
   display: grid;
   grid-template-rows: auto auto minmax(10em, 1fr) auto;
   gap: t.esp(2);
-  height: calc(100dvh - 9.5em);
+  height: calc(100vh - 9.5em);
+  height: calc(100svh - 9.5em);
   padding-top: t.esp(3);
   max-width: 56em;
 }

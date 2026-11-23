@@ -5,7 +5,8 @@
    60/30/10: superficie blanca, verde en marca/activo, amarillo solo en el acento «Peón» y el foco. */
 :host {
   @include m.host-bloque;
-  height: 100dvh;
+  /* Alto = el del documento (html/body al 100 %): nunca 100dvh adentro, que en algunos navegadores excede la ventana. */
+  height: 100%;
   overflow: hidden;
   background: var(--iswc-bg);
   color: var(--iswc-text);
@@ -15,7 +16,7 @@
   display: grid;
   place-items: center;
   gap: t.esp(4);
-  min-height: 100dvh;
+  height: 100%;
   align-content: center;
 
   img { border-radius: 50%; }
@@ -24,7 +25,8 @@
 .marco {
   display: grid;
   grid-template-columns: var(--ancho, 16.5em) 0 minmax(0, 1fr);
-  height: 100dvh;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
   overflow: hidden;
 
   &[data-colapsado] { grid-template-columns: 4.25em minmax(0, 1fr); }
@@ -65,6 +67,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
   min-width: 0;
   overflow: hidden;
   background: var(--iswc-bg-soft);
@@ -190,7 +193,8 @@
 /* El scroll vive en las secciones, nunca en html/body. */
 .trabajo {
   min-width: 0;
-  height: 100dvh;
+  min-height: 0;
+  height: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: t.esp(5) t.esp(6) t.esp(10);
