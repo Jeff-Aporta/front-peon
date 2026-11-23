@@ -36,7 +36,7 @@ export type NoticiaFila = { id: number; categoria: CategoriaNoticia; titulo: str
 export type Noticia = Omit<NoticiaFila, 'adelanto'> & { cuerpo_md: string };
 
 /** Campana (plugin `notificaciones` de DER): bandeja de la sesión y contador. */
-export type Notificacion = { id: string; iusuario: string; titulo: string; texto: string | null; tipo: string; enlace: string | null; leida: string | null; fhcre: string };
+export type Notificacion = { id: string; iusuario: string; iactor: string | null; actor: string | null; titulo: string; texto: string | null; tipo: string; enlace: string | null; leida: string | null; fhcre: string };
 export type Bandeja = { items: Notificacion[]; noLeidas: number };
 
 /** Contexto con que se abre el chat desde otra pantalla (noticia y fragmento citado, o la vista). */

@@ -1,7 +1,8 @@
 @use "tokens" as t;
 @use "mixins" as m;
 
-/* Campana del panel: misma forma que una entrada de la navegación; la insignia es pequeña (0.72em, como los badges). */
+/* Notificaciones como en Facebook: contador rojo, avatar con insignia del tipo, fondo de «no leída» y hora relativa.
+   El rojo del contador es el de peligro del kit (familiar en todas las redes); nada más usa rojo. */
 :host { @include m.host-bloque; }
 
 .campana {
@@ -20,36 +21,58 @@
   text-align: start;
   cursor: pointer;
 
-  iswc-icon { flex: none; font-size: 1.25em; color: var(--iswc-brand); }
+  .icono { position: relative; display: inline-grid; flex: none; }
+  .icono > iswc-icon { font-size: 1.25em; color: var(--iswc-brand); }
   .rotulo { @include m.una-linea; flex: 1; }
   &:hover { background: var(--iswc-brand-soft); }
   &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); outline-offset: -0.15em; }
+  &[aria-expanded="true"] .icono > iswc-icon { color: var(--iswc-brand-text, var(--iswc-brand)); }
 
   &[data-compacta] { justify-content: center; padding: 0; }
+
+  /* En la barra inferior: ícono arriba y rótulo corto debajo, como las demás pestañas. */
+  &[data-barra] {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.15em;
+    height: 100%;
+    min-height: 0;
+    padding: t.esp(1) 0;
+    border-radius: t.radio(sm);
+    color: var(--iswc-text-muted, var(--iswc-text));
+
+    .icono > iswc-icon { color: inherit; font-size: 1.35em; }
+    .rotulo { flex: none; font-size: 0.7em; }
+    &[aria-expanded="true"] { color: var(--iswc-brand-text, var(--iswc-brand)); }
+  }
 }
 
 .insignia {
+  position: absolute;
+  top: -0.55em;
+  right: -0.75em;
   display: inline-grid;
   place-items: center;
-  min-width: 1.6em;
-  height: 1.6em;
-  padding: 0 0.4em;
+  min-width: 1.55em;
+  height: 1.55em;
+  padding: 0 0.35em;
+  border: 0.12em solid var(--iswc-bg);
   border-radius: 999px;
-  background: var(--peon-morado);
-  color: var(--peon-sobre-morado);
+  background: var(--iswc-color-danger, #e41e3f);
+  color: #fff;
   font-size: 0.72em;
   font-weight: 700;
   line-height: 1;
 
   &[hidden] { display: none; }
-  [data-compacta] > & { position: absolute; top: 0.15em; right: 0.15em; }
 }
 
 .lista {
   display: grid;
+  align-content: start;
   gap: t.esp(2);
-  width: min(24em, calc(100vw - 2em));
-  max-height: min(30em, calc(100svh - 4em));
+  width: min(25em, calc(100vw - 1.5em));
+  max-height: min(34em, calc(100svh - 6em));
   overflow-y: auto;
   padding: t.esp(3);
 }
@@ -57,36 +80,80 @@
 .cabeza {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: t.esp(2);
 
-  strong { font-family: t.$titulos; }
+  h2 { margin: 0; font-family: t.$titulos; font-size: 1.3em; }
 }
 
 .leer-todas {
-  display: inline-flex;
-  align-items: center;
-  gap: t.esp(1);
   padding: 0;
   border: 0;
   background: none;
   color: var(--iswc-brand-text, var(--iswc-brand));
   font: inherit;
-  font-size: 0.82em;
+  font-size: 0.85em;
   cursor: pointer;
+
+  &:hover { text-decoration: underline; }
 }
 
-.items { display: grid; gap: t.esp(1); margin: 0; padding: 0; list-style: none; }
+/* Pestañas «Todas / No leídas» (píldoras, como en FB). */
+.filtros {
+  display: flex;
+  gap: t.esp(1);
+
+  button {
+    height: 2.1em;
+    padding: 0 t.esp(3);
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover { background: var(--iswc-bg-soft); }
+    &[aria-selected="true"] { background: var(--iswc-brand-soft); color: var(--iswc-brand-text, var(--iswc-brand)); }
+  }
+}
+
+.activar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: t.esp(2);
+  align-items: center;
+  padding: t.esp(2) t.esp(3);
+  border-radius: t.radio(md);
+  background: var(--iswc-bg-soft);
+  font-size: 0.85em;
+
+  > iswc-icon { color: var(--iswc-brand); }
+  button {
+    padding: t.esp(1) t.esp(3);
+    border: 0;
+    border-radius: t.radio(sm);
+    background: var(--iswc-brand);
+    color: var(--iswc-on-brand, #fff);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+.items { display: grid; gap: 0.15em; margin: 0; padding: 0; list-style: none; }
 
 .item {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: t.esp(2);
-  align-items: start;
+  gap: t.esp(3);
+  align-items: center;
   width: 100%;
   padding: t.esp(2);
-  border: 1px solid transparent;
+  border: 0;
   border-radius: t.radio(md);
   background: none;
   color: inherit;
@@ -94,20 +161,71 @@
   text-align: start;
   cursor: pointer;
 
-  > iswc-icon { margin-top: 0.1em; color: var(--iswc-brand); }
-  &[data-tipo="noticia"] > iswc-icon, &[data-tipo="vps"] > iswc-icon { color: var(--peon-morado-texto); }
-  &:hover { background: var(--iswc-bg-soft); border-color: var(--iswc-border-soft); }
-  &[data-nueva] { background: var(--peon-morado-suave); }
+  &:hover { background: var(--iswc-bg-soft); }
+  &[data-nueva] { background: var(--iswc-brand-soft); }
+  &[data-nueva]:hover { background: color-mix(in srgb, var(--iswc-brand-soft), var(--iswc-text) 4%); }
   &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); }
+}
+
+.avatar {
+  position: relative;
+  display: inline-grid;
+  width: 3.1em;
+  height: 3.1em;
+
+  /* El avatar del kit mide 1em: su font-size es su lado (y las iniciales salen proporcionadas). */
+  iswc-avatar { font-size: 3.1em; }
+}
+
+.avatar-vps {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--peon-morado-suave);
+  color: var(--peon-morado-texto);
+  font-size: 1.4em;
+}
+
+.insignia-tipo {
+  position: absolute;
+  right: -0.15em;
+  bottom: -0.15em;
+  display: grid;
+  place-items: center;
+  width: 1.45em;
+  height: 1.45em;
+  border: 0.12em solid var(--iswc-bg);
+  border-radius: 50%;
+  background: var(--iswc-brand);
+  color: var(--iswc-on-brand, #fff);
+  font-size: 0.8em;
+
+  [data-tipo="noticia"] > &, [data-tipo="vps"] > & { background: var(--peon-morado); color: var(--peon-sobre-morado); }
 }
 
 .texto {
   display: grid;
+  gap: 0.1em;
   min-width: 0;
 
-  strong { font-size: 0.92em; overflow-wrap: anywhere; }
-  .detalle { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; opacity: 0.8; font-size: 0.82em; }
-  .cuando { opacity: 0.55; font-size: 0.75em; }
+  .frase { font-size: 0.92em; line-height: 1.3; overflow-wrap: anywhere; }
+  .detalle { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; opacity: 0.75; font-size: 0.82em; }
+  .cuando { opacity: 0.6; font-size: 0.78em; }
+  [data-nueva] & .cuando { opacity: 1; color: var(--iswc-brand-text, var(--iswc-brand)); font-weight: 600; }
 }
 
-.punto { width: 0.55em; height: 0.55em; margin-top: 0.4em; border-radius: 50%; background: var(--peon-morado); }
+.punto { width: 0.7em; height: 0.7em; border-radius: 50%; background: var(--iswc-brand); }
+
+/* Hoja inferior (móvil) y panel izquierdo (md+): la lista desplaza por dentro; el cajón ya trae el título. */
+.panel-avisos { --iswc-drawer-size: min(26em, 100vw); }
+.hoja { --iswc-drawer-size: min(80svh, 40em); --iswc-drawer-radius: 1em; }
+
+.hoja, .panel-avisos {
+
+  /* El cajón del kit ya pone «Notificaciones» en su cabecera: aquí no se repite. */
+  .cabeza h2 { display: none; }
+  .cabeza { justify-content: flex-end; }
+  .lista { width: auto; max-height: none; padding-bottom: calc(#{t.esp(4)} + env(safe-area-inset-bottom, 0px)); }
+}

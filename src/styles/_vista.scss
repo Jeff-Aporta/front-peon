@@ -137,6 +137,9 @@ iswc-tab-panel {
   max-width: 100%;
 }
 
+/* El panel oculto sigue oculto (la regla de arriba no debe ganarle al `hidden` del kit). */
+iswc-tab-panel[hidden] { display: none; }
+
 iswc-data-grid {
   display: block;
   max-width: 100%;

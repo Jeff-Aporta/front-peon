@@ -8,7 +8,8 @@
  *   contenido         la vista activa; dentro, sus herramientas en pestañas (`iswc-tab-group`)
  *
  * Grid CSS (no `iswc-split-panel`). El panel se redimensiona con el tirador (13–26 em, se recuerda) y se colapsa
- * tocando la marca (logo + rótulo). En sm/xs (< 48rem) no va en el layout: va en un cajón izquierdo (`iswc-drawer`).
+ * tocando la marca (logo + rótulo). En sm/xs (< 48rem) no va en el layout: barra inferior fija (4 destinos + «Menú»,
+ * como FB/IG) y el «Menú» abre un cajón izquierdo (`iswc-drawer`) con todas las vistas, el usuario y salir.
  * Sin scroll en html/body: desplazan sus secciones (la navegación y el contenido).
  * Sin router: `activo` es estado (y se recuerda en `localStorage['peon:vista']`). Sin sesión → `<peon-acceso>`;
  * con clave temporal → `<peon-acceso modo="cambiar">` antes de cualquier vista.
@@ -40,6 +41,9 @@ const guardar = (k: string, v: string): void => {
 const ANCHO_MIN = 13;
 const ANCHO_MAX = 26;
 const ANCHO_INICIAL = 16.5;
+/** Rótulos cortos de la barra inferior (caben debajo del ícono en 360 px). */
+const CORTOS: Record<string, string> = { inicio: 'Inicio', chat: 'Chat', listado: 'Registros', registro: 'Registrar', noticias: 'Noticias' };
+
 const limitar = (n: number): number => Math.min(ANCHO_MAX, Math.max(ANCHO_MIN, n));
 const anchoGuardado = (): number => {
   const n = Number(leer('peon:ancho'));
@@ -177,7 +181,7 @@ class PeonApp extends Componente<PeonAppProps> {
         <nav class="nav" aria-label="Vistas">
           ${this.#visibles().map((v) => html`<button class="item" type="button" title=${v.titulo} data-vista=${v.id} ?data-actual=${v.id === actual} aria-current=${v.id === actual ? 'page' : 'false'} onclick=${() => this.#abrir(v.id)}><iswc-icon icon=${v.icono}></iswc-icon><span class="texto">${v.titulo}</span></button>`)}
         </nav>
-        <div class="avisos-panel">${this.#campana(colapsado)}</div>
+        ${enCajon ? null : html`<div class="avisos-panel">${this.#campana(colapsado, false)}</div>`}
         <footer class="pie" part="pie">
           <iswc-person class="usuario" nombre=${u.nombre} detalle=${u.rolNombre} ?compacto=${colapsado}></iswc-person>
           <button class="icono salir" type="button" title="Cerrar sesión" data-salir onclick=${() => void salir()}><iswc-icon icon="mdi:logout"></iswc-icon></button>
@@ -185,11 +189,34 @@ class PeonApp extends Componente<PeonAppProps> {
       </aside>`;
   }
 
-  /** Campana con contador (plugin `notificaciones` de DER). Una por panel; en el cajón (sm/xs) va desplegada. */
-  #campana(compacta: boolean): HTMLElement {
+  /** Campana con contador (plugin `notificaciones` de DER): en el panel (md+) o en la barra inferior (sm/xs). */
+  #campana(compacta: boolean, barra: boolean): HTMLElement {
     const c = document.createElement('peon-campana');
-    Object.assign(c, { props: { compacta } });
+    Object.assign(c, { props: { compacta, barra } });
     return c;
+  }
+
+  /**
+   * Barra inferior móvil (como Facebook/Instagram): hasta 4 destinos fijos según permisos + «Menú» (hamburguesa), que
+   * abre el cajón con TODAS las vistas, el usuario y salir. Destinos: Inicio · Chat (o Registros) · Registrar (o
+   * Noticias) · Avisos (campana con contador). El activo va en el color de marca; «Menú» se marca si la vista actual
+   * no está en la barra.
+   */
+  #barra(actual: string): DocumentFragment {
+    const u = sesion.usuario!;
+    const ids = new Set(this.#visibles().map((x) => x.id));
+    const destinos = ['inicio', ids.has('chat') ? 'chat' : 'listado', ids.has('registro') ? 'registro' : 'noticias'].filter((id) => ids.has(id));
+    const enBarra = destinos.includes(actual);
+    void u;
+    return html`
+      <nav class="barra" aria-label="Navegación principal">
+        ${destinos.map((id) => {
+          const x = vista(id);
+          return html`<button type="button" class="pestana-barra" data-barra=${id} ?data-actual=${id === actual} aria-current=${id === actual ? 'page' : 'false'} onclick=${() => this.#abrir(id)}><iswc-icon icon=${x.icono}></iswc-icon><span>${CORTOS[id] ?? x.titulo}</span></button>`;
+        })}
+        <div class="pestana-barra campana-barra">${this.#campana(false, true)}</div>
+        <button type="button" class="pestana-barra" data-menu ?data-actual=${!enBarra} aria-expanded=${this.props.cajon ? 'true' : 'false'} onclick=${() => { this.props = { cajon: true }; }}><iswc-icon icon="mdi:menu"></iswc-icon><span>Menú</span></button>
+      </nav>`;
   }
 
   protected override pintar(root: ShadowRoot, props: PeonAppProps): void {
@@ -219,10 +246,10 @@ class PeonApp extends Componente<PeonAppProps> {
           <h1 class="titulo-vista"><iswc-icon icon=${v.icono}></iswc-icon>${v.titulo}</h1>
           ${contenido}
         </main>
+        ${chico ? this.#barra(actual) : null}
       </div>
       ${chico
         ? html`
-          <button class="fab" type="button" title="Abrir el menú" data-menu onclick=${() => { this.props = { cajon: true }; }}><iswc-icon icon="mdi:menu"></iswc-icon></button>
           <iswc-drawer class="cajon" placement="start" without-header light-dismiss ?open=${props.cajon} oniswc-after-hide=${() => { if (this.props.cajon) this.props = { cajon: false }; }}>${this.#lateral(props, actual, true)}</iswc-drawer>`
         : null}
     `);

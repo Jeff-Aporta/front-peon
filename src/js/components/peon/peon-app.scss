@@ -30,7 +30,13 @@
   overflow: hidden;
 
   &[data-colapsado] { grid-template-columns: 4.25em minmax(0, 1fr); }
-  &[data-angosto] { grid-template-columns: minmax(0, 1fr); }
+  /* sm/xs: contenido arriba y barra inferior abajo, en el mismo grid (la barra reserva su alto: nada queda tapado). */
+  &[data-angosto] {
+    /* Alto de la barra inferior: las vistas que miden contra la ventana (el chat) lo descuentan. */
+    --peon-barra: calc(5em + env(safe-area-inset-bottom, 0px)); /* barra (3.6em) + el aire inferior de .trabajo */
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
   &[data-arrastrando] { cursor: col-resize; user-select: none; }
 }
 
@@ -219,28 +225,57 @@
   iswc-icon { color: var(--iswc-brand); }
 }
 
-[data-angosto] .trabajo { padding: t.esp(4) t.esp(3) t.esp(10); }
-
-.fab {
-  position: fixed;
-  left: t.esp(4);
-  bottom: t.esp(4);
-  z-index: 10;
-  display: grid;
-  place-items: center;
-  width: 3.25em;
-  height: 3.25em;
-  border: 0;
-  border-radius: 50%;
-  background: var(--iswc-brand);
-  color: var(--iswc-on-brand, #fff);
-  box-shadow: var(--iswc-shadow-md, 0 0.25em 0.75em rgb(0 0 0 / 25%));
-  font-size: 1.1em;
-  cursor: pointer;
-
-  &:focus-visible { outline: 0.2em solid var(--iswc-color-contrast); outline-offset: 0.15em; }
-}
+[data-angosto] .trabajo { padding: t.esp(4) t.esp(3) t.esp(6); }
 
 .cajon {
   .lateral { position: static; height: 100%; border-right: 0; }
 }
+
+/* Barra inferior móvil (FB/IG): 4 destinos + «Menú». Respeta la zona segura del teléfono (muesca/gestos). */
+.barra {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: stretch;
+  min-height: 3.6em;
+  padding: 0.2em t.esp(1) calc(0.2em + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--iswc-border-soft);
+  background: var(--iswc-bg);
+  box-shadow: 0 -0.25em 1em rgb(0 0 0 / 6%);
+}
+
+.pestana-barra {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.15em;
+  min-width: 0;
+  padding: t.esp(1) 0;
+  border: 0;
+  border-radius: t.radio(sm);
+  background: none;
+  color: var(--iswc-text-muted, var(--iswc-text));
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  iswc-icon { font-size: 1.35em; }
+  span { @include m.una-linea; max-width: 100%; font-size: 0.7em; }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); outline-offset: -0.15em; }
+  &:active { background: var(--iswc-brand-soft); }
+
+  /* Activo en el color de marca, con la rayita arriba como en las apps sociales. */
+  &[data-actual] { color: var(--iswc-brand-text, var(--iswc-brand)); font-weight: 600; }
+  &[data-actual]::before {
+    content: "";
+    position: absolute;
+    top: -0.2em;
+    left: 25%;
+    right: 25%;
+    height: 0.18em;
+    border-radius: 0 0 0.2em 0.2em;
+    background: var(--iswc-brand);
+  }
+}
+
+.campana-barra { padding: 0; }

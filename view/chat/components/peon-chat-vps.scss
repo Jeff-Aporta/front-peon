@@ -3,8 +3,8 @@
 
 /* La vista solo da el alto: el chat transversal (<peon-chat>) desplaza su lista de mensajes por dentro. */
 .chat-vista {
-  height: calc(100vh - 9.5em);
-  height: calc(100svh - 9.5em);
+  height: calc(100vh - 9.5em - var(--peon-barra, 0px));
+  height: calc(100svh - 9.5em - var(--peon-barra, 0px));
   max-width: 56em;
   padding-top: t.esp(3);
 }

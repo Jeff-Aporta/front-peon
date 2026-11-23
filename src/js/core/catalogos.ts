@@ -108,3 +108,16 @@ export function fecha(iso: string | null | undefined, conHora = true): string {
 
 /** Iniciales para el avatar. */
 export const iniciales = (nombre: string): string => nombre.split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]!.toUpperCase()).join('');
+
+/** Hora relativa corta, como en las redes sociales: «ahora», «hace 5 min», «hace 3 h», «hace 2 d», o la fecha. */
+export function haceCuanto(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return '';
+  const s = Math.max(0, (Date.now() - t) / 1000);
+  if (s < 60) return 'ahora';
+  if (s < 3600) return `hace ${Math.floor(s / 60)} min`;
+  if (s < 86400) return `hace ${Math.floor(s / 3600)} h`;
+  if (s < 7 * 86400) return `hace ${Math.floor(s / 86400)} d`;
+  return new Date(t).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+}

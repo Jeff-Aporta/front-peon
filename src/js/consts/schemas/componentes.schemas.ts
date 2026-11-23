@@ -45,6 +45,8 @@ export type PeonChatProps = z.infer<typeof PeonChatPropsSchema>;
 /** `<peon-campana>`: campana con contador (en el panel). `compacta` = solo el ícono (panel colapsado). */
 export const PeonCampanaPropsSchema = z.object({
   compacta: z.boolean().default(false),
+  /** En la barra inferior móvil: ícono con rótulo corto debajo y la lista abre hacia arriba, a todo el ancho. */
+  barra: z.boolean().default(false),
 });
 export type PeonCampanaProps = z.infer<typeof PeonCampanaPropsSchema>;
 
