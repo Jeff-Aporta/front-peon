@@ -4,7 +4,8 @@
  *
  * La página oficial (Registraduría) bloquea a los robots, así que el servidor no la consulta. Quien registra:
  *   1. toca «Copiar cédula y abrir Registraduría» (copia la cédula y abre la página oficial en su navegador),
- *   2. consulta allí, selecciona el resultado y lo pega en el recuadro: `leerTexto()` llena los campos solo,
+ *   2. trae el resultado: «Pegar texto» (portapapeles), «Leer de una imagen» (captura → OCR en el navegador con
+ *      Tesseract.js) o «Dictar» (Web Speech API, es-CO). `leerTexto()` / `leerEnLinea()` llenan los campos solos,
  *   3. revisa o corrige (puesto, dirección, municipio, departamento, mesa) y guarda.
  * La API lo deja verificado (`fuente: registraduria-manual`) y en la caché por hash: cada cédula se resuelve una vez.
  */
@@ -69,8 +70,54 @@ export function leerTexto(texto: string): Partial<PuestoManual> {
       i++;
     }
   }
+  if (Object.keys(datos).length < 2) Object.assign(datos, { ...leerEnLinea(texto), ...datos });
   return datos;
 }
+
+const NUMEROS: Record<string, number> = { uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11, doce: 12, trece: 13, catorce: 14, quince: 15, dieciseis: 16, dieciséis: 16, diecisiete: 17, dieciocho: 18, diecinueve: 19, veinte: 20, veintiuno: 21, veintidos: 22, veintidós: 22, veintitres: 23, veintitrés: 23, veinticuatro: 24, veinticinco: 25, treinta: 30, cuarenta: 40, cincuenta: 50 };
+
+/** «doce» → «12», «treinta y dos» → «32»; si ya trae dígitos, los dígitos. */
+function numeroHablado(t: string): string {
+  const d = t.match(/\d+/);
+  if (d) return d[0];
+  let total = 0;
+  for (const w of t.toLowerCase().split(/\s+|\by\b/)) total += NUMEROS[w] ?? 0;
+  return total ? String(total) : t.trim();
+}
+
+/**
+ * Lector EN LÍNEA para texto dictado o leído de una imagen sin estructura: busca las palabras clave
+ * (departamento, municipio, puesto, dirección, mesa) y toma lo que sigue hasta la siguiente palabra clave.
+ */
+export function leerEnLinea(texto: string): Partial<PuestoManual> {
+  const plano = texto.replace(/\s+/g, ' ').trim();
+  const re = /\b(departamento|municipio|ciudad|direcci[oó]n(?: del puesto)?|(?:nombre del )?puesto(?: de votaci[oó]n)?|lugar de votaci[oó]n|mesa(?: n[uú]mero)?)\b\s*(?:es|:|-)?\s*/gi;
+  const marcas = [...plano.matchAll(re)];
+  const datos: Partial<PuestoManual> = {};
+  marcas.forEach((m, i) => {
+    const k = etiqueta(m[1]!.replace(/ n[uú]mero$/i, '').replace(/^lugar de votaci[oó]n$/i, 'puesto'));
+    const fin = marcas[i + 1]?.index ?? plano.length;
+    const valor = plano.slice(m.index! + m[0].length, fin).replace(/[,.;]+$/, '').trim();
+    if (!k || !valor || datos[k]) return;
+    datos[k] = k === 'mesa' ? numeroHablado(valor) : titulo(valor);
+  });
+  return datos;
+}
+
+/** OCR en el navegador (Tesseract.js por CDN, español): la imagen nunca sale del equipo. */
+async function textoDeImagen(archivo: File): Promise<string> {
+  const url = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.esm.min.js';
+  const mod = (await import(/* @vite-ignore */ url)) as { default?: { recognize: Reconocer }; recognize?: Reconocer };
+  const reconocer = mod.recognize ?? mod.default?.recognize;
+  if (!reconocer) throw new Error('No se pudo cargar el lector de imágenes');
+  const r = await reconocer(archivo, 'spa');
+  return r.data.text;
+}
+type Reconocer = (img: File, idioma: string) => Promise<{ data: { text: string } }>;
+
+type Reconocimiento = { lang: string; interimResults: boolean; continuous: boolean; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: ((e: { error: string }) => void) | null };
+const Dictado = (globalThis as { SpeechRecognition?: new () => Reconocimiento; webkitSpeechRecognition?: new () => Reconocimiento }).SpeechRecognition ??
+  (globalThis as { webkitSpeechRecognition?: new () => Reconocimiento }).webkitSpeechRecognition;
 
 /**
  * Bloque de consulta asistida. `cedula()` da la cédula a copiar. `leer()` devuelve el puesto escrito (o `null` si
@@ -90,13 +137,68 @@ export function bloquePuestoManual(cedula: () => string, inicial: Partial<Puesto
     if (c.length >= 5 && (await copiar(c))) avisar('Cédula copiada: pégala en la página de la Registraduría.', 'brand');
     window.open(URL_REGISTRADURIA, '_blank', 'noopener');
   };
-  const alPegar = (e: Event) => {
-    const t = String((e.currentTarget as HTMLElement & { value?: string }).value ?? '');
+  const usarTexto = (t: string, origen: string): void => {
+    const area = caja.querySelector('[data-campo="pm-texto"]') as (HTMLElement & { value?: string }) | null;
+    if (area && origen !== 'recuadro') area.value = t;
     const d = leerTexto(t);
     const n = Object.keys(d).length;
-    if (!n) return;
+    if (!n) {
+      if (origen !== 'recuadro') avisar(`No encontré datos del puesto en ${origen}. Escríbelos a mano.`, 'warning');
+      return;
+    }
     fijar(d);
-    avisar(`Leí ${n} dato(s) del resultado. Revísalos antes de guardar.`, 'success');
+    avisar(`Leí ${n} dato(s) ${origen === 'recuadro' ? 'del resultado' : `de ${origen}`}. Revísalos antes de guardar.`, 'success');
+  };
+  const alPegar = (e: Event) => usarTexto(String((e.currentTarget as HTMLElement & { value?: string }).value ?? ''), 'recuadro');
+  const pegar = async (): Promise<void> => {
+    try {
+      usarTexto(await navigator.clipboard.readText(), 'lo copiado');
+    } catch {
+      avisar('El navegador no dejó leer el portapapeles: pega con Ctrl+V en el recuadro.', 'warning');
+    }
+  };
+  const archivo = document.createElement('input');
+  archivo.type = 'file';
+  archivo.accept = 'image/*';
+  archivo.hidden = true;
+  archivo.addEventListener('change', async () => {
+    const f = archivo.files?.[0];
+    archivo.value = '';
+    if (!f) return;
+    const boton = caja.querySelector('[data-leer-imagen]');
+    boton?.setAttribute('loading', '');
+    try {
+      avisar('Leyendo la imagen… (la primera vez tarda unos segundos)', 'brand');
+      usarTexto(await textoDeImagen(f), 'la imagen');
+    } catch (err) {
+      avisar(err instanceof Error ? err.message : 'No se pudo leer la imagen', 'danger');
+    } finally {
+      boton?.removeAttribute('loading');
+    }
+  });
+  let oyendo: Reconocimiento | null = null;
+  const dictar = (): void => {
+    const boton = caja.querySelector('[data-dictar]');
+    if (oyendo) return oyendo.stop();
+    if (!Dictado) return avisar('Este navegador no permite dictado. Prueba con Chrome o Edge.', 'warning');
+    const rec = new Dictado();
+    rec.lang = 'es-CO';
+    rec.interimResults = false;
+    rec.continuous = true;
+    let dicho = '';
+    rec.onresult = (e) => {
+      dicho = Array.from(e.results).map((r) => r[0]?.transcript ?? '').join(' ');
+    };
+    rec.onerror = (e) => avisar(`Dictado: ${e.error === 'not-allowed' ? 'permite el micrófono' : e.error}`, 'warning');
+    rec.onend = () => {
+      oyendo = null;
+      boton?.removeAttribute('data-oyendo');
+      if (dicho) usarTexto(dicho, 'lo dictado');
+    };
+    oyendo = rec;
+    boton?.setAttribute('data-oyendo', '');
+    avisar('Te escucho: di «puesto…, dirección…, municipio…, mesa…» y toca de nuevo para terminar.', 'brand');
+    rec.start();
   };
   caja.append(html`
     <header class="manual-cabeza">
@@ -105,7 +207,15 @@ export function bloquePuestoManual(cedula: () => string, inicial: Partial<Puesto
     </header>
     <ol class="pasos">
       <li><iswc-button size="small" variant="outlined" data-abrir-registraduria onclick=${() => void abrir()}><iswc-icon slot="start" icon="mdi:open-in-new"></iswc-icon>Copiar cédula y abrir Registraduría</iswc-button></li>
-      <li><iswc-textarea data-campo="pm-texto" rows="2" placeholder="Pega aquí lo que muestra la Registraduría (selecciona el resultado y cópialo): los campos se llenan solos." oniswc-input=${alPegar}></iswc-textarea></li>
+      <li class="extraer">
+        <div class="acciones">
+          <iswc-button size="small" variant="outlined" data-pegar onclick=${() => void pegar()}><iswc-icon slot="start" icon="mdi:clipboard-text-outline"></iswc-icon>Pegar texto</iswc-button>
+          <iswc-button size="small" variant="outlined" data-leer-imagen onclick=${() => archivo.click()}><iswc-icon slot="start" icon="mdi:image-search-outline"></iswc-icon>Leer de una imagen</iswc-button>
+          <iswc-button size="small" variant="outlined" data-dictar ?disabled=${!Dictado} title=${Dictado ? 'Narra el puesto, la dirección, el municipio y la mesa' : 'Este navegador no permite dictado'} onclick=${dictar}><iswc-icon slot="start" icon="mdi:microphone-outline"></iswc-icon>Dictar</iswc-button>
+          ${archivo}
+        </div>
+        <iswc-textarea data-campo="pm-texto" rows="2" placeholder="…o pega aquí lo que muestra la Registraduría: los campos se llenan solos." oniswc-input=${alPegar}></iswc-textarea>
+      </li>
       <li class="campos-puesto">
         <iswc-input data-campo="pm-nombre" label="Puesto de votación"></iswc-input>
         <iswc-input data-campo="pm-direccion" label="Dirección del puesto"></iswc-input>

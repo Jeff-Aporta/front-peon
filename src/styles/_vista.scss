@@ -288,3 +288,6 @@ iswc-tab { white-space: nowrap; }
   &:hover { text-decoration: underline; }
   &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); }
 }
+
+.extraer { display: grid; gap: t.esp(2); }
+[data-dictar][data-oyendo]::part(base) { border-color: var(--iswc-color-contrast); background: var(--iswc-contrast-soft); }
