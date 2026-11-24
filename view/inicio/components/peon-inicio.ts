@@ -18,6 +18,7 @@ import { HERRAMIENTAS_CHAT, fecha } from '../../../src/js/core/catalogos.js';
 import { CAMPANA } from '../../../src/js/core/config.js';
 import { tarjetaNoticia } from '../../../src/js/core/noticias.js';
 import { paginaEditable } from '../../../src/js/core/pagina.js';
+import { texto } from '../../../src/js/core/textos.js';
 import { abrirChat, abrirFicha, estadoPuesto, ir, textoError } from '../../../src/js/core/ui.js';
 
 type Resumen = { misRegistros: number; misRegistrosHoy: number; misPendientes: number; visibles: number; pendientes: number; verificados: number; avisos: { tipo: string; texto: string; ir?: string }[] };
@@ -73,11 +74,11 @@ class PeonInicio extends Componente<VistaProps> {
     ];
     // Bloques alternos (imagen | texto) de la sección en degradado, al estilo de las páginas de producto.
     const visualIcono = (icono: string) => html`<span class="func-icono"><iswc-icon icon=${icono}></iswc-icon></span>`;
-    const funciones: { etiqueta: string; titulo: string; texto: string; boton: string; ir: () => void; visual: Node; si?: boolean }[] = [
-      { etiqueta: 'Elecciones', titulo: 'Tu voto, paso a paso', texto: 'Dónde votar, qué llevar y cómo marcar el tarjetón sin errores. Una guía sencilla para ti y tu familia.', boton: 'Ver la guía', ir: () => ir('votar'), visual: visualIcono('mdi:vote-outline') },
-      { etiqueta: 'Comparte', titulo: 'Lleva la campaña a tus redes', texto: 'Piezas listas para WhatsApp, historias y portadas, con la foto oficial. Descárgalas o compártelas en un toque.', boton: 'Descargar piezas', ir: () => ir('comparte'), visual: html`<img class="func-foto" src=${CAMPANA.fotoCompleta} alt="" loading="lazy" width="330" height="384">` },
-      { etiqueta: 'Al día', titulo: 'Entérate cada día', texto: 'Recorridos, propuestas y encuentros en los barrios. Las noticias de la campaña, apenas pasan.', boton: 'Leer noticias', ir: () => ir('noticias', 'noticias'), visual: visualIcono('mdi:newspaper-variant-multiple-outline') },
-      { etiqueta: 'Equipo', titulo: 'Suma gente a la marcha', texto: 'Registra a tus amigos y vecinos; la app verifica su puesto de votación por ti.', boton: 'Registrar a alguien', ir: () => ir('registro', 'persona'), visual: visualIcono('mdi:account-group-outline'), si: !!u?.escribe },
+    const funciones: { n: number; etiqueta: string; titulo: string; texto: string; boton: string; ir: () => void; visual: Node; si?: boolean }[] = [
+      { n: 1, etiqueta: 'Elecciones', titulo: 'Tu voto, paso a paso', texto: 'Dónde votar, qué llevar y cómo marcar el tarjetón sin errores. Una guía sencilla para ti y tu familia.', boton: 'Ver la guía', ir: () => ir('votar'), visual: visualIcono('mdi:vote-outline') },
+      { n: 2, etiqueta: 'Comparte', titulo: 'Lleva la campaña a tus redes', texto: 'Piezas listas para WhatsApp, historias y portadas, con la foto oficial. Descárgalas o compártelas en un toque.', boton: 'Descargar piezas', ir: () => ir('comparte'), visual: html`<img class="func-foto" src=${CAMPANA.fotoCompleta} alt="" loading="lazy" width="330" height="384">` },
+      { n: 3, etiqueta: 'Al día', titulo: 'Entérate cada día', texto: 'Recorridos, propuestas y encuentros en los barrios. Las noticias de la campaña, apenas pasan.', boton: 'Leer noticias', ir: () => ir('noticias', 'noticias'), visual: visualIcono('mdi:newspaper-variant-multiple-outline') },
+      { n: 4, etiqueta: 'Equipo', titulo: 'Suma gente a la marcha', texto: 'Registra a tus amigos y vecinos; la app verifica su puesto de votación por ti.', boton: 'Registrar a alguien', ir: () => ir('registro', 'persona'), visual: visualIcono('mdi:account-group-outline'), si: !!u?.escribe },
     ];
     // Carrusel sin barra de desplazamiento: flechas izquierda/derecha (y deslizar con el dedo en pantallas táctiles).
     const carril = document.createElement('nav');
@@ -117,7 +118,7 @@ class PeonInicio extends Componente<VistaProps> {
         </figure>
         <div class="quien">
           <small class="movimiento">${CAMPANA.movimiento}</small>
-          <p class="manuscrito">Pequeño en apariencia, grande en propósito</p>
+          <p class="manuscrito">${texto('inicio-textos', '1', 'Pequeño en apariencia, grande en propósito')}</p>
           <h2 class="nombre"><span class="pincel">${nombre}<span class="clave"> ${apellido}</span></span></h2>
           <p class="lema"><span>${CAMPANA.lema}</span></p>
           <small class="lugar"><iswc-icon icon="mdi:map-marker-outline"></iswc-icon>${CAMPANA.lugar}</small>
@@ -137,15 +138,15 @@ class PeonInicio extends Componente<VistaProps> {
         <button type="button" class="flecha der" title="Siguientes" aria-label="Ver las siguientes" onclick=${() => mover(1)}><iswc-icon icon="mdi:chevron-right"></iswc-icon></button>
       </div>
       <section class="ola" aria-label="Lo que puedes hacer">
-        <h2 class="ola-titulo">Una campaña que <em>avanza contigo</em></h2>
-        <p class="ola-sub">Todo lo que necesitas para votar, compartir y estar al día, en un solo lugar.</p>
+        <h2 class="ola-titulo">${texto('inicio-textos', '2', 'Una campaña que')} <em>${texto('inicio-textos', '2.1', 'avanza contigo')}</em></h2>
+        <p class="ola-sub">${texto('inicio-textos', '3', 'Todo lo que necesitas para votar, compartir y estar al día, en un solo lugar.')}</p>
         ${funciones.filter((f) => f.si !== false).map((f, i) => html`
           <article class="func" ?data-invertida=${i % 2 === 1}>
             <div class="func-visual">${f.visual}</div>
             <div class="func-texto">
               <span class="func-etiqueta">${f.etiqueta}</span>
-              <h3>${f.titulo}</h3>
-              <p>${f.texto}</p>
+              <h3>${texto('inicio-textos', `4.${f.n}`, f.titulo)}</h3>
+              <p>${texto('inicio-textos', `4.${f.n}.1`, f.texto)}</p>
               <button type="button" class="func-boton" onclick=${f.ir}>${f.boton}<iswc-icon icon="mdi:arrow-right"></iswc-icon></button>
             </div>
           </article>`)}
@@ -156,8 +157,8 @@ class PeonInicio extends Componente<VistaProps> {
         ${this.#noticias}
       </section>
       <section class="cierre" aria-label="El candidato">
-        <h2>Conoce la historia detrás de <span>${CAMPANA.candidato}</span></h2>
-        <p>Pequeño en apariencia, grande en propósito: su camino, sus propuestas y por qué marcha con Armenia.</p>
+        <h2>${texto('inicio-textos', '5', 'Conoce la historia detrás de')} <span>${CAMPANA.candidato}</span></h2>
+        <p>${texto('inicio-textos', '6', 'Pequeño en apariencia, grande en propósito: su camino, sus propuestas y por qué marcha con Armenia.')}</p>
         <div class="cierre-botones">
           <button type="button" class="func-boton claro" onclick=${() => ir('candidato')}>Biografía y trayectoria<iswc-icon icon="mdi:arrow-right"></iswc-icon></button>
         </div>

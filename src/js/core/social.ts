@@ -10,6 +10,7 @@
  */
 import { avisar, html } from '../base/componente.js';
 import { api, puede, sesion, usuarioActivo } from './api.js';
+import { ROLES } from './catalogos.js';
 import { tiempoNoticia } from './noticias.js';
 import { textoError } from './ui.js';
 
@@ -57,7 +58,7 @@ function abrirVotantes(espacio: string, ref: string, r: Resumen): void {
       const q = new URLSearchParams({ espacio, ref, page: String(page) });
       if (filtro) q.set('reaccion', filtro);
       const v = await api<{ hayMas: boolean; votantes: { reaccion: string; nombre: string; rol: string }[] }>('GET', `reacciones/votantes?${q}`);
-      lista.append(...v.votantes.map((x) => html`<li><span class="avatar" aria-hidden="true">${iniciales(x.nombre)}</span><span class="quien"><strong>${x.nombre}</strong><small>${x.rol}</small></span><span class="emoji" title=${nombreDe(x.reaccion)}>${x.reaccion}</span></li>`));
+      lista.append(...v.votantes.map((x) => html`<li><span class="avatar" aria-hidden="true">${iniciales(x.nombre)}</span><span class="quien"><strong>${x.nombre}</strong><small>${ROLES[x.rol] ?? x.rol}</small></span><span class="emoji" title=${nombreDe(x.reaccion)}>${x.reaccion}</span></li>`));
       mas.hidden = !v.hayMas;
       page++;
     } catch (e) {
@@ -221,7 +222,7 @@ export function bloqueSocial(espacio: string, ref: string): HTMLElement {
     fila.append(html`
       <span class="avatar" aria-hidden="true">${iniciales(c.autor.nombre)}</span>
       <div class="cuerpo-c">
-        <div class="burbuja-c"><strong>${c.autor.nombre}</strong>${c.autor.rol ? html`<small class="rol">${c.autor.rol}</small>` : null}<p>${c.texto}</p>${conteo}</div>
+        <div class="burbuja-c"><strong>${c.autor.nombre}</strong>${c.autor.rol ? html`<small class="rol">${ROLES[c.autor.rol] ?? c.autor.rol}</small>` : null}<p>${c.texto}</p>${conteo}</div>
         <div class="acciones-c">
           <time title=${c.creado ? new Date(c.creado).toLocaleString('es-CO') : ''}>${tiempoNoticia(c.creado)}${c.editado ? ' · editado' : ''}</time>
           ${botonReaccion('comentario', `${espacio}:${ref}:${c.indice}`, reac, (n) => { reac = n; pintarConteo(); }, true)}
