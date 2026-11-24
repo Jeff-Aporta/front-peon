@@ -75,7 +75,6 @@ export const HERRAMIENTAS_CHAT: { id: string; titulo: string; icono: string; tex
   { id: 'escuadra', titulo: 'Informe de escuadra', icono: 'mdi:account-group-outline', texto: 'Prepara un informe por escuadra: miembros, registros de la semana y quién necesita apoyo.', ayuda: 'Avance por equipo' },
   { id: 'ideas', titulo: 'Ideas para registrar', icono: 'mdi:lightbulb-on-outline', texto: 'Dame 5 ideas concretas para registrar más personas esta semana en Armenia, según los barrios con menos registros.', ayuda: 'Barrios y estrategias' },
   { id: 'archivo', titulo: 'Analizar archivo', icono: 'mdi:file-search-outline', texto: 'Analiza el archivo adjunto y dime qué personas o datos útiles contiene para la escuadra.', ayuda: 'Adjunta un Excel, PDF o foto' },
-  { id: 'servidor', titulo: 'Estado del servidor', icono: 'mdi:server-network', texto: '¿Cómo está el servidor? Dime si la API, la base de datos y la consulta del puesto funcionan bien.', ayuda: 'Salud de la app' },
 ];
 
 /** Secciones de las noticias y páginas de la campaña (`categoria` de la entidad `noticias`). */

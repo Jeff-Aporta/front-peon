@@ -230,7 +230,10 @@
   min-height: 0;
   height: 100%;
   overflow: clip; /* ni el usuario ni un scrollIntoView lo desplazan: solo desplaza la vista de adentro */
-  padding: t.esp(5) t.esp(6) 0;
+  /* Sin relleno lateral: la barra de desplazamiento de la vista va al borde (scroll a todo el ancho); el aire lateral
+     lo ponen el título y la vista POR DENTRO de su zona de scroll. */
+  padding: t.esp(5) 0 0;
+  --lado: #{t.esp(6)};
 }
 
 /* La vista activa: todo el alto que queda; si no arma zonas propias, desplaza ella misma (red de seguridad). */
@@ -240,6 +243,7 @@
   height: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
+  padding-inline: var(--lado);
 }
 
 .titulo-vista {
@@ -248,13 +252,14 @@
   align-items: center;
   gap: t.esp(3);
   margin: 0 0 t.esp(4);
+  padding-inline: var(--lado);
   font-family: t.$titulos;
   font-size: 1.35em;
 
   iswc-icon { color: var(--iswc-brand); }
 }
 
-[data-angosto] .trabajo { padding: t.esp(4) t.esp(3) 0; }
+[data-angosto] .trabajo { padding: t.esp(4) 0 0; --lado: #{t.esp(3)}; }
 
 .cajon {
   .lateral { position: static; height: 100%; border-right: 0; }
