@@ -143,6 +143,21 @@ iswc-tab-panel {
   max-width: 100%;
 }
 
+/* Scroll por sección: el grupo de pestañas llena el alto de la vista, la barra de pestañas queda fija y desplaza
+   solo el cuerpo (el panel activo). Dentro de un diálogo el alto es automático y no cambia nada. */
+.pestanas { height: 100%; }
+.pestanas::part(tab-group) { height: 100%; grid-template-rows: auto minmax(0, 1fr); }
+.pestanas::part(body) {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: t.esp(8);
+}
+
+/* Vistas de zonas propias (chat, lista | detalle): el panel mide el cuerpo y cada zona desplaza por dentro. */
+.pestanas.llena::part(body) { overflow: hidden; padding-bottom: t.esp(3); }
+.pestanas.llena iswc-tab-panel { height: 100%; }
+
 /* El panel oculto sigue oculto (la regla de arriba no debe ganarle al `hidden` del kit). */
 iswc-tab-panel[hidden] { display: none; }
 

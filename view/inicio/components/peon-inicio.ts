@@ -79,6 +79,8 @@ class PeonInicio extends Componente<VistaProps> {
     const apellido = resto.join(' ');
     caja.append(html`
       <section class="portada" aria-label="El candidato">
+        <div class="sombrilla" aria-hidden="true"></div>
+        <div class="medio-tono" aria-hidden="true"></div>
         <div class="brillo" aria-hidden="true"></div>
         <figure class="foto">
           <picture>

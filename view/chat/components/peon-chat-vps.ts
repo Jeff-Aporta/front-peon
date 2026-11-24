@@ -26,6 +26,8 @@ class PeonChatVps extends Componente<VistaProps> {
       Object.assign(chat, { props: { contexto: null, compacto: false } });
       return chat;
     }));
+    // Zonas propias: el chat mide el cuerpo de las pestañas y desplaza su lista por dentro.
+    root.querySelector('.pestanas')?.classList.add('llena');
   }
 }
 

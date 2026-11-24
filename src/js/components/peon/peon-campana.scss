@@ -72,7 +72,7 @@
   align-content: start;
   gap: t.esp(2);
   width: min(25em, calc(100vw - 1.5em));
-  max-height: min(34em, calc(100svh - 6em));
+  max-height: 34em; /* el cajón la recorta si no cabe: sin medir la ventana */
   overflow-y: auto;
   padding: t.esp(3);
 }

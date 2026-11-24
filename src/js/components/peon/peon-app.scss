@@ -213,14 +213,27 @@
 }
 
 /* El scroll vive en las secciones, nunca en html/body. El relleno va DENTRO del alto (border-box): con content-box
-   `height: 100%` + padding medía más que la ventana y el marco se desplazaba (panel cortado arriba, hueco abajo). */
+   `height: 100%` + padding medía más que la ventana y el marco se desplazaba (panel cortado arriba, hueco abajo).
+   Regla del autor: «cada sección debe tener su scroll». `.trabajo` NO desplaza: el título queda fijo y la vista llena
+   el resto (alto definido); dentro, las pestañas quedan fijas y desplaza su cuerpo (`_vista.scss`), o la vista arma
+   sus propias zonas (chat, split panels). */
 .trabajo {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  padding: t.esp(5) t.esp(6) 0;
+}
+
+/* La vista activa: todo el alto que queda; si no arma zonas propias, desplaza ella misma (red de seguridad). */
+.trabajo > :not(.titulo-vista) {
   min-width: 0;
   min-height: 0;
   height: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: t.esp(5) t.esp(6) t.esp(10);
 }
 
 .titulo-vista {
@@ -235,7 +248,7 @@
   iswc-icon { color: var(--iswc-brand); }
 }
 
-[data-angosto] .trabajo { padding: t.esp(4) t.esp(3) t.esp(6); }
+[data-angosto] .trabajo { padding: t.esp(4) t.esp(3) 0; }
 
 .cajon {
   .lateral { position: static; height: 100%; border-right: 0; }

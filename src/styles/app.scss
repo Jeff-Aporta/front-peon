@@ -45,7 +45,16 @@ iswc-drawer.peon-cajon-noticia {
 
 iswc-drawer.peon-cajon-noticia { --iswc-drawer-size: min(46em, 100vw); }
 
+/* El chat llena el cuerpo del cajón (alto definido por el propio cajón, nunca por la ventana). */
+iswc-drawer.peon-cajon-chat::part(body) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
 iswc-drawer.peon-cajon-chat peon-chat {
-  height: calc(100vh - 6em);
-  height: calc(100svh - 6em);
+  flex: 1;
+  height: auto;
+  min-height: 0;
 }
