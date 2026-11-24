@@ -58,3 +58,16 @@ iswc-drawer.peon-cajon-chat peon-chat {
   height: auto;
   min-height: 0;
 }
+
+
+/* Modal de votantes (core/social.ts): vive en el documento, fuera de las sombras. */
+iswc-dialog.peon-votantes { --width: min(26em, 94vw); }
+.peon-votantes .chips-votos { display: flex; flex-wrap: wrap; gap: 0.4em; margin-bottom: 0.6em; }
+.peon-votantes .chip-voto { padding: 0.35em 0.8em; border: 1px solid var(--peon-morado-borde); border-radius: 999px; background: var(--iswc-bg); color: inherit; font: inherit; cursor: pointer; }
+.peon-votantes .chip-voto[data-activa] { border-color: transparent; background: var(--peon-morado); color: #fff; }
+.peon-votantes .votantes { display: grid; gap: 0.5em; max-height: 50vh; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.peon-votantes .votantes li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.6em; }
+.peon-votantes .avatar { display: grid; place-items: center; width: 2.2em; height: 2.2em; border-radius: 50%; background: linear-gradient(140deg, var(--peon-morado), var(--peon-morado-hondo)); color: #fff; font-size: 0.8em; font-weight: 700; }
+.peon-votantes .quien { display: grid; } .peon-votantes .quien small { opacity: 0.65; }
+.peon-votantes .emoji { font-size: 1.3em; }
+.peon-votantes .ver-mas { margin-top: 0.5em; border: 0; background: none; color: var(--peon-morado); font: inherit; font-weight: 700; cursor: pointer; }

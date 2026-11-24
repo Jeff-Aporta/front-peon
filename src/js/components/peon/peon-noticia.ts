@@ -17,6 +17,7 @@ import type { PeonNoticiaProps } from '../../consts/schemas/componentes.schemas.
 import type { Noticia, NoticiaFila } from '../../consts/schemas/api.schemas.js';
 import { api, puede } from '../../core/api.js';
 import { tiempoNoticia } from '../../core/noticias.js';
+import { bloqueSocial } from '../../core/social.js';
 import { CATEGORIAS_NOTICIA, fecha } from '../../core/catalogos.js';
 import { pintarMd } from '../../core/md.js';
 import { abrirChat, textoError, valor } from '../../core/ui.js';
@@ -150,6 +151,7 @@ class PeonNoticia extends Componente<PeonNoticiaProps> {
           </header>`}
         ${n.imagen ? html`<figure class="portada"><img src=${n.imagen} alt="" loading="lazy">${n.fuente && n.tipo !== 'propia' ? html`<figcaption>Imagen: ${n.fuente}</figcaption>` : null}</figure>` : html`<div class="cinta" aria-hidden="true"></div>`}
         ${cuerpo}
+        ${n.estado === 'publicada' && !this.props.sinTitulo ? bloqueSocial('noticia', String(n.id)) : null}
         ${n.enlace_original ? html`<a class="original" href=${n.enlace_original} target="_blank" rel="noopener noreferrer"><iswc-icon icon="mdi:open-in-new"></iswc-icon>Leer la noticia original${n.fuente ? ` en ${n.fuente}` : ''}</a>` : null}
       </article>`;
   }
