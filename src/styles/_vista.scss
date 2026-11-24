@@ -3,6 +3,12 @@
 @use "tokens" as t;
 @use "mixins" as m;
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :host { @include m.host-bloque; }
 
 .caja {

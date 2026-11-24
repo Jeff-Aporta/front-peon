@@ -18,6 +18,7 @@ body {
   margin: 0;
   height: 100%;
   overflow: hidden;
+  overflow: clip;
   overscroll-behavior: none;
   background: var(--iswc-bg);
   color: var(--iswc-text);

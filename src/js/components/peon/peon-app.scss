@@ -3,11 +3,17 @@
 
 /* peon-app — grid: panel izquierdo (marca · nav plana · usuario) + contenido. Sin barra superior.
    60/30/10: superficie blanca, verde en marca/activo, amarillo solo en el acento «Peón» y el foco. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :host {
   @include m.host-bloque;
   /* Alto = el del documento (html/body al 100 %): nunca 100dvh adentro, que en algunos navegadores excede la ventana. */
   height: 100%;
-  overflow: hidden;
+  overflow: clip;
   background: var(--iswc-bg);
   color: var(--iswc-text);
 }
@@ -27,7 +33,7 @@
   grid-template-columns: var(--ancho, 16.5em) 0 minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   height: 100%;
-  overflow: hidden;
+  overflow: clip;
 
   &[data-colapsado] { grid-template-columns: 4.25em minmax(0, 1fr); }
   /* sm/xs: contenido arriba y barra inferior abajo, en el mismo grid (la barra reserva su alto: nada queda tapado). */
@@ -206,7 +212,8 @@
   .sesion::part(name) { display: none; }
 }
 
-/* El scroll vive en las secciones, nunca en html/body. */
+/* El scroll vive en las secciones, nunca en html/body. El relleno va DENTRO del alto (border-box): con content-box
+   `height: 100%` + padding medía más que la ventana y el marco se desplazaba (panel cortado arriba, hueco abajo). */
 .trabajo {
   min-width: 0;
   min-height: 0;
