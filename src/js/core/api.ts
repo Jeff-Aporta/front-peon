@@ -145,7 +145,45 @@ function avisarSesion(): void {
   window.dispatchEvent(new CustomEvent('peon:sesion'));
 }
 
+/**
+ * Respaldo de lo PÚBLICO sin servidor: cada respuesta buena de `GET noticias…` / `GET info` se guarda en el navegador;
+ * si ni el servidor local ni el en línea responden, se devuelve la última copia (las noticias y páginas siguen
+ * visibles). Lo protegido nunca se guarda.
+ */
+const RESPALDO = 'peon:respaldo:';
+const esPublica = (metodo: string, ruta: string): boolean => metodo === 'GET' && /^(noticias|info)(\?|\/|$)/.test(ruta) && !ruta.includes('todas=1');
+
+function guardarRespaldo(ruta: string, datos: unknown): void {
+  try {
+    localStorage.setItem(RESPALDO + ruta, JSON.stringify(datos));
+  } catch { /* lleno o bloqueado: sin respaldo */ }
+}
+
+function leerRespaldo<T>(ruta: string): T | undefined {
+  const t = leer(RESPALDO + ruta);
+  if (!t) return undefined;
+  try {
+    return JSON.parse(t) as T;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function api<T = unknown>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
+  try {
+    const datos = await apiDirecta<T>(metodo, ruta, cuerpo);
+    if (esPublica(metodo, ruta)) guardarRespaldo(ruta, datos);
+    return datos;
+  } catch (e) {
+    if (e instanceof ErrorApi && e.status === 0 && esPublica(metodo, ruta)) {
+      const copia = leerRespaldo<T>(ruta);
+      if (copia !== undefined) return copia;
+    }
+    throw e;
+  }
+}
+
+async function apiDirecta<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
   const headers: Record<string, string> = {};
   if (cuerpo !== undefined) headers['content-type'] = 'application/json';
   if (sesion.token) headers.authorization = `Bearer ${sesion.token}`;

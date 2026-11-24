@@ -99,3 +99,17 @@
     mask: var(--peon-peon) center / contain no-repeat;
   }
 }
+
+/// Efecto táctil común de lo que se toca (tarjetas, botones propios, filas): sin el destello gris del navegador, sin la
+/// espera del doble toque, una leve presión al tocar y, en pantallas sin puntero fino, sin «hover» pegado tras el toque.
+@mixin toque($escala: 0.97) {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+
+  &:active { transform: scale($escala); transition-duration: 0.06s; }
+  @media (hover: none) {
+    &:hover { transform: none; }
+    &:active { transform: scale($escala); }
+  }
+}

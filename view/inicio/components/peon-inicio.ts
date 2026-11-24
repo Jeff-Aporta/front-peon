@@ -78,6 +78,27 @@ class PeonInicio extends Componente<VistaProps> {
       { etiqueta: 'Al día', titulo: 'Entérate cada día', texto: 'Recorridos, propuestas y encuentros en los barrios. Las noticias de la campaña, apenas pasan.', boton: 'Leer noticias', ir: () => ir('noticias', 'noticias'), visual: visualIcono('mdi:newspaper-variant-multiple-outline') },
       { etiqueta: 'Equipo', titulo: 'Suma gente a la marcha', texto: 'Registra a tus amigos y vecinos; la app verifica su puesto de votación por ti.', boton: 'Registrar a alguien', ir: () => ir('registro', 'persona'), visual: visualIcono('mdi:account-group-outline'), si: !!u?.escribe },
     ];
+    // Carrusel sin barra de desplazamiento: flechas izquierda/derecha (y deslizar con el dedo en pantallas táctiles).
+    const carril = document.createElement('nav');
+    carril.className = 'carrusel';
+    carril.setAttribute('aria-label', 'Todo lo de la campaña');
+    carril.append(html`${accesos.filter((a) => a.si !== false).map((a, i) => html`<button type="button" class="tarjeta-c" data-acceso=${a.id} style=${`--i:${i}`} onclick=${a.ir}><strong>${a.titulo}</strong><small>${a.texto}</small><iswc-icon icon=${a.icono}></iswc-icon></button>`)}`);
+    const mover = (dir: number) => {
+      const tarjeta = carril.querySelector('.tarjeta-c') as HTMLElement | null;
+      const paso = tarjeta ? tarjeta.offsetWidth + parseFloat(getComputedStyle(carril).columnGap || '0') : carril.clientWidth * 0.8;
+      carril.scrollBy({ left: dir * paso * Math.max(1, Math.floor(carril.clientWidth / paso)), behavior: 'smooth' });
+    };
+    const flechas = () => {
+      const marco = carril.parentElement;
+      if (!marco) return;
+      // Margen de 12 px: el ajuste de las tarjetas (scroll-snap) deja unos píxeles sueltos en los extremos.
+      const max = carril.scrollWidth - carril.clientWidth - 12;
+      marco.querySelector('.izq')?.toggleAttribute('hidden', carril.scrollLeft <= 12);
+      marco.querySelector('.der')?.toggleAttribute('hidden', carril.scrollLeft >= max);
+    };
+    carril.addEventListener('scroll', flechas, { passive: true });
+    carril.addEventListener('scrollend', flechas);
+    new ResizeObserver(flechas).observe(carril);
     this.#noticias = document.createElement('div');
     this.#noticias.className = 'nt-rejilla';
     const [nombre, ...resto] = CAMPANA.candidato.split(' ');
@@ -109,9 +130,11 @@ class PeonInicio extends Componente<VistaProps> {
         <div class="pie-tablero" aria-hidden="true"></div>
         <div class="cinta" aria-hidden="true"></div>
       </section>
-      <nav class="carrusel" aria-label="Todo lo de la campaña">
-        ${accesos.filter((a) => a.si !== false).map((a, i) => html`<button type="button" class="tarjeta-c" data-acceso=${a.id} style=${`--i:${i}`} onclick=${a.ir}><strong>${a.titulo}</strong><small>${a.texto}</small><iswc-icon icon=${a.icono}></iswc-icon></button>`)}
-      </nav>
+      <div class="carrusel-marco">
+        ${carril}
+        <button type="button" class="flecha izq" title="Anteriores" aria-label="Ver las anteriores" onclick=${() => mover(-1)} hidden><iswc-icon icon="mdi:chevron-left"></iswc-icon></button>
+        <button type="button" class="flecha der" title="Siguientes" aria-label="Ver las siguientes" onclick=${() => mover(1)}><iswc-icon icon="mdi:chevron-right"></iswc-icon></button>
+      </div>
       <section class="ola" aria-label="Lo que puedes hacer">
         <h2 class="ola-titulo">Una campaña que <em>avanza contigo</em></h2>
         <p class="ola-sub">Todo lo que necesitas para votar, compartir y estar al día, en un solo lugar.</p>

@@ -2,6 +2,7 @@
 // Estilo lector de noticias: texto a la izquierda, imagen cuadrada a la derecha, separadores finos entre filas.
 // Responsiva: una columna en celular; dos o tres en pantallas anchas (`.nt-rejilla`).
 @use "tokens" as t;
+@use "mixins" as m;
 
 .nt-rejilla {
   display: grid;
@@ -10,6 +11,7 @@
 }
 
 .nt {
+  @include m.toque;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: t.esp(3);

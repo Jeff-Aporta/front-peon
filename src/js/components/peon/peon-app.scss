@@ -154,6 +154,7 @@
 }
 
 .item {
+  @include m.toque;
   display: flex;
   align-items: center;
   gap: t.esp(3);
@@ -274,6 +275,7 @@
 }
 
 .pestana-barra {
+  @include m.toque;
   position: relative;
   display: grid;
   justify-items: center;
@@ -317,6 +319,7 @@
 .trabajo { position: relative; }
 
 .fab {
+  @include m.toque;
   position: absolute;
   right: t.esp(5);
   bottom: t.esp(5);

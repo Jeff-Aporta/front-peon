@@ -147,6 +147,7 @@
 .llamados { display: flex; flex-wrap: wrap; justify-content: center; gap: t.esp(2); margin-top: t.esp(2); }
 
 .llamado {
+  @include m.toque;
   display: inline-flex;
   align-items: center;
   gap: t.esp(2);
@@ -473,10 +474,44 @@
   overscroll-behavior-x: contain;
   padding: t.esp(1) t.esp(1) t.esp(3);
   scroll-snap-type: x mandatory;
-  scrollbar-width: thin;
+  /* Sin barra visible: se navega con las flechas (o deslizando con el dedo). */
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.carrusel-marco { position: relative; min-width: 0; }
+
+.flecha {
+  position: absolute;
+  top: calc(50% - 0.5em);
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.6em;
+  height: 2.6em;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--peon-morado);
+  font-size: 1em;
+  cursor: pointer;
+  box-shadow: 0 0.3em 0.9em hsl(var(--peon-morado-h) 50% 40% / 18%), 0 0 0 1px hsl(var(--peon-morado-h) 50% 50% / 10%);
+  translate: 0 -50%;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+
+  iswc-icon { font-size: 1.5em; }
+  /* Dentro del borde del carrusel (nada las recorta) y sobre las tarjetas. */
+  &.izq { left: 0.5em; }
+  &.der { right: 0.5em; }
+  &[hidden] { display: none; }
+  &:hover { transform: scale(1.06); }
+  &:active { transform: scale(0.92); }
+  &:focus-visible { outline: 0.18em solid var(--iswc-color-contrast); outline-offset: 0.15em; }
 }
 
 .tarjeta-c {
+  @include m.toque;
   --a: var(--peon-morado);
   --b: hsl(calc(var(--peon-morado-h) + 25) 70% 52%);
   position: relative;
@@ -599,6 +634,7 @@
 .func p { margin: 0; max-width: 30em; line-height: 1.5; opacity: 0.92; }
 
 .func-boton {
+  @include m.toque;
   display: inline-flex;
   align-items: center;
   gap: t.esp(2);

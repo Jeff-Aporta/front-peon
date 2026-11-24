@@ -45,6 +45,7 @@
 }
 
 .fila {
+  @include m.toque(0.985);
   display: flex;
   align-items: center;
   justify-content: space-between;
