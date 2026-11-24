@@ -218,7 +218,7 @@
   border-radius: 50%;
   background: repeating-conic-gradient(from 0deg, hsl(var(--iswc-contrast-h) 100% 70% / 22%) 0 7.5deg, rgb(255 255 255 / 4%) 7.5deg 15deg);
   mask: radial-gradient(closest-side, #000 35%, transparent 85%);
-  animation: girar 40s linear infinite;
+  animation: girar 24s linear infinite;
   pointer-events: none;
 }
 
@@ -230,11 +230,26 @@
   mask: radial-gradient(70% 90% at 100% 100%, #000, transparent 70%);
   opacity: 0.8;
   pointer-events: none;
+  /* Baile: la trama se desliza en diagonal y late (crece y se apaga un poco), en bucle. */
+  animation: bailar 6s ease-in-out infinite;
+}
+
+@keyframes bailar {
+  0%   { background-position: 0 0; background-size: 0.7em 0.7em; opacity: 0.8; }
+  25%  { background-position: 0.35em -0.2em; background-size: 0.76em 0.76em; opacity: 0.55; }
+  50%  { background-position: 0.7em 0.35em; background-size: 0.7em 0.7em; opacity: 0.9; }
+  75%  { background-position: 0.2em 0.6em; background-size: 0.64em 0.64em; opacity: 0.6; }
+  100% { background-position: 0 0; background-size: 0.7em 0.7em; opacity: 0.8; }
 }
 
 @keyframes girar { to { rotate: 360deg; } }
 
-@media (prefers-reduced-motion: reduce) { .sombrilla { animation: none; } }
+/* Pedido del autor: el héroe se mueve siempre (capta la atención). Si el sistema pide menos movimiento, no se apaga:
+   va más lento y el baile de los puntos es más corto, para no marear. */
+@media (prefers-reduced-motion: reduce) {
+  .sombrilla { animation-duration: 60s; }
+  .medio-tono { animation-duration: 10s; }
+}
 
 /* Rayo de luz que avanza (afiche): una franja diagonal muy tenue detrás del texto. */
 .portada::before {
@@ -304,7 +319,7 @@
   background:
     radial-gradient(120% 140% at 100% 0%, var(--tono-suave), transparent 55%),
     var(--iswc-bg);
-  box-shadow: 0 0.15em 0.4em rgb(30 10 60 / 6%), 0 0.6em 1.4em rgb(30 10 60 / 5%);
+  box-shadow: 0 0.1em 0.25em hsl(var(--peon-morado-h) 40% 40% / 5%), 0 0.4em 1em hsl(var(--peon-morado-h) 50% 50% / 4%);
   color: inherit;
   font: inherit;
   text-align: start;
@@ -338,10 +353,10 @@
     width: 2.6em;
     height: 2.6em;
     border-radius: 0.8em;
-    background: linear-gradient(140deg, var(--tono), color-mix(in srgb, var(--tono) 70%, #000));
+    background: linear-gradient(140deg, color-mix(in srgb, var(--tono) 78%, #fff), var(--tono));
     color: #fff;
     font-size: 1.1em;
-    box-shadow: 0 0.4em 0.9em color-mix(in srgb, var(--tono) 35%, transparent);
+    box-shadow: 0 0.3em 0.7em color-mix(in srgb, var(--tono) 16%, transparent), inset 0 0.08em 0 rgb(255 255 255 / 30%);
   }
   strong { align-self: end; font-size: 0.98em; line-height: 1.2; overflow-wrap: anywhere; }
   small { align-self: start; opacity: 0.7; font-size: 0.8em; }
@@ -349,7 +364,7 @@
   &:hover {
     transform: translateY(-0.18em);
     border-color: color-mix(in srgb, var(--tono) 35%, transparent);
-    box-shadow: 0 0.4em 0.8em rgb(30 10 60 / 8%), 0 1.2em 2.4em rgb(30 10 60 / 10%);
+    box-shadow: 0 0.2em 0.5em hsl(var(--peon-morado-h) 40% 40% / 6%), 0 0.9em 1.8em hsl(var(--peon-morado-h) 50% 50% / 9%);
   }
   &:hover::after { transform: translateX(0.2em); opacity: 1; }
   &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); outline-offset: 0.15em; }
