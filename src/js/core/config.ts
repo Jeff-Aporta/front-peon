@@ -33,6 +33,9 @@ export const CAMPANA = {
   foto: './assets/candidato-retrato.webp',
   fotoChica: './assets/candidato-retrato-360.webp',
   fotoCompleta: './assets/candidato-completo.webp',
+  /** Busto (más estrecho, centrado en la cara): el héroe del Inicio, que lo estira a todo su alto. */
+  fotoBusto: './assets/candidato-busto.webp',
+  fotoBustoChica: './assets/candidato-busto-420.webp',
   redes: [
     { red: 'Facebook', icono: 'mdi:facebook', url: '' },
     { red: 'Instagram', icono: 'mdi:instagram', url: '' },

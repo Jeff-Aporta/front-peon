@@ -68,6 +68,23 @@ for i in range(alto):
     ra[fila, :, 3] = (ra[fila, :, 3] * (1 - i / alto)).astype(np.uint8)
 retrato = Image.fromarray(ra)
 
+# 5) Busto para el héroe: más estrecho (centrado en la cabeza) para que la foto llene el alto de la portada sin
+#    quedar chica; los bordes laterales se desvanecen (los brazos cruzados llegan al borde de la foto).
+bb = np.asarray(retrato)
+cab = np.where(bb[100:420, :, 3].max(axis=0) > 200)[0]
+centro = (int(cab.min()) + int(cab.max())) // 2
+ancho_b = int(retrato.height * 0.94)
+x0b = max(0, min(retrato.width - ancho_b, centro - ancho_b // 2))
+busto = np.asarray(retrato.crop((x0b, 0, x0b + ancho_b, retrato.height))).copy()
+lado = int(ancho_b * 0.12)
+for i in range(lado):
+    f = i / lado
+    busto[:, i, 3] = (busto[:, i, 3] * f).astype(np.uint8)
+    busto[:, -1 - i, 3] = (busto[:, -1 - i, 3] * f).astype(np.uint8)
+busto = Image.fromarray(busto)
+busto.resize((busto.width * 760 // busto.height, 760), Image.LANCZOS).save(f'{out}/candidato-busto.webp', 'WEBP', quality=86, method=6)
+busto.resize((busto.width * 420 // busto.height, 420), Image.LANCZOS).save(f'{out}/candidato-busto-420.webp', 'WEBP', quality=84, method=6)
+
 completa.save(f'{out}/candidato-completo.webp', 'WEBP', quality=86, method=6)
 retrato.resize((retrato.width * 720 // retrato.height, 720), Image.LANCZOS).save(f'{out}/candidato-retrato.webp', 'WEBP', quality=86, method=6)
 retrato.resize((retrato.width * 360 // retrato.height, 360), Image.LANCZOS).save(f'{out}/candidato-retrato-360.webp', 'WEBP', quality=84, method=6)

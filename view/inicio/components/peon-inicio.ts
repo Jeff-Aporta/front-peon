@@ -82,8 +82,8 @@ class PeonInicio extends Componente<VistaProps> {
         <div class="brillo" aria-hidden="true"></div>
         <figure class="foto">
           <picture>
-            <source media="(max-width: 30em)" srcset=${CAMPANA.fotoChica}>
-            <img src=${CAMPANA.foto} alt=${`${CAMPANA.candidato}, candidato de ${CAMPANA.movimiento}`} width="400" height="302" fetchpriority="high">
+            <source media="(max-width: 40em)" srcset=${CAMPANA.fotoBustoChica}>
+            <img src=${CAMPANA.fotoBusto} alt=${`${CAMPANA.candidato}, candidato de ${CAMPANA.movimiento}`} width="714" height="760" fetchpriority="high">
           </picture>
         </figure>
         <div class="quien">

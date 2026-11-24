@@ -67,24 +67,27 @@
   animation: flotar 9s ease-in-out infinite alternate;
 }
 
-/* Foto oficial (sin fondo) parada sobre el pie de la portada, como en el afiche; detrás, luz de amanecer. */
+/* Foto oficial (busto sin fondo). En una columna va arriba del texto y se funde con él por abajo; con ancho llena
+   todo el alto de la portada (la cabeza cerca del borde superior) y se para detrás del tablero del pie. */
 .foto {
   position: relative;
-  align-self: end;
-  width: min(19em, 86%);
-  /* En una columna la foto va arriba del texto (su borde inferior ya se desvanece); con ancho se para en el pie. */
-  margin: calc(-1 * #{t.esp(2)}) 0 calc(-1 * #{t.esp(3)});
+  z-index: 0;
+  width: min(17em, 74%);
+  margin: calc(-1 * #{t.esp(2)}) 0 calc(-1 * #{t.esp(5)});
   animation: aparecer 0.7s 0.1s ease-out both;
 
+  /* Luz de amanecer detrás de la cabeza (afiche: reina dorada con luz). */
   &::before {
     content: "";
     position: absolute;
-    inset: 8% 4% 0;
+    inset: 4% 6% 22%;
     z-index: -1;
-    border-radius: 50% 50% 0 0;
-    background: radial-gradient(60% 55% at 50% 38%, hsl(var(--iswc-contrast-h) 100% 70% / 45%), hsl(var(--iswc-contrast-h) 100% 60% / 0%) 70%);
+    border-radius: 50%;
+    background: radial-gradient(closest-side, hsl(var(--iswc-contrast-h) 100% 72% / 55%), hsl(var(--iswc-contrast-h) 100% 60% / 18%) 55%, transparent);
+    filter: blur(0.6em);
   }
-  img { display: block; width: 100%; height: auto; filter: drop-shadow(0 0.8em 1.2em rgb(0 0 0 / 30%)); }
+  picture { display: contents; }
+  img { display: block; width: 100%; height: auto; filter: drop-shadow(0 1em 1.4em rgb(20 0 40 / 35%)); }
 }
 
 .quien { display: grid; justify-items: center; gap: t.esp(2); min-width: 0; animation: aparecer 0.7s 0.2s ease-out both; }
@@ -200,19 +203,44 @@
   background: var(--peon-cinta);
 }
 
-/* Con ancho, foto a la izquierda y texto a la derecha. */
+/* Rayo de luz que avanza (afiche): una franja diagonal muy tenue detrás del texto. */
+.portada::before {
+  content: "";
+  position: absolute;
+  inset: -40% auto -40% 38%;
+  z-index: -1;
+  width: 38%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 9%) 45%, rgb(255 255 255 / 14%) 50%, rgb(255 255 255 / 9%) 55%, transparent);
+  transform: rotate(18deg);
+  pointer-events: none;
+}
+
+/* Con ancho: foto a la izquierda a TODO el alto (sin aire muerto encima), texto a la derecha centrado. */
 @container (min-width: 44em) {
   .portada {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
     justify-items: start;
     align-items: center;
-    gap: t.esp(8);
-    padding: t.esp(6) t.esp(8) t.esp(10) t.esp(4);
+    min-height: clamp(21em, 42cqi, 28em);
+    gap: t.esp(6);
+    padding: t.esp(8) t.esp(8) t.esp(10) 0;
     text-align: start;
   }
-  .portada { padding-bottom: t.esp(10); }
-  .foto { width: clamp(17em, 34cqi, 24em); margin-bottom: calc(-1 * #{t.esp(10)}); }
-  .quien { justify-items: start; padding-bottom: t.esp(4); }
+  .foto {
+    position: absolute;
+    top: t.esp(4);
+    bottom: 0;
+    left: 1%;
+    width: 42%;
+    margin: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+
+    &::before { inset: 0 8% 25%; }
+    img { width: auto; max-width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; }
+  }
+  .quien { grid-column: 2; justify-items: start; gap: t.esp(2); }
   .llamados { justify-content: flex-start; }
 }
 
