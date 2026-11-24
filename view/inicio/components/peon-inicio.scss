@@ -109,7 +109,8 @@
   font-family: t.$titulos;
   font-size: clamp(1.9em, 1.3em + 3.4cqi, 3.3em);
   font-weight: 800;
-  line-height: 1.05;
+  /* Aire entre renglones: la pincelada de un renglón no tapa las letras del otro (el texto siempre se ve completo). */
+  line-height: 1.3;
   text-transform: uppercase;
   text-wrap: balance;
   overflow-wrap: anywhere;

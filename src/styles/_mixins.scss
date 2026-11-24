@@ -51,7 +51,7 @@
 
 /// Pincelada morada inclinada detrás de un titular (texto blanco). Va en un `<span>` en línea: acompaña los saltos.
 @mixin pincel {
-  padding: 0.08em 0.35em;
+  padding: 0 0.35em;
   background: linear-gradient(100deg, transparent 0 0.25em, var(--peon-morado-hondo) 0.6em calc(100% - 0.6em), transparent calc(100% - 0.25em));
   color: #fff;
   -webkit-box-decoration-break: clone;

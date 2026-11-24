@@ -60,7 +60,7 @@ const anchoGuardado = (): number => {
 class PeonApp extends Componente<PeonAppProps> {
   static tag = 'peon-app';
   static css = css;
-  static deps = ['iswc-icon', 'iswc-session-menu', 'iswc-dropdown-item', 'iswc-dialog', 'iswc-drawer', 'iswc-spinner', 'peon-acceso', 'peon-campana'];
+  static deps = ['iswc-icon', 'iswc-button', 'iswc-session-menu', 'iswc-dropdown-item', 'iswc-dialog', 'iswc-drawer', 'iswc-spinner', 'peon-acceso', 'peon-campana'];
 
   #listo = false;
   #soltarCambios: (() => void) | null = null;
@@ -82,6 +82,9 @@ class PeonApp extends Componente<PeonAppProps> {
     window.addEventListener('peon:ir', this.#alIr);
     this.#medio.addEventListener('change', this.#alCambiarMedio);
     void cargarSesion().finally(() => {
+      // Al cargar, una vista protegida guardada sin sesión NO despliega «Entrar»: se muestra Inicio y ya.
+      // (El desplegable solo se abre cuando la persona pide una vista protegida.)
+      if (!usuarioActivo()) this.#pidioEntrar = this.props.activo;
       this.#listo = true;
       this.props = {};
     });
@@ -259,7 +262,10 @@ class PeonApp extends Componente<PeonAppProps> {
   #pie(enCajon: boolean): Node {
     const m = this.#menuSesion('top-start');
     if (!enCajon) this.#menu = m;
-    return m;
+    if (usuarioActivo()) return m;
+    // Sin sesión: «Entrar» a todo el ancho. El kit no deja ensanchar su disparador (va en sombras anidadas), así que
+    // el botón propio abre el desplegable del kit, que queda debajo como ancla.
+    return html`<div class="entrar-pie">${m}<iswc-button class="entrar-ancho" color="brand" onclick=${() => m.show()}><iswc-icon slot="start" icon="mdi:login"></iswc-icon>Entrar</iswc-button></div>`;
   }
 
   /** Campana con contador (plugin `notificaciones` de DER): en el panel (md+) o en la barra inferior (sm/xs). */
