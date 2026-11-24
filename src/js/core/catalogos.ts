@@ -43,7 +43,7 @@ export const VISTAS: Vista[] = [
   },
   {
     id: 'ajustes', titulo: 'Ajustes', icono: 'mdi:cog-outline', tag: 'peon-ajustes', visible: () => true,
-    pestanas: [{ id: 'perfil', titulo: 'Mi perfil', icono: 'mdi:account-circle-outline' }, { id: 'clave', titulo: 'Cambiar clave', icono: 'mdi:lock-reset' }, { id: 'sesion', titulo: 'Sesión y apariencia', icono: 'mdi:monitor-cellphone' }],
+    pestanas: [{ id: 'perfil', titulo: 'Mi perfil', icono: 'mdi:account-circle-outline' }, { id: 'clave', titulo: 'Cambiar clave', icono: 'mdi:lock-reset' }, { id: 'sesion', titulo: 'Sesión', icono: 'mdi:monitor-cellphone' }],
   },
   // Pestañas de las fichas (no salen en el menú)
   {

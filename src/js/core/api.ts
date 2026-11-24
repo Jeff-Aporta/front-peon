@@ -2,8 +2,13 @@
 /**
  * api.ts — cliente de `api-peon` y estado de la sesión (patrón de front-cocontable/core/api.ts).
  *
- *   Base del API: en desarrollo (localhost con puerto) `http://localhost:8098/api`; publicado, `./api/` relativo a la app
- *   (nginx sirve `/peon/` y `/peon/api/`). Se puede forzar con `localStorage['peon:api']`.
+ *   Base del API con cambio automático de contexto (local → en línea):
+ *     · en localhost: primero la API local `http://localhost:8098/api`; si no responde, la en línea.
+ *     · en github.io u otro host: primero la en línea; luego `./api` relativa (nginx del VPS sirve `/peon/api/`).
+ *   La en línea es `localStorage['peon:api']` si existe (pruebas) o `API_PUBLICA` (core/config.ts; vacía hasta que la
+ *   API tenga dominio con TLS: mientras tanto esa candidata simplemente no está).
+ *   Se prueba `GET {base}/info` con 1,5 s de límite y se usa la primera que responda; la elegida se recuerda en
+ *   `sessionStorage['peon:api-elegida']` y se vuelve a elegir si una llamada falla por red.
  *   Token en `localStorage['peon:token']` y cabecera `Authorization: Bearer <token>` en cada llamada.
  *   La app escucha el evento de ventana `peon:sesion` para repintarse cuando cambia la sesión.
  */
@@ -28,12 +33,97 @@ function escribir(k: string, v: string | null): void {
   } catch { /* almacenamiento bloqueado */ }
 }
 
+const CLAVE_ELEGIDA = 'peon:api-elegida';
+const LIMITE_PRUEBA_MS = 1500;
+export const SIN_SERVIDOR = 'No pudimos conectar con el servidor local ni con el en línea. Inténtalo de nuevo en un momento.';
+
+function leerSesion(k: string): string | null {
+  try {
+    return sessionStorage.getItem(k);
+  } catch {
+    return null;
+  }
+}
+
+function escribirSesion(k: string, v: string | null): void {
+  try {
+    if (v === null) sessionStorage.removeItem(k);
+    else sessionStorage.setItem(k, v);
+  } catch { /* almacenamiento bloqueado */ }
+}
+
+const sinBarra = (u: string): string => u.replace(/\/$/, '');
+const esLocalhost = (): boolean => ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+
+/** La API local de desarrollo. */
+export function apiLocal(): string {
+  return `http://${location.hostname === '[::1]' ? 'localhost' : location.hostname}:8098/api`;
+}
+
+/** La API en línea: la forzada para pruebas o la publicada. Vacía si aún no hay ninguna. */
+function apiEnLinea(): string {
+  return sinBarra(leer('peon:api') || API_PUBLICA || '');
+}
+
+/** Servidores a probar, en orden: en localhost primero el local; en cualquier otro host primero el en línea. */
+export function candidatas(): string[] {
+  const relativa = sinBarra(new URL('api', location.href.replace(/[^/]*$/, '')).href);
+  const lista = esLocalhost() ? [apiLocal(), apiEnLinea()] : [apiEnLinea(), relativa];
+  return [...new Set(lista.filter(Boolean))];
+}
+
+let elegida: string | null = leerSesion(CLAVE_ELEGIDA);
+if (elegida && !candidatas().includes(elegida)) elegida = null;
+let eligiendo: Promise<string | null> | null = null;
+
+async function responde(base: string): Promise<boolean> {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), LIMITE_PRUEBA_MS);
+  try {
+    const r = await fetch(`${base}/info`, { signal: ctl.signal, cache: 'no-store' });
+    return r.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/**
+ * Elige el servidor: la primera candidata que responda a `GET /info`. Con `otraVez` descarta la recordada y vuelve a
+ * probar todas (tras un fallo de red o desde «Reintentar conexión»). Las llamadas simultáneas comparten la prueba.
+ */
+export function elegirServidor(otraVez = false): Promise<string | null> {
+  if (elegida && !otraVez) return Promise.resolve(elegida);
+  eligiendo ??= (async () => {
+    const antes = elegida;
+    let nueva: string | null = null;
+    for (const c of candidatas()) {
+      if (await responde(c)) {
+        nueva = c;
+        break;
+      }
+    }
+    elegida = nueva;
+    escribirSesion(CLAVE_ELEGIDA, nueva);
+    if (nueva !== antes) window.dispatchEvent(new CustomEvent('peon:servidor', { detail: servidor() }));
+    return nueva;
+  })().finally(() => {
+    eligiendo = null;
+  });
+  return eligiendo;
+}
+
+/** Base del API en uso (síncrona): la elegida o, mientras no se haya probado, la primera candidata. */
 export function baseApi(): string {
-  const forzada = leer('peon:api');
-  if (forzada) return forzada.replace(/\/$/, '');
-  if (['localhost', '127.0.0.1'].includes(location.hostname) && location.port && location.port !== '8098') return `http://${location.hostname}:8098/api`;
-  if (location.hostname.endsWith('github.io')) return API_PUBLICA.replace(/\/$/, '');
-  return new URL('api', location.href.replace(/[^/]*$/, '')).href;
+  return elegida ?? candidatas()[0] ?? '';
+}
+
+/** A qué servidor está conectada la app, para mostrarlo en Ajustes. */
+export function servidor(): { base: string | null; tipo: 'local' | 'en-linea' | null; nombre: string } {
+  if (!elegida) return { base: null, tipo: null, nombre: 'Sin conexión' };
+  const local = esLocalhost() && elegida === apiLocal();
+  return { base: elegida, tipo: local ? 'local' : 'en-linea', nombre: local ? 'Local' : 'En línea' };
 }
 
 export class ErrorApi extends Error {
@@ -58,12 +148,21 @@ export async function api<T = unknown>(metodo: string, ruta: string, cuerpo?: un
   const headers: Record<string, string> = {};
   if (cuerpo !== undefined) headers['content-type'] = 'application/json';
   if (sesion.token) headers.authorization = `Bearer ${sesion.token}`;
-  if (!baseApi()) throw new ErrorApi(0, 'El servidor de la app todavía no está publicado. Vuelve a intentarlo más tarde.');
+  const pedir = (base: string) => fetch(`${base}/${ruta}`, { method: metodo, headers, body: cuerpo === undefined ? null : JSON.stringify(cuerpo) });
+  let base = await elegirServidor();
+  if (!base) throw new ErrorApi(0, SIN_SERVIDOR);
   let r: Response;
   try {
-    r = await fetch(`${baseApi()}/${ruta}`, { method: metodo, headers, body: cuerpo === undefined ? null : JSON.stringify(cuerpo) });
+    r = await pedir(base);
   } catch {
-    throw new ErrorApi(0, 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.');
+    // Falló por red: el servidor elegido se cayó. Se vuelve a elegir (local → en línea) y se reintenta una vez.
+    base = await elegirServidor(true);
+    if (!base) throw new ErrorApi(0, SIN_SERVIDOR);
+    try {
+      r = await pedir(base);
+    } catch {
+      throw new ErrorApi(0, SIN_SERVIDOR);
+    }
   }
   const texto = await r.text();
   let datos: unknown = null;
@@ -156,12 +255,14 @@ function engancharTipo(tipo: string): void {
 }
 
 function conectar(): void {
-  if (fuente && tokenFuente === sesion.token) return;
+  if (fuente && tokenFuente === sesion.token && fuente.url.startsWith(baseApi())) return;
   fuente?.close();
   fuente = null;
   tokenFuente = sesion.token;
   if (!sesion.token || !baseApi()) return;
   fuente = new EventSource(`${baseApi()}/eventos?token=${encodeURIComponent(sesion.token)}`);
+  // Si el servidor deja de responder, se vuelve a elegir (local → en línea); el evento `peon:servidor` reconecta.
+  fuente.addEventListener('error', () => void elegirServidor(true));
   for (const tipo of oyentes.keys()) engancharTipo(tipo);
 }
 
@@ -174,6 +275,9 @@ export function escuchar(tipo: string, fn: (datos: unknown) => void): () => void
   engancharTipo(tipo);
   return () => set.delete(fn);
 }
+
+// Si cambia el servidor (p. ej. se cayó el local y pasó al en línea), la conexión en vivo se rehace contra el nuevo.
+window.addEventListener('peon:servidor', () => conectar());
 
 window.addEventListener('peon:sesion', () => {
   if (sesion.token) return conectar();

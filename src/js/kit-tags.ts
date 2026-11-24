@@ -42,7 +42,6 @@ export const KIT_TAGS = [
   'iswc-tab-group',
   'iswc-tag',
   'iswc-textarea',
-  'iswc-theme-toggle',
   'iswc-toast',
 ] as const;
 

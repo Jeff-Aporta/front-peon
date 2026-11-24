@@ -7,7 +7,7 @@
 
 La app es una única página hecha de piezas con nombre propio (`<peon-…>`) sobre el kit
 iswc-base. Cada pieza muestra una parte concreta, recibe datos (atributos o `props`) y avisa hacia
-arriba con eventos `peon-…`; se ve igual en claro y oscuro; tiene una ficha (`.md`) y un
+arriba con eventos `peon-…`; se ve bien en modo claro (la app no tiene modo oscuro); tiene una ficha (`.md`) y un
 ejemplo vivo en la galería.
 
 ## 2. Requisitos WHAT

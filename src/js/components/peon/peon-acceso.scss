@@ -4,40 +4,59 @@
 /* peon-acceso — pantalla completa: superficie blanca (60), franja verde de marca (30), acento amarillo (10). */
 :host {
   @include m.host-bloque;
+  /* Ocupa el alto que le da <peon-app> (nunca 100dvh adentro). */
+  height: 100%;
 }
 
+/* La sección desplaza su propio contenido: si no cabe (móvil acostado, ventana baja) se recorre sin cortar nada.
+   La tarjeta se centra con `margin: auto` (y no con place-items) para que, al sobrar contenido, crezca hacia abajo
+   en lugar de salirse por arriba. El logo sobresale de la tarjeta, así que la sección deja ese aire arriba. */
 .pantalla {
-  position: relative;
+  box-sizing: border-box;
   display: grid;
-  place-items: center;
   height: 100%;
   overflow-y: auto;
-  padding: t.esp(8) t.esp(4) t.esp(4);
+  padding: calc(var(--logo) / 2 + #{t.esp(5)}) t.esp(4) t.esp(5);
   background:
     linear-gradient(180deg, var(--iswc-brand) 0 34%, transparent 34%),
     var(--iswc-bg);
+  --logo: 7em;
 }
 
 .tarjeta {
   display: grid;
   justify-items: center;
   gap: t.esp(2);
+  box-sizing: border-box;
   width: min(25em, 100%);
-  padding: t.esp(8) t.esp(6) t.esp(6);
+  margin: auto;
+  padding: calc(var(--logo) / 2 + #{t.esp(2)}) t.esp(6) t.esp(6);
   border: 1px solid var(--iswc-border-soft);
   border-radius: t.radio(lg);
   background: var(--iswc-bg);
   box-shadow: var(--iswc-shadow-md, 0 0.5em 1.5em rgb(0 0 0 / 15%));
+  position: relative;
 }
 
+/* El logo queda mitad fuera y mitad dentro de la tarjeta, siempre dentro del aire que deja la sección. */
 .logo {
-  width: 8.25em;
-  height: 8.25em;
-  margin-top: -5em;
+  position: absolute;
+  top: calc(var(--logo) / -2);
+  left: 50%;
+  translate: -50% 0;
+  box-sizing: border-box;
+  width: var(--logo);
+  height: var(--logo);
   object-fit: contain;
   border-radius: 50%;
   border: 0.25em solid var(--iswc-bg);
   background: var(--iswc-bg);
+  box-shadow: 0 0.25em 0.75em rgb(0 0 0 / 12%);
+}
+
+@media (max-width: 400px) {
+  .pantalla { --logo: 6em; padding-inline: t.esp(3); }
+  .tarjeta { padding-inline: t.esp(4); }
 }
 
 .titulo {
@@ -70,11 +89,6 @@
   text-align: center;
 }
 
-.tema {
-  position: absolute;
-  top: t.esp(3);
-  right: t.esp(3);
-}
 
 /* Campos compactos: el texto fluido ya escala; los controles un punto por debajo del cuerpo. */
 iswc-input,

@@ -15,7 +15,7 @@ import { textoError, valor } from '../../core/ui.js';
 class PeonAcceso extends Componente<PeonAccesoProps> {
   static tag = 'peon-acceso';
   static css = css;
-  static deps = ['iswc-input', 'iswc-masked-input', 'iswc-button', 'iswc-callout', 'iswc-card', 'iswc-theme-toggle'];
+  static deps = ['iswc-input', 'iswc-masked-input', 'iswc-button', 'iswc-callout', 'iswc-card'];
 
   #ocupado = false;
 
@@ -87,7 +87,6 @@ class PeonAcceso extends Componente<PeonAccesoProps> {
               : html`<p class="ayuda">¿No tienes perfil? Pídeselo a la administración de tu escuadra.</p>`}
           </form>
         </section>
-        <iswc-theme-toggle class="tema" scope="root"></iswc-theme-toggle>
       </div>
     `);
   }

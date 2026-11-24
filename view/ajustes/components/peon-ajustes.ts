@@ -1,13 +1,13 @@
 // @contexto PROMPT-CLAUDE.md §4 (vista 10 · Ajustes)
 /**
  * <peon-ajustes> — Mi perfil (lo que el sistema sabe de mí y mis permisos) · Cambiar clave (cuando quiera,
- * mínimo 4) · Sesión y apariencia (tema claro/oscuro y cerrar sesión).
+ * mínimo 4) · Sesión (a qué servidor está conectada la app y cerrar sesión).
  */
 import { define } from '@jeff-aporta/iswc-base/core/iswc-element.min.mjs';
 import css from 'iswc:css';
 import { Componente, avisar, html } from '../../../src/js/base/componente.js';
 import type { VistaProps } from '../../../src/js/consts/schemas/componentes.schemas.js';
-import { baseApi, cambiarClave, salir, sesion } from '../../../src/js/core/api.js';
+import { cambiarClave, elegirServidor, salir, servidor, sesion } from '../../../src/js/core/api.js';
 import { PERMISOS_TEXTO } from '../../../src/js/core/catalogos.js';
 import { grupoPestanas } from '../../../src/js/core/pestanas.js';
 import { textoError, valor } from '../../../src/js/core/ui.js';
@@ -15,7 +15,7 @@ import { textoError, valor } from '../../../src/js/core/ui.js';
 class PeonAjustes extends Componente<VistaProps> {
   static tag = 'peon-ajustes';
   static css = css;
-  static deps = ['iswc-tab-group', 'iswc-input', 'iswc-button', 'iswc-callout', 'iswc-person', 'iswc-tag', 'iswc-theme-toggle'];
+  static deps = ['iswc-tab-group', 'iswc-input', 'iswc-button', 'iswc-callout', 'iswc-person', 'iswc-tag'];
 
   protected override inicial(): VistaProps {
     return { pestana: '' };
@@ -66,14 +66,51 @@ class PeonAjustes extends Componente<VistaProps> {
     return caja;
   }
 
+  /** Servidor conectado: local (pruebas en este equipo) o en línea; «Reintentar conexión» vuelve a elegir. */
   #sesion(): Node {
-    return html`
-      <div class="caja angosta">
-        <div class="fila-tema"><span>Tema claro u oscuro</span><iswc-theme-toggle scope="root"></iswc-theme-toggle></div>
-        <dl class="datos"><dt>Servidor</dt><dd><code>${baseApi()}</code></dd></dl>
-        <div class="acciones"><iswc-button variant="outlined" color="danger" onclick=${() => void salir()}><iswc-icon slot="start" icon="mdi:logout"></iswc-icon>Cerrar sesión</iswc-button></div>
-      </div>`;
+    const caja = document.createElement('div');
+    caja.className = 'caja angosta';
+    const estado = document.createElement('dl');
+    estado.className = 'datos';
+    const pintarEstado = () => {
+      const s = servidor();
+      estado.replaceChildren(html`
+        <dt>Conectado a</dt>
+        <dd><iswc-tag color=${s.tipo === 'local' ? 'warning' : s.tipo ? 'success' : 'danger'}>${s.nombre}</iswc-tag></dd>
+        ${s.base ? html`<dt>Dirección</dt><dd><code>${s.base}</code></dd>` : ''}`);
+    };
+    const reintentar = async (boton: HTMLElement) => {
+      boton.setAttribute('loading', '');
+      try {
+        const base = await elegirServidor(true);
+        pintarEstado();
+        avisar(base ? `Conectado: ${servidor().nombre}.` : 'No pudimos conectar con el servidor local ni con el en línea.', base ? 'success' : 'danger');
+      } finally {
+        boton.removeAttribute('loading');
+      }
+    };
+    pintarEstado();
+    this.#pintarEstado = pintarEstado;
+    caja.append(html`
+      ${estado}
+      <div class="acciones">
+        <iswc-button variant="outlined" onclick=${(e: Event) => void reintentar(e.currentTarget as HTMLElement)}><iswc-icon slot="start" icon="mdi:refresh"></iswc-icon>Reintentar conexión</iswc-button>
+        <iswc-button variant="outlined" color="danger" onclick=${() => void salir()}><iswc-icon slot="start" icon="mdi:logout"></iswc-icon>Cerrar sesión</iswc-button>
+      </div>`);
+    return caja;
   }
+
+  override onConnected(): void {
+    super.onConnected();
+    window.addEventListener('peon:servidor', this.#alCambiarServidor);
+  }
+
+  override onDisconnected(): void {
+    window.removeEventListener('peon:servidor', this.#alCambiarServidor);
+  }
+
+  #alCambiarServidor = (): void => this.#pintarEstado?.();
+  #pintarEstado: (() => void) | null = null;
 
   protected override pintar(root: ShadowRoot, props: VistaProps): void {
     root.append(grupoPestanas('ajustes', props.pestana, (p) => (p === 'clave' ? this.#clave() : p === 'sesion' ? this.#sesion() : this.#perfil())));

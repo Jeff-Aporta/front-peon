@@ -11,7 +11,7 @@ con el kit iswc-base (`iswc-*`) y componentes propios `peon-*`.
 ## 2. Requisitos WHAT
 
 - [W-PLAT-01] La página raíz se titula «Peon en Marcha», idioma `es`, y sin JavaScript muestra «JavaScript requerido».
-- [W-PLAT-02] El tema inicial (claro/oscuro) y la paleta se aplican antes del primer pintado: nunca hay un destello del tema equivocado.
+- [W-PLAT-02] La app es siempre modo claro (sin modo oscuro ni selector de tema) y la paleta `peon` se aplica antes del primer pintado.
 - [W-PLAT-03] La página permanece oculta hasta que el arranque termina; si tarda más de 6 s se revela igual, con aviso en consola.
 - [W-PLAT-04] La app funciona servida desde la raíz del host o desde cualquier sub-ruta.
 - [W-PLAT-05] Un solo comando produce todos los artefactos servibles; otro lo hace en modo vigilancia.

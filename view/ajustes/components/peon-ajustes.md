@@ -1,11 +1,11 @@
 ---
 name: peon-ajustes
-description: Mi perfil, cambio de clave, sesión y apariencia.
+description: Mi perfil, cambio de clave, sesión (servidor conectado y salir).
 ---
 
 # `<peon-ajustes>`
 
-Mi perfil, cambio de clave, sesión y apariencia.
+Mi perfil, cambio de clave, sesión (servidor conectado y salir).
 
 - **Cuándo usarlo:** Lo monta `<peon-app>` al elegir «Ajustes».
 - **Cuándo no:** No la montes dentro de otra vista: se cambia con `ir(vista, pestana)`.
