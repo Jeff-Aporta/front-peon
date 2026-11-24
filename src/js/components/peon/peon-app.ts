@@ -26,7 +26,7 @@ import type { Vista } from '../../consts/schemas/api.schemas.js';
 import { cargarSesion, entrar, escuchar, puede, salir, sesion, usuarioActivo } from '../../core/api.js';
 import { tituloConContador } from '../../core/avisos-navegador.js';
 import { VISTAS, vista } from '../../core/catalogos.js';
-import { MEDIO_ANGOSTO, abrirChat, angosto, textoError } from '../../core/ui.js';
+import { MEDIO_ANGOSTO, abrirChat, angosto, textoError, visiblesDe } from '../../core/ui.js';
 
 /** API pública de `<iswc-session-menu>` que usa el shell. */
 type MenuSesion = HTMLElement & { loading: boolean; error: string; reset(): void; show(): void; hide(): void };
@@ -339,7 +339,7 @@ class PeonApp extends Componente<PeonAppProps> {
           <h1 class="titulo-vista"><iswc-icon icon=${v.icono}></iswc-icon>${v.titulo}</h1>
           ${contenido}
           ${puede('chat_con_vps') && actual !== 'chat'
-            ? html`<button type="button" class="fab" title="Chat con el VPS" aria-label="Abrir el chat con el VPS" onclick=${() => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: v.titulo })}><iswc-icon icon="mdi:robot-outline"></iswc-icon></button>`
+            ? html`<button type="button" class="fab" title="Asistente" aria-label="Abrir el asistente con el contexto de esta pantalla" onclick=${() => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: v.titulo, visibles: visiblesDe(contenido) })}><iswc-icon icon="mdi:robot-outline"></iswc-icon></button>`
             : null}
         </main>
         ${chico ? this.#barra(actual) : null}

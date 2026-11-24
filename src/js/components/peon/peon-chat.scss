@@ -15,7 +15,7 @@
 .chat {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto minmax(8em, 1fr) auto;
+  grid-template-rows: auto auto auto auto auto minmax(8em, 1fr) auto;
   gap: t.esp(2);
   height: 100%;
   min-height: 0;
@@ -339,3 +339,105 @@ audio { max-width: 100%; height: 2.25em; }
 
 .chat[data-compacto] .tarjetas { grid-template-columns: 1fr 1fr; }
 .chat[data-compacto] .tarjeta small { display: none; }
+
+
+/* Barra superior del chat: solo íconos (rótulo en title/aria-label), título del hilo al centro. */
+.cabeza-chat { display: flex; align-items: center; gap: t.esp(1); min-width: 0; }
+.titulo-hilo { @include m.una-linea; flex: 1; font-family: t.$titulos; font-size: 0.95em; }
+.ic {
+  @include m.toque(0.92);
+  display: grid;
+  place-items: center;
+  width: 2.2em;
+  height: 2.2em;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--iswc-text-muted, var(--iswc-text));
+  cursor: pointer;
+
+  iswc-icon { font-size: 1.25em; }
+  &:hover { background: var(--peon-morado-suave); color: var(--peon-morado); }
+}
+.buscar {
+  width: 100%;
+  padding: t.esp(2) t.esp(3);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: 999px;
+  background: var(--iswc-bg);
+  color: inherit;
+  font: inherit;
+  font-size: 0.9em;
+
+  &[hidden] { display: none; }
+}
+.hilos {
+  display: grid;
+  gap: t.esp(2);
+  max-height: 16em;
+  overflow-y: auto;
+  padding: t.esp(2);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: 0.8em;
+  background: var(--iswc-bg);
+
+  &[hidden] { display: none; }
+}
+.hilos-lista { display: grid; gap: 0.2em; }
+.hilo-item {
+  @include m.toque(0.98);
+  display: grid;
+  min-width: 0;
+  padding: t.esp(2);
+  border: 0;
+  border-radius: 0.6em;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  strong { @include m.una-linea; font-size: 0.9em; }
+  small { @include m.una-linea; opacity: 0.65; font-size: 0.78em; }
+  &:hover, &[data-actual] { background: var(--peon-morado-suave); }
+}
+.anteriores {
+  @include m.toque;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: t.esp(1);
+  padding: t.esp(1) t.esp(3);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: 999px;
+  background: var(--iswc-bg);
+  color: var(--peon-morado);
+  font: inherit;
+  font-size: 0.82em;
+  cursor: pointer;
+}
+
+/* Widgets de grilling (el asistente pregunta para entender). */
+.widget { display: grid; gap: t.esp(2); margin-top: t.esp(1); padding: t.esp(2) t.esp(3); border-radius: 0.7em; background: var(--peon-morado-suave); }
+.widget p { margin: 0; font-weight: 600; font-size: 0.9em; }
+.opciones-w { display: flex; flex-wrap: wrap; gap: t.esp(1); }
+.op-w, .enviar-w {
+  @include m.toque;
+  display: inline-flex;
+  align-items: center;
+  gap: t.esp(1);
+  min-height: 2.2em;
+  padding: 0 t.esp(3);
+  border: 1px solid var(--peon-morado-borde);
+  border-radius: 999px;
+  background: var(--iswc-bg);
+  color: var(--peon-morado);
+  font: inherit;
+  font-size: 0.85em;
+  cursor: pointer;
+
+  &[data-elegida] { background: var(--peon-morado); color: #fff; }
+}
+.enviar-w { background: var(--peon-morado); color: #fff; justify-self: start; }
+.fila-w { display: flex; gap: t.esp(1); }
+.texto-w { flex: 1; min-width: 0; padding: t.esp(1) t.esp(3); border: 1px solid var(--iswc-border-soft); border-radius: 999px; font: inherit; }

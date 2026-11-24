@@ -29,7 +29,17 @@ import { abrirNoticia, textoError } from '../../core/ui.js';
 import { Dictado, escucharVoz } from '../../core/voz.js';
 
 type Adjunto = { id: string; nombre: string; tipo: string; tamano: number };
-type Linea = { id: number; autor: 'usuario' | 'vps'; texto: string; creado: string; adjuntos?: Adjunto[] };
+/** Widget de grilling del asistente (DISENO-ASISTENTE §4). */
+type Widget = { tipo: 'opciones'; pregunta: string; opciones: string[]; multiple?: boolean } | { tipo: 'texto'; pregunta: string; placeholder?: string } | { tipo: 'feedback'; pregunta: string };
+type Linea = { id: number; autor: 'usuario' | 'vps'; texto: string; creado: string; hilo?: string; widget?: Widget | null; adjuntos?: Adjunto[] };
+type Hilo = { id: number; clave: string; titulo: string; ultimo: string | null; mensajes: number; actualizado: string };
+
+/** Hilo de un contexto: noticia → «noticia:<id>», pantalla → «pagina:<slug>», sin contexto → «general». */
+export function hiloDe(c: ContextoChat | null): { clave: string; titulo: string } {
+  if (c?.tipo === 'noticia' && c.id) return { clave: `noticia:${c.id}`, titulo: c.titulo ? `Noticia: ${c.titulo}` : `Noticia ${c.id}` };
+  if (c?.pantalla) return { clave: `pagina:${c.pantalla.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`, titulo: c.pantalla };
+  return { clave: 'general', titulo: 'Asistente' };
+}
 type Pendiente = { nombre: string; tipo: string; tamano: number; datos: string; voz?: boolean };
 type Grabadora = HTMLElement & { start(): Promise<void>; stop(): void };
 
@@ -89,16 +99,111 @@ class PeonChat extends Componente<PeonChatProps> {
   #reloj: ReturnType<typeof setInterval> | undefined;
   #borradorPendiente = '';
 
+  #hayMas = false;
+  #busqueda = '';
+
   protected override inicial(): PeonChatProps {
-    return { contexto: null, compacto: false };
+    return { contexto: null, compacto: false, hilo: '', hiloTitulo: null };
+  }
+
+  /** El hilo en uso: el fijado por prop o el que se deduce del contexto. */
+  get #hilo(): { clave: string; titulo: string } {
+    const h = hiloDe(this.props.contexto);
+    return this.props.hilo ? { clave: this.props.hilo, titulo: this.props.hiloTitulo ?? h.titulo } : h;
   }
 
   override onConnected(): void {
     super.onConnected();
     this.#soltar = escuchar('chat', (d) => {
-      this.#lineas.push(d as Linea);
+      const l = d as Linea;
+      if ((l.hilo ?? 'general') !== this.#hilo.clave || this.#busqueda) return;
+      this.#lineas.push(l);
       this.#pintarLineas();
     });
+  }
+
+  /** Carga una página del historial del hilo (la más reciente, o la anterior a `antes`), con búsqueda opcional. */
+  async #cargar(antes = 0): Promise<void> {
+    const q = new URLSearchParams({ hilo: this.#hilo.clave, limite: '30' });
+    if (antes) q.set('antes', String(antes));
+    if (this.#busqueda) q.set('q', this.#busqueda);
+    const r = await api<{ canal: boolean; hayMas: boolean; lineas: Linea[] }>('GET', `chat?${q}`);
+    this.#hayMas = r.hayMas;
+    const l = this.#lista;
+    const alto = l ? l.scrollHeight - l.scrollTop : 0;
+    this.#lineas = antes ? [...r.lineas, ...this.#lineas] : r.lineas;
+    this.#pintarLineas(antes ? alto : null);
+  }
+
+  /** Lista de chats del usuario (hilos por contexto), con buscador; elegir uno lo abre aquí. */
+  async #abrirHilos(panel: HTMLElement, q = ''): Promise<void> {
+    try {
+      const hilos = await api<Hilo[]>('GET', `chat/hilos${q ? `?q=${encodeURIComponent(q)}` : ''}`);
+      panel.querySelector('.hilos-lista')?.replaceChildren(...(hilos.length ? hilos.map((h) => html`<button type="button" class="hilo-item" ?data-actual=${h.clave === this.#hilo.clave} onclick=${() => { panel.hidden = true; this.props = { hilo: h.clave, hiloTitulo: h.titulo }; }}><strong>${h.titulo}</strong><small>${h.ultimo ?? ''}</small></button>`) : [html`<p class="nota">Sin chats todavía.</p>`]));
+    } catch (e) {
+      panel.querySelector('.hilos-lista')?.replaceChildren(html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`);
+    }
+  }
+
+  /** Widget de grilling: la respuesta vuelve como mensaje normal del hilo. */
+  /** Barra de arriba, solo íconos (title/aria-label): lista de chats (vista completa), título del hilo y buscador. */
+  #cabeza(props: PeonChatProps): DocumentFragment {
+    const panel = document.createElement('div');
+    panel.className = 'hilos';
+    panel.hidden = true;
+    const buscarHilos = document.createElement('input');
+    buscarHilos.className = 'buscar';
+    buscarHilos.placeholder = 'Buscar chats';
+    buscarHilos.addEventListener('input', () => void this.#abrirHilos(panel, buscarHilos.value.trim()));
+    panel.append(buscarHilos, html`<div class="hilos-lista"></div>`);
+    const buscar = document.createElement('input');
+    buscar.className = 'buscar';
+    buscar.type = 'search';
+    buscar.placeholder = 'Buscar en este chat';
+    buscar.hidden = true;
+    let espera = 0;
+    buscar.addEventListener('input', () => {
+      clearTimeout(espera);
+      espera = setTimeout(() => {
+        this.#busqueda = buscar.value.trim();
+        void this.#cargar();
+      }, 300);
+    });
+    return html`
+      <div class="cabeza-chat">
+        ${props.compacto ? null : html`<button type="button" class="ic" title="Mis chats" aria-label="Mis chats" onclick=${() => { panel.hidden = !panel.hidden; if (!panel.hidden) void this.#abrirHilos(panel); }}><iswc-icon icon="mdi:forum-outline"></iswc-icon></button>`}
+        <strong class="titulo-hilo" title=${this.#hilo.clave}>${this.#hilo.titulo}</strong>
+        <button type="button" class="ic" title="Buscar en este chat" aria-label="Buscar en este chat" onclick=${() => { buscar.hidden = !buscar.hidden; if (buscar.hidden && this.#busqueda) { buscar.value = ''; this.#busqueda = ''; void this.#cargar(); } else buscar.focus(); }}><iswc-icon icon="mdi:magnify"></iswc-icon></button>
+        ${props.hilo || this.props.contexto ? html`<button type="button" class="ic" title="Chat general" aria-label="Ir al chat general" onclick=${() => this.props = { hilo: 'general', hiloTitulo: 'Asistente', contexto: null }}><iswc-icon icon="mdi:home-outline"></iswc-icon></button>` : null}
+      </div>
+      ${buscar}
+      ${panel}`;
+  }
+
+  #widget(w: Widget): DocumentFragment {
+    const responder = (texto: string) => {
+      if (!texto.trim()) return;
+      if (this.#campo) this.#campo.value = texto;
+      void this.#enviar(this.shadow?.querySelector('[data-accion]') as HTMLElement);
+    };
+    if (w.tipo === 'opciones') {
+      const elegidas = new Set<string>();
+      return html`<div class="widget" data-tipo="opciones"><p>${w.pregunta}</p><div class="opciones-w">${w.opciones.map((o) => html`<button type="button" class="op-w" onclick=${(e: Event) => {
+        if (!w.multiple) return responder(o);
+        const b = e.currentTarget as HTMLElement;
+        if (elegidas.has(o)) elegidas.delete(o);
+        else elegidas.add(o);
+        b.toggleAttribute('data-elegida', elegidas.has(o));
+      }}>${o}</button>`)}</div>${w.multiple ? html`<button type="button" class="enviar-w" onclick=${() => responder([...elegidas].join(', '))}>Responder</button>` : null}</div>`;
+    }
+    if (w.tipo === 'texto') {
+      const campo = document.createElement('input');
+      campo.className = 'texto-w';
+      campo.placeholder = w.placeholder ?? 'Escribe tu respuesta';
+      campo.addEventListener('keydown', (e) => { if (e.key === 'Enter') responder(campo.value); });
+      return html`<div class="widget" data-tipo="texto"><p>${w.pregunta}</p><div class="fila-w">${campo}<button type="button" class="enviar-w" title="Responder" aria-label="Responder" onclick=${() => responder(campo.value)}><iswc-icon icon="mdi:send"></iswc-icon></button></div></div>`;
+    }
+    return html`<div class="widget" data-tipo="feedback"><p>${w.pregunta}</p><div class="opciones-w"><button type="button" class="op-w" title="Sí, quedó bien" aria-label="Sí, quedó bien" onclick=${() => responder('👍 Quedó bien')}><iswc-icon icon="mdi:thumb-up-outline"></iswc-icon></button><button type="button" class="op-w" title="No, hay que ajustar" aria-label="No, hay que ajustar" onclick=${() => { if (this.#campo) { this.#campo.value = '👎 Ajusta esto: '; this.#campo.focus(); } }}><iswc-icon icon="mdi:thumb-down-outline"></iswc-icon></button></div></div>`;
   }
 
   override onDisconnected(): void {
@@ -111,6 +216,12 @@ class PeonChat extends Componente<PeonChatProps> {
   /** Cambiar solo el contexto no rehace la conversación: se actualiza la ficha de la cita. */
   protected override parcial(props: PeonChatProps, previos: PeonChatProps): boolean {
     if (props.compacto !== previos.compacto || !this.#cita) return false;
+    // Otro hilo (otro contexto): se rehace la conversación con su historial.
+    const hiloPrevio = previos.hilo || hiloDe(previos.contexto).clave;
+    if ((props.hilo || hiloDe(props.contexto).clave) !== hiloPrevio) {
+      this.#busqueda = '';
+      return false;
+    }
     this.#pintarCita();
     return true;
   }
@@ -155,6 +266,7 @@ class PeonChat extends Componente<PeonChatProps> {
       <div class="burbuja" data-autor=${x.autor}>
         ${cuerpo}
         ${x.adjuntos?.length ? html`<div class="adjuntos">${x.adjuntos.map((a) => this.#adjunto(a))}</div>` : null}
+        ${x.autor === 'vps' && x.widget ? this.#widget(x.widget) : null}
         ${acciones}
         <small class="pie-burbuja">${x.autor === 'vps' ? 'VPS' : 'Tú'} · ${fecha(x.creado)}</small>
       </div>`;
@@ -179,9 +291,13 @@ class PeonChat extends Componente<PeonChatProps> {
     return html`<button type="button" class="adjunto" title="Descargar" onclick=${() => void descargar(a)}><iswc-icon icon="mdi:paperclip"></iswc-icon><span>${a.nombre}</span><small>${peso(a.tamano)}</small></button>`;
   }
 
-  #pintarLineas(): void {
+  #pintarLineas(conservarAlto: number | null = null): void {
     const l = this.#lista;
     if (!l) return;
+    if (!this.#lineas.length && this.#busqueda) {
+      l.replaceChildren(html`<p class="nota"><iswc-icon icon="mdi:magnify-close"></iswc-icon> Nada coincide con «${this.#busqueda}» en este chat.</p>`);
+      return;
+    }
     if (!this.#lineas.length) {
       l.replaceChildren(html`
         <div class="recomendaciones">
@@ -190,8 +306,9 @@ class PeonChat extends Componente<PeonChatProps> {
         </div>`);
       return;
     }
-    l.replaceChildren(...this.#lineas.map((x) => this.#burbuja(x)));
-    l.scrollTop = l.scrollHeight;
+    const anteriores = this.#hayMas ? html`<button type="button" class="anteriores" onclick=${(e: Event) => { (e.currentTarget as HTMLElement).setAttribute('disabled', ''); void this.#cargar(this.#lineas[0]?.id ?? 0); }}><iswc-icon icon="mdi:history"></iswc-icon>Cargar anteriores</button>` : null;
+    l.replaceChildren(...(anteriores ? [anteriores] : []), ...this.#lineas.map((x) => this.#burbuja(x)));
+    l.scrollTop = conservarAlto === null ? l.scrollHeight : l.scrollHeight - conservarAlto;
   }
 
   #pintarChips(): void {
@@ -307,7 +424,10 @@ class PeonChat extends Componente<PeonChatProps> {
     boton.setAttribute('loading', '');
     try {
       const c = this.props.contexto;
+      const h = this.#hilo;
       const r = await api<{ enviado: boolean; lineas: Linea[] }>('POST', 'chat', {
+        hilo: h.clave,
+        hiloTitulo: h.titulo,
         texto,
         adjuntos: this.#pendientes.map(({ voz: _v, ...p }) => p),
         ...(this.#transcripcion ? { transcripcion: this.#transcripcion } : {}),
@@ -440,6 +560,7 @@ class PeonChat extends Componente<PeonChatProps> {
     this.#grabadora = PUEDE_GRABAR ? grabadora : null;
     const aviso = document.createElement('div');
     caja.append(html`
+      ${this.#cabeza(props)}
       <div class="herramientas" role="toolbar" aria-label="Herramientas">${HERRAMIENTAS_CHAT.map((h) => html`<button type="button" class="herramienta" title=${h.ayuda} onclick=${() => this.borrador(h.texto)}><iswc-icon icon=${h.icono}></iswc-icon>${h.titulo}</button>`)}</div>
       ${aviso}
       ${this.#lista}
@@ -463,8 +584,9 @@ class PeonChat extends Componente<PeonChatProps> {
     root.append(caja);
     this.#pintarCita();
     this.#pintarChips();
-    void api<{ canal: boolean; lineas: Linea[] }>('GET', 'chat').then((r) => {
+    void api<{ canal: boolean; hayMas: boolean; lineas: Linea[] }>('GET', `chat?hilo=${encodeURIComponent(this.#hilo.clave)}&limite=30`).then((r) => {
       this.#lineas = r.lineas;
+      this.#hayMas = r.hayMas;
       if (!r.canal) aviso.replaceChildren(html`<p class="aviso" data-tipo="warning"><iswc-icon icon="mdi:lan-disconnect"></iswc-icon><span class="texto">El canal con el VPS aún no está configurado; los mensajes quedan guardados.</span></p>`);
       this.#pintarLineas();
       let borrador = this.#borradorPendiente;

@@ -49,5 +49,7 @@ export const ContextoChatSchema = z.object({
   titulo: z.string().nullable().default(null),
   fragmento: z.string().nullable().default(null),
   pantalla: z.string().nullable().default(null),
+  /** Elementos visibles en pantalla cuando se invocó el asistente (página, índice del fragmento y texto). */
+  visibles: z.array(z.object({ pagina: z.string(), indice: z.string(), texto: z.string() })).optional(),
 });
 export type ContextoChat = z.infer<typeof ContextoChatSchema>;

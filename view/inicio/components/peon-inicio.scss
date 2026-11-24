@@ -681,3 +681,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) { .tarjeta-c, .tarjeta-c iswc-icon, .func-boton, .func-boton iswc-icon { transition: none; } }
+
+/* Contenido editable por el asistente (página «inicio» en la DB, por fragmentos). */
+.pagina-editable { display: grid; gap: t.esp(3); &[hidden] { display: none; } }
+.fragmento[data-nivel="1"] > :first-child { margin-top: 0; }

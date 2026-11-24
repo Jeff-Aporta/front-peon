@@ -17,6 +17,7 @@ import { api, puede, sesion, usuarioActivo } from '../../../src/js/core/api.js';
 import { HERRAMIENTAS_CHAT, fecha } from '../../../src/js/core/catalogos.js';
 import { CAMPANA } from '../../../src/js/core/config.js';
 import { tarjetaNoticia } from '../../../src/js/core/noticias.js';
+import { paginaEditable } from '../../../src/js/core/pagina.js';
 import { abrirChat, abrirFicha, estadoPuesto, ir, textoError } from '../../../src/js/core/ui.js';
 
 type Resumen = { misRegistros: number; misRegistrosHoy: number; misPendientes: number; visibles: number; pendientes: number; verificados: number; avisos: { tipo: string; texto: string; ir?: string }[] };
@@ -149,6 +150,7 @@ class PeonInicio extends Componente<VistaProps> {
             </div>
           </article>`)}
       </section>
+      ${paginaEditable('inicio')}
       <section class="bloque-noticias">
         <header class="cabeza-bloque"><h3>Últimas noticias</h3><button type="button" class="ver-todo" onclick=${() => ir('noticias', 'noticias')}>Ver todas <iswc-icon icon="mdi:chevron-right"></iswc-icon></button></header>
         ${this.#noticias}

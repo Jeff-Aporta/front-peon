@@ -84,8 +84,9 @@ function cajon(clase: string, etiqueta: string, tag: string): { cajon: HTMLEleme
  * que se quiere editar, o la pantalla desde donde se pidió. Requiere el permiso `chat_con_vps` (lo filtra quien llama).
  */
 export function abrirChat(contexto: ContextoChat | null = null, borrador = ''): void {
-  const { cajon: c, hijo } = cajon('peon-cajon-chat', 'Chat con el VPS', 'peon-chat');
-  Object.assign(hijo, { props: { contexto, compacto: true } });
+  const { cajon: c, hijo } = cajon('peon-cajon-chat', 'Asistente', 'peon-chat');
+  // Hilo fijo del contexto (al editar una noticia se abre SOLO su chat, sin la lista de todos).
+  Object.assign(hijo, { props: { contexto, compacto: true, hilo: '', hiloTitulo: null } });
   if (borrador) (hijo as HTMLElement & { borrador?(t: string): void }).borrador?.(borrador);
   c.setAttribute('open', '');
 }
@@ -107,4 +108,30 @@ export function irEnlace(enlace: string | null): void {
   if (tipo === 'noticias' && Number(valor)) return abrirNoticia(Number(valor));
   if (tipo === 'ficha' && valor) return abrirFicha(valor);
   ir(tipo ?? 'inicio', valor);
+}
+
+/**
+ * Elementos visibles en pantalla para el asistente (DISENO-ASISTENTE §3): recorre las sombras desde `raiz` y toma los
+ * fragmentos con `[data-indice]` (página + índice + texto) que se ven; si no hay, los títulos y párrafos visibles.
+ */
+export function visiblesDe(raiz: Element, max = 30): { pagina: string; indice: string; texto: string }[] {
+  const alto = innerHeight;
+  const ve = (e: Element) => {
+    const r = e.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < alto;
+  };
+  const todos: Element[] = [];
+  const recorrer = (n: Element | ShadowRoot) => {
+    for (const e of Array.from(n.children)) {
+      todos.push(e);
+      if (e.shadowRoot) recorrer(e.shadowRoot);
+      recorrer(e);
+    }
+  };
+  if (raiz.shadowRoot) recorrer(raiz.shadowRoot);
+  recorrer(raiz);
+  const texto = (e: Element) => (e.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 600);
+  const frag = todos.filter((e) => e instanceof HTMLElement && e.dataset.indice && ve(e));
+  if (frag.length) return frag.slice(0, max).map((e) => ({ pagina: (e as HTMLElement).dataset.pagina ?? '', indice: (e as HTMLElement).dataset.indice ?? '', texto: texto(e) }));
+  return todos.filter((e) => /^(H1|H2|H3|P|LI|STRONG)$/.test(e.tagName) && ve(e) && texto(e).length > 2).slice(0, max).map((e) => ({ pagina: '', indice: '', texto: texto(e) }));
 }

@@ -41,6 +41,10 @@ export type VistaProps = z.infer<typeof VistaPropsSchema>;
 export const PeonChatPropsSchema = z.object({
   contexto: ContextoChatSchema.nullable().default(null),
   compacto: z.boolean().default(false),
+  /** Hilo fijo (contexto de la conversación): «general», «noticia:12», «pagina:inicio». Vacío = se deduce del contexto. */
+  hilo: z.string().default(''),
+  /** Título del hilo (se guarda en la lista de chats). */
+  hiloTitulo: z.string().nullable().default(null),
 });
 export type PeonChatProps = z.infer<typeof PeonChatPropsSchema>;
 
