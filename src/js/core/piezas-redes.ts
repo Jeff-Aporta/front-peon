@@ -220,9 +220,9 @@ export function creadorPiezas(filas: () => NoticiaFila[]): HTMLElement {
       <div class="opciones acciones-creador">
         <button type="button" class="func-boton" onclick=${async () => { try { bajar(await aPng(svg, formato), `peon-${plantilla}-${formato}.png`); } catch (e) { avisar(textoError(e), 'danger'); } }}>Descargar PNG</button>
         <button type="button" class="opcion" onclick=${() => bajar(new Blob([svg], { type: 'image/svg+xml' }), `peon-${plantilla}-${formato}.svg`)}>SVG editable</button>
-        ${puede('chat_con_vps') ? html`<button type="button" class="opcion" onclick=${() => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: 'Para redes' }, `Propón 3 titulares de máximo 9 palabras para redes sociales sobre esta noticia: «${elegida?.titulo ?? CAMPANA.lema}». Tono positivo, sin datos inventados.`)}>Titulares con IA</button>` : null}
+        ${puede('chat_con_vps') ? html`<button type="button" class="opcion" onclick=${() => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: 'Para redes' }, `Propón 3 titulares de máximo 9 palabras para redes sociales sobre esta noticia: «${elegida?.titulo ?? CAMPANA.lema}». Tono positivo, sin datos inventados.`)}>Proponer titulares</button>` : null}
       </div>
-      <p class="creador-nota">El diseño sale siempre igual (plantilla SVG con la identidad de la campaña); la IA solo propone el texto.</p>
+      <p class="creador-nota">El diseño sale siempre igual, con la identidad de la campaña; el asistente solo propone el texto.</p>
     </div>
     ${previa}`);
   void repintar();

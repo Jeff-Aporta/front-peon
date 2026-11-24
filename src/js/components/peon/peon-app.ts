@@ -339,7 +339,7 @@ class PeonApp extends Componente<PeonAppProps> {
           <h1 class="titulo-vista"><iswc-icon icon=${v.icono}></iswc-icon>${v.titulo}</h1>
           ${contenido}
           ${puede('chat_con_vps') && actual !== 'chat'
-            ? html`<button type="button" class="fab" title="Asistente" aria-label="Abrir el asistente con el contexto de esta pantalla" onclick=${() => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: v.titulo, visibles: visiblesDe(contenido) })}><iswc-icon icon="mdi:robot-outline"></iswc-icon></button>`
+            ? html`<button type="button" class="fab" title="Asistente" aria-label="Abrir el asistente con el contexto de esta pantalla" onclick=${() => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: v.titulo, visibles: visiblesDe(contenido) })}><iswc-icon icon="mdi:message-text-outline"></iswc-icon></button>`
             : null}
         </main>
         ${chico ? this.#barra(actual) : null}

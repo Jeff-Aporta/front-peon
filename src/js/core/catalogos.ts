@@ -20,7 +20,7 @@ export const VISTAS: Vista[] = [
     pestanas: [{ id: 'campana', titulo: 'Campaña', icono: 'mdi:flag-variant-outline', publica: true }, { id: 'resumen', titulo: 'Mi resumen', icono: 'mdi:view-dashboard-outline' }, { id: 'recientes', titulo: 'Mis registros', icono: 'mdi:history' }],
   },
   {
-    id: 'chat', titulo: 'Chat con el VPS', icono: 'mdi:robot-outline', tag: 'peon-chat-vps', visible: (u) => p(u, 'chat_con_vps'),
+    id: 'chat', titulo: 'Asistente', icono: 'mdi:message-text-outline', tag: 'peon-chat-vps', visible: (u) => p(u, 'chat_con_vps'),
     pestanas: [{ id: 'chat', titulo: 'Conversación', icono: 'mdi:chat-processing-outline' }],
   },
   {
@@ -104,7 +104,7 @@ export const PERMISOS_TEXTO: Record<string, string> = {
   agregar_admins: 'Agregar administradores',
   editar_admins: 'Editar perfiles y permisos',
   ver_miembros: 'Ver miembros',
-  chat_con_vps: 'Chat con el VPS',
+  chat_con_vps: 'Asistente',
   ver_todos_los_registros: 'Ver todos los datos de contacto',
   publicar_noticias: 'Publicar noticias',
 };

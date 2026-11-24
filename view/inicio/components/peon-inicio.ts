@@ -69,7 +69,7 @@ class PeonInicio extends Componente<VistaProps> {
       { id: 'biografia', icono: 'mdi:account-star-outline', titulo: 'Biografía', texto: `Quién es ${CAMPANA.candidato.split(' ')[0]}`, ir: () => ir('candidato') },
       { id: 'trayectoria', icono: 'mdi:timeline-text-outline', titulo: 'Trayectoria', texto: 'El camino recorrido', ir: () => ir('candidato') },
       { id: 'votar', icono: 'mdi:vote-outline', titulo: 'Cómo votar', texto: 'Paso a paso, sin errores', ir: () => ir('votar') },
-      { id: 'chat', icono: 'mdi:robot-outline', titulo: 'Pregúntale al VPS', texto: 'Informes, ideas y noticias', ir: () => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: 'Inicio' }), si: chat },
+      { id: 'chat', icono: 'mdi:message-text-outline', titulo: 'Pregúntale al asistente', texto: 'Informes, ideas y noticias', ir: () => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: 'Inicio' }), si: chat },
       { id: 'privacidad', icono: 'mdi:shield-lock-outline', titulo: 'Privacidad', texto: 'Cómo cuidamos tus datos', ir: () => ir('privacidad') },
     ];
     // Bloques alternos (imagen | texto) de la sección en degradado, al estilo de las páginas de producto.
@@ -217,8 +217,8 @@ class PeonInicio extends Componente<VistaProps> {
     return html`
       <section class="promo-chat">
         <div class="cabeza-promo">
-          <iswc-icon icon="mdi:robot-outline"></iswc-icon>
-          <div><strong>Pregúntale al VPS</strong><small>Resúmenes, informes, ideas y análisis de archivos en segundos.</small></div>
+          <iswc-icon icon="mdi:message-text-outline"></iswc-icon>
+          <div><strong>Pregúntale al asistente</strong><small>Resúmenes, informes, ideas y noticias.</small></div>
           <iswc-button size="small" color="brand" onclick=${() => ir('chat')}>Abrir chat</iswc-button>
         </div>
         <div class="herramientas">${HERRAMIENTAS_CHAT.slice(0, 4).map((h) => html`<button type="button" class="herramienta" title=${h.ayuda} onclick=${() => usar(h.texto)}><iswc-icon icon=${h.icono}></iswc-icon>${h.titulo}</button>`)}</div>
