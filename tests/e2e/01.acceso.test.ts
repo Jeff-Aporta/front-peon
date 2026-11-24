@@ -62,8 +62,8 @@ export default definirPruebas([
     categoria: 'what',
     async correr({ expect }) {
       const r = await s.page.evaluate(() => ({ html: getComputedStyle(document.documentElement).overflow, body: getComputedStyle(document.body).overflow, sobra: document.scrollingElement!.scrollHeight - innerHeight }), null);
-      expect('html sin scroll', r.html === 'hidden', r.html);
-      expect('body sin scroll', r.body === 'hidden', r.body);
+      expect('html sin scroll', ['hidden', 'clip'].includes(r.html), r.html);
+      expect('body sin scroll', ['hidden', 'clip'].includes(r.body), r.body);
       expect('el documento mide la ventana', r.sobra <= 0, String(r.sobra));
     },
   },
