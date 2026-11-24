@@ -36,6 +36,9 @@ $fuente-cuerpo: var(--iswc-font-sans, #{$pila-cuerpo});
 /// Fuente de títulos (la del cuerpo es su último recurso).
 $titulos: "Plus Jakarta Sans", $fuente-cuerpo;
 
+/// Rótulos manuscritos del afiche («Pequeño en apariencia, grande en propósito»). Solo frases cortas.
+$manuscrita: "Caveat", "Segoe Script", cursive;
+
 /// Espaciado de la escala (1 = 0.25rem … 10 = 3rem).
 @function esp($n) {
   @if not map.has-key($espacios, $n) {

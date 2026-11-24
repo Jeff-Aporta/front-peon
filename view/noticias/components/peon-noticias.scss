@@ -2,7 +2,35 @@
 @use "tokens" as t;
 @use "mixins" as m;
 
-.paginas { max-width: 50em; }
+.paginas { max-width: 50em; container-type: inline-size; }
+
+/* Biografía: foto oficial (sin fondo) sobre morado, con el titular y el lema del afiche. */
+.ficha-candidato {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: t.esp(3);
+  padding: t.esp(4) t.esp(4) 0;
+  overflow: hidden;
+  border-radius: t.radio(lg);
+  background:
+    radial-gradient(70% 80% at 30% 20%, hsl(var(--iswc-contrast-h) 100% 65% / 25%), transparent 60%),
+    linear-gradient(150deg, var(--peon-morado-hondo), var(--peon-morado));
+  color: #fff;
+  text-align: center;
+
+  img { display: block; width: min(15em, 80%); height: auto; align-self: end; order: 2; }
+  > div { display: grid; justify-items: center; gap: t.esp(2); min-width: 0; }
+  .manuscrito { margin: 0; font-family: t.$manuscrita; font-size: 1.3em; transform: rotate(-2deg); }
+  .titular { @include m.titular-pincel; margin: 0; background: var(--peon-morado-hondo); font-size: clamp(1.2em, 1em + 2cqi, 1.8em); overflow-wrap: anywhere; }
+  .lema-cinta { margin: 0; font-style: italic; font-weight: 700; span { @include m.cinta-amarilla; } }
+}
+
+@container (min-width: 36em) {
+  .ficha-candidato { grid-template-columns: auto minmax(0, 1fr); justify-items: start; text-align: start; padding: t.esp(4) t.esp(6) 0; }
+  .ficha-candidato img { order: 0; width: 13em; }
+  .ficha-candidato > div { justify-items: start; padding-bottom: t.esp(4); }
+}
 .pagina + .pagina { padding-top: t.esp(4); border-top: 1px solid var(--iswc-border-soft); }
 
 /* Nueva noticia (solo con publicar_noticias). */

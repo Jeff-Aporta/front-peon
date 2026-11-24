@@ -1,6 +1,7 @@
 // _md.scss — contenido Markdown pintado con md-lite del kit (noticias, páginas, respuestas del VPS).
 // Uso: `@use "md";` y la clase `.md` en el contenedor. Nada rebasa: imágenes, tablas y código se ajustan al ancho.
 @use "tokens" as t;
+@use "mixins" as m;
 
 .md {
   min-width: 0;
@@ -21,6 +22,8 @@
   h3 { font-size: 1.05em; }
   p, ul, ol, table, blockquote, iswc-callout, iswc-scroller { margin: 0 0 0.75em; }
   ul, ol { padding-inline-start: 1.3em; }
+  /* Viñetas con peón morado (guía del afiche). */
+  ul { @include m.vinetas-peon; }
   li + li { margin-top: 0.25em; }
   a { color: var(--peon-morado-texto, var(--iswc-brand)); }
   img, video, iswc-theme-img { max-width: 100%; height: auto; border-radius: t.radio(md); }

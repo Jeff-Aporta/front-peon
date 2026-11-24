@@ -1,35 +1,52 @@
-/* Paleta de la marca (IDENTIDAD-VISUAL.md §2–4). Bandera de Armenia (verde, blanco, amarillo del logo) + MORADO, el
-   color del candidato. Regla 60/30/10:
+/* Paleta de la marca (IDENTIDAD-VISUAL.md §2–4). Decisión del autor (24-nov-2026): el MORADO del candidato es el color
+   PRINCIPAL; el verde y el amarillo de la bandera de Armenia quedan de secundarios. Regla 60/30/10:
      60 % superficie (blanco y derivados del kit)
-     30 % verde de marca (marca, activos, botón principal)          → semilla brand del kit
-     10 % acentos: morado de campaña (~7 %: portada del candidato, noticias, llamados de campaña)
-                   + amarillo (~3 %: foco, «pendiente», lo que exige atención) → semilla contrast del kit
-   El kit solo tiene dos semillas (brand y contrast): el morado vive en tokens propios `--peon-morado*`, que se
-   derivan AQUÍ de una semilla HSL (nunca hex sueltos en los componentes). */
+     30 % morado de marca (marca, activos, botón principal, titulares)  → semilla brand del kit
+     10 % acentos: verde de la bandera (~6 %: cinta, estados «verificado», detalles del logo)
+                   + amarillo (~4 %: foco, lemas en cinta, palabras clave, «pendiente») → semilla contrast del kit
+   Los tokens `--peon-morado*` se derivan de la semilla brand (son el mismo color); el verde vive en `--peon-verde*`
+   con su propia semilla HSL (nunca hex sueltos en los componentes). Solo modo claro. */
 /* `html[...]` sube la especificidad: palettes.min.css (que carga después) declara semillas por defecto en :root,[data-palette]. */
 html[data-palette="peon"] {
-  --iswc-brand-h: 140;
-  --iswc-brand-s: 78%;
-  --iswc-brand-b: 27%;
+  /* Morado del afiche y la camisa: #5B1FA6 ≈ h 267 · s 68 % · l 38 %. Blanco encima: contraste ≈ 9:1. */
+  --iswc-brand-h: 267;
+  --iswc-brand-s: 68%;
+  --iswc-brand-b: 38%;
   --iswc-contrast-h: 45;
   --iswc-contrast-s: 100%;
   --iswc-contrast-l: 48%;
   --iswc-tint: 0.6;
   --iswc-font-tint: 0.4;
 
-  /* Morado de campaña (el de la camisa del afiche): semilla y derivados. */
-  --peon-morado-h: 275;
-  --peon-morado-s: 70%;
-  --peon-morado-l: 38%;
+  /* Morado de campaña = color de marca: los derivados leen la misma semilla. */
+  --peon-morado-h: var(--iswc-brand-h);
+  --peon-morado-s: var(--iswc-brand-s);
+  --peon-morado-l: var(--iswc-brand-b);
   --peon-morado: hsl(var(--peon-morado-h) var(--peon-morado-s) var(--peon-morado-l));
   --peon-morado-hondo: hsl(var(--peon-morado-h) var(--peon-morado-s) calc(var(--peon-morado-l) - 14%));
   --peon-morado-texto: var(--peon-morado);
   --peon-morado-suave: hsl(var(--peon-morado-h) var(--peon-morado-s) var(--peon-morado-l) / 12%);
   --peon-morado-borde: hsl(var(--peon-morado-h) var(--peon-morado-s) var(--peon-morado-l) / 35%);
   --peon-sobre-morado: #fff;
-  /* Colores de la bandera (cinta verde · blanco · amarillo de la pieza de campaña). */
-  --peon-verde: hsl(var(--iswc-brand-h) var(--iswc-brand-s) 30%);
+  /* Secundarios: verde de la bandera (semilla propia) y amarillo (semilla contrast del kit). */
+  --peon-verde-h: 140;
+  --peon-verde-s: 78%;
+  --peon-verde-l: 28%;
+  --peon-verde: hsl(var(--peon-verde-h) var(--peon-verde-s) var(--peon-verde-l));
+  --peon-verde-suave: hsl(var(--peon-verde-h) var(--peon-verde-s) var(--peon-verde-l) / 12%);
+  --peon-verde-borde: hsl(var(--peon-verde-h) var(--peon-verde-s) var(--peon-verde-l) / 35%);
+  --peon-sobre-verde: #fff;
   --peon-amarillo: hsl(var(--iswc-contrast-h) var(--iswc-contrast-s) var(--iswc-contrast-l));
+  --peon-sobre-amarillo: var(--peon-morado-hondo);
+  --peon-sobre-amarillo: var(--peon-morado-hondo);
   --peon-cinta: linear-gradient(90deg, var(--peon-verde) 0 33.4%, #fff 33.4% 66.6%, var(--peon-amarillo) 66.6% 100%);
+  /* Peón (mdi:chess-pawn, Apache 2.0) como máscara para viñetas del afiche: es un dibujo, no texto. */
+  --peon-peon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 22H5v-2h14zm-3-4H8l2.18-8H8V8h2.72l.07-.26A2.97 2.97 0 0 1 9.25 6.2c-.67-1.52.02-3.29 1.54-3.95c1.52-.67 3.29.02 3.95 1.54a2.99 2.99 0 0 1-1.54 3.95l.07.26H16v2h-2.18z'/%3E%3C/svg%3E");
+  /* Tablero de ajedrez morado/blanco (pie del afiche), para bordes y pies decorativos. */
+  --peon-tablero: repeating-conic-gradient(var(--peon-morado) 0 25%, #fff 0 50%) 0 0 / 1em 1em;
+  /* Peón (mdi:chess-pawn, Apache 2.0) como máscara para viñetas del afiche: es un dibujo, no texto. */
+  --peon-peon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 22H5v-2h14zm-3-4H8l2.18-8H8V8h2.72l.07-.26A2.97 2.97 0 0 1 9.25 6.2c-.67-1.52.02-3.29 1.54-3.95c1.52-.67 3.29.02 3.95 1.54a2.99 2.99 0 0 1-1.54 3.95l.07.26H16v2h-2.18z'/%3E%3C/svg%3E");
+  /* Tablero de ajedrez morado/blanco (pie del afiche), para bordes y pies decorativos. */
+  --peon-tablero: repeating-conic-gradient(var(--peon-morado) 0 25%, #fff 0 50%) 0 0 / 1em 1em;
 }
 

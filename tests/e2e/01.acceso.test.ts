@@ -48,12 +48,12 @@ export default definirPruebas([
     },
   },
   {
-    nombre: 'identidad W-CAT-02 paleta peon con el morado de campaña',
+    nombre: 'identidad W-CAT-02 paleta peon con el morado como color principal',
     categoria: 'what',
     async correr({ expect }) {
-      const p = await s.page.evaluate(() => ({ paleta: document.documentElement.dataset.palette, morado: getComputedStyle(document.documentElement).getPropertyValue('--peon-morado-h').trim(), cinta: getComputedStyle(document.documentElement).getPropertyValue('--peon-cinta').trim() }), null);
+      const p = await s.page.evaluate(() => ({ paleta: document.documentElement.dataset.palette, morado: getComputedStyle(document.documentElement).getPropertyValue('--peon-morado-h').trim(), brand: getComputedStyle(document.documentElement).getPropertyValue('--iswc-brand-h').trim(), cinta: getComputedStyle(document.documentElement).getPropertyValue('--peon-cinta').trim() }), null);
       expect('paleta', p.paleta === 'peon', String(p.paleta));
-      expect('morado h275', p.morado === '275', p.morado);
+      expect('morado principal h267 (= brand)', p.morado === '267' && p.brand === '267', `${p.morado} · ${p.brand}`);
       expect('cinta de la bandera', p.cinta.includes('linear-gradient'), p.cinta);
     },
   },

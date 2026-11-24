@@ -3,9 +3,11 @@
  * publicidad.ts — piezas de campaña descargables, dibujadas en el navegador con <canvas> (sin servidor, sin
  * dependencias): pieza cuadrada para redes y WhatsApp (1080×1080), historia vertical (1080×1920) y banner (1500×500).
  *
- * Colores: los de la marca leídos de las semillas de la paleta (`--peon-morado-h/s`, `--iswc-brand-h/s`,
- * `--iswc-contrast-*`), siempre en su versión CLARA (la pieza no depende del tema de quien la baja).
- * Imagen: la foto del candidato (`CAMPANA.foto`, cuando lleguen los insumos) o, mientras tanto, el logo.
+ * Colores: los de la marca leídos de las semillas de la paleta (`--peon-morado-h/s` = brand, `--peon-verde-h/s`,
+ * `--iswc-contrast-*`).
+ * Imagen: cuadrada e historia llevan la foto COMPLETA (`CAMPANA.fotoCompleta`: ya trae el logotipo con el nombre y
+ * el lema, así que no se repiten en texto); el banner, el retrato (`CAMPANA.foto`) con nombre y lema al lado.
+ * Estilo del afiche: fondo morado con luz, tablero morado/blanco abajo y la cinta de la bandera.
  */
 import { CAMPANA } from './config.js';
 
@@ -20,10 +22,10 @@ export const FORMATOS: Formato[] = [
 const semilla = (nombre: string, def: string): string => getComputedStyle(document.documentElement).getPropertyValue(nombre).trim() || def;
 
 function colores() {
-  const mh = semilla('--peon-morado-h', '275');
-  const ms = semilla('--peon-morado-s', '70%');
-  const vh = semilla('--iswc-brand-h', '140');
-  const vs = semilla('--iswc-brand-s', '78%');
+  const mh = semilla('--peon-morado-h', '267');
+  const ms = semilla('--peon-morado-s', '68%');
+  const vh = semilla('--peon-verde-h', '140');
+  const vs = semilla('--peon-verde-s', '78%');
   const ah = semilla('--iswc-contrast-h', '45');
   const as = semilla('--iswc-contrast-s', '100%');
   return {
@@ -61,23 +63,6 @@ function textoEnLineas(c: CanvasRenderingContext2D, texto: string, x: number, y:
   return yy + alto;
 }
 
-/** Imagen en círculo con aro (verde · amarillo): el logo es cuadrado con fondo blanco y así no se ve el cuadro. */
-function enCirculo(c: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, lado: number, aro: string): void {
-  const r = lado / 2;
-  c.save();
-  c.beginPath();
-  c.arc(x + r, y + r, r + lado * 0.035, 0, Math.PI * 2);
-  c.fillStyle = aro;
-  c.fill();
-  c.beginPath();
-  c.arc(x + r, y + r, r, 0, Math.PI * 2);
-  c.fillStyle = '#ffffff';
-  c.fill();
-  c.clip();
-  c.drawImage(img, x, y, lado, lado);
-  c.restore();
-}
-
 /** Dibuja la pieza en un canvas nuevo. */
 export async function dibujarPieza(f: Formato): Promise<HTMLCanvasElement> {
   const lienzo = document.createElement('canvas');
@@ -109,62 +94,79 @@ export async function dibujarPieza(f: Formato): Promise<HTMLCanvasElement> {
     c.fillRect(i * tercio, f.alto - cinta, tercio + 1, cinta);
   }
 
-  const foto = CAMPANA.foto ? await cargarImagen(CAMPANA.foto) : null;
-  const logo = await cargarImagen('./assets/logo-512.webp');
+  // Tablero de ajedrez morado/blanco a lo ancho, encima de la cinta (pie del afiche).
+  const casilla = Math.round(base * 0.032);
+  const yTablero = f.alto - cinta - casilla * 2;
+  for (let fila = 0; fila < 2; fila++) {
+    for (let col = 0; col * casilla < f.ancho; col++) {
+      c.fillStyle = (col + fila) % 2 ? '#ffffff' : k.moradoHondo;
+      c.fillRect(col * casilla, yTablero + fila * casilla, casilla, casilla);
+    }
+  }
+
   c.textAlign = 'center';
   c.fillStyle = '#ffffff';
 
   if (f.id === 'banner') {
-    const img = foto ?? logo;
-    const lado = f.alto * 0.78;
-    if (img && foto) c.drawImage(img, f.alto * 0.12, (f.alto - lado) / 2 - cinta / 2, lado, lado * (img.height / img.width));
-    else if (img) enCirculo(c, img, f.alto * 0.12, (f.alto - lado) / 2 - cinta / 2, lado, k.amarillo);
+    const img = (CAMPANA.foto ? await cargarImagen(CAMPANA.foto) : null) ?? (await cargarImagen('./assets/logo-512.webp'));
+    const alto = yTablero - f.alto * 0.04;
+    const ancho = img ? alto * (img.width / img.height) : 0;
+    if (img) c.drawImage(img, f.alto * 0.1, yTablero - alto, ancho, alto);
     c.textAlign = 'left';
-    const x = f.alto * 0.12 + lado + f.alto * 0.12;
-    const max = f.ancho - x - f.alto * 0.12;
-    c.font = fuente(600, f.alto * 0.08);
-    c.globalAlpha = 0.85;
-    c.fillText(CAMPANA.movimiento.toUpperCase(), x, f.alto * 0.3, max);
+    const x = f.alto * 0.1 + ancho + f.alto * 0.1;
+    const max = f.ancho - x - f.alto * 0.1;
+    c.font = fuente(700, f.alto * 0.065);
+    c.globalAlpha = 0.9;
+    c.fillText(CAMPANA.movimiento.toUpperCase(), x, f.alto * 0.24, max);
     c.globalAlpha = 1;
-    c.font = fuente(800, f.alto * 0.17);
-    c.fillText(CAMPANA.candidato, x, f.alto * 0.52, max);
-    c.font = fuente(500, f.alto * 0.075);
+    c.font = fuente(800, f.alto * 0.16);
+    c.fillText(CAMPANA.candidato.toUpperCase(), x, f.alto * 0.45, max);
+    // Lema en cinta amarilla con texto morado (como en el afiche).
+    c.font = `italic ${fuente(700, f.alto * 0.062)}`;
+    const lema = CAMPANA.lema;
+    const w = Math.min(c.measureText(lema).width + f.alto * 0.08, max);
     c.fillStyle = k.amarillo;
-    c.fillText(`«${CAMPANA.lema}»`, x, f.alto * 0.68, max);
+    c.fillRect(x, f.alto * 0.53, w, f.alto * 0.11);
+    c.fillStyle = k.moradoHondo;
+    c.fillText(lema, x + f.alto * 0.04, f.alto * 0.605, max - f.alto * 0.08);
     c.fillStyle = '#ffffff';
-    c.globalAlpha = 0.8;
-    c.font = fuente(500, f.alto * 0.06);
-    c.fillText(CAMPANA.lugar, x, f.alto * 0.82, max);
+    c.globalAlpha = 0.85;
+    c.font = fuente(500, f.alto * 0.055);
+    c.fillText(CAMPANA.lugar, x, f.alto * 0.76, max);
     c.globalAlpha = 1;
     return lienzo;
   }
 
   const margen = f.ancho * 0.08;
-  let y = f.alto * (f.id === 'historia' ? 0.1 : 0.09);
-  c.font = fuente(700, base * 0.04);
-  c.globalAlpha = 0.85;
-  c.fillText(CAMPANA.movimiento.toUpperCase(), f.ancho / 2, y, f.ancho - margen * 2);
-  c.globalAlpha = 1;
+  const yTitulo = f.alto * (f.id === 'historia' ? 0.07 : 0.075);
+  c.font = fuente(800, base * 0.042);
+  c.fillText(CAMPANA.movimiento.toUpperCase(), f.ancho / 2, yTitulo, f.ancho - margen * 2);
 
-  const img = foto ?? logo;
+  const completa = CAMPANA.fotoCompleta ? await cargarImagen(CAMPANA.fotoCompleta) : null;
+  const img = completa ?? (await cargarImagen('./assets/logo-512.webp'));
+  // Espacio para la foto: del título al tablero (en la historia queda aire abajo para el lugar).
+  const arriba = yTitulo + base * 0.035;
+  const abajo = yTablero - base * (f.id === 'historia' ? 0.16 : 0.05);
   if (img) {
-    const lado = base * (foto ? 0.62 : 0.46);
-    const alto = lado * (img.height / img.width);
-    y += base * 0.05;
-    if (foto) c.drawImage(img, (f.ancho - lado) / 2, y, lado, alto);
-    else enCirculo(c, img, (f.ancho - lado) / 2, y, lado, k.amarillo);
-    y += alto + base * 0.08;
+    const escala = Math.min((abajo - arriba) / img.height, (f.ancho - margen) / img.width);
+    const ancho = img.width * escala;
+    const alto = img.height * escala;
+    c.drawImage(img, (f.ancho - ancho) / 2, abajo - alto, ancho, alto);
   }
-  c.font = fuente(800, base * 0.095);
-  y = textoEnLineas(c, CAMPANA.candidato, f.ancho / 2, y, f.ancho - margen * 2, base * 0.1);
-  c.font = fuente(600, base * 0.048);
-  c.fillStyle = k.amarillo;
-  y = textoEnLineas(c, `«${CAMPANA.lema}»`, f.ancho / 2, y + base * 0.01, f.ancho - margen * 2, base * 0.06);
-  c.fillStyle = '#ffffff';
-  c.globalAlpha = 0.85;
-  c.font = fuente(500, base * 0.038);
-  c.fillText(CAMPANA.lugar, f.ancho / 2, Math.min(y + base * 0.04, f.alto - cinta - base * 0.05));
-  c.globalAlpha = 1;
+  if (!completa) {
+    c.font = fuente(800, base * 0.08);
+    textoEnLineas(c, CAMPANA.candidato, f.ancho / 2, abajo - base * 0.2, f.ancho - margen * 2, base * 0.09);
+  }
+  if (f.id === 'historia') {
+    c.font = `italic ${fuente(800, base * 0.05)}`;
+    c.fillStyle = k.amarillo;
+    c.fillText('Solo necesitamos seguir avanzando', f.ancho / 2, abajo + base * 0.08, f.ancho - margen * 2);
+    c.fillStyle = '#ffffff';
+    c.globalAlpha = 0.85;
+    c.font = fuente(600, base * 0.04);
+    c.fillText(CAMPANA.lugar, f.ancho / 2, abajo + base * 0.14, f.ancho - margen * 2);
+    c.globalAlpha = 1;
+  }
   return lienzo;
 }
 

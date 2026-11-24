@@ -25,8 +25,14 @@ export const CAMPANA = {
   movimiento: 'La Fuerza del Peón en Marcha',
   lugar: 'Armenia · Quindío',
   lema: 'Nuestra misión es servir, no figurar',
-  /** Foto del candidato con el fondo quitado (`assets/candidato-*.webp`); vacía hasta que lleguen los insumos. */
-  foto: '',
+  /**
+   * Foto oficial con el fondo quitado (original en `insumos/`; se regenera con `scripts/assets/recorte-candidato.py`).
+   * `foto`: retrato sin el logotipo (portada y biografía) · `fotoCompleta`: con el logotipo «Fredisney García» y el
+   * lema (piezas descargables). `fotoChica`: retrato liviano (360 px de alto) para pantallas angostas.
+   */
+  foto: './assets/candidato-retrato.webp',
+  fotoChica: './assets/candidato-retrato-360.webp',
+  fotoCompleta: './assets/candidato-completo.webp',
   redes: [
     { red: 'Facebook', icono: 'mdi:facebook', url: '' },
     { red: 'Instagram', icono: 'mdi:instagram', url: '' },

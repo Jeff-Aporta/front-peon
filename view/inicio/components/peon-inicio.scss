@@ -67,45 +67,74 @@
   animation: flotar 9s ease-in-out infinite alternate;
 }
 
+/* Foto oficial (sin fondo) parada sobre el pie de la portada, como en el afiche; detrás, luz de amanecer. */
 .foto {
   position: relative;
-  width: min(15em, 62%);
-  height: auto;
-  align-self: center;
-  margin: 0;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 40%, rgb(255 255 255 / 30%), rgb(255 255 255 / 6%) 70%);
-  box-shadow: 0 0 0 0.35em rgb(255 255 255 / 85%), 0 0 0 0.7em var(--peon-amarillo), 0 1.5em 3em rgb(0 0 0 / 35%);
+  align-self: end;
+  width: min(19em, 86%);
+  /* En una columna la foto va arriba del texto (su borde inferior ya se desvanece); con ancho se para en el pie. */
+  margin: calc(-1 * #{t.esp(2)}) 0 calc(-1 * #{t.esp(3)});
   animation: aparecer 0.7s 0.1s ease-out both;
 
-  img { display: block; box-sizing: border-box; width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 50%; }
-  &[data-logo] img { object-fit: contain; padding: 12%; }
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 8% 4% 0;
+    z-index: -1;
+    border-radius: 50% 50% 0 0;
+    background: radial-gradient(60% 55% at 50% 38%, hsl(var(--iswc-contrast-h) 100% 70% / 45%), hsl(var(--iswc-contrast-h) 100% 60% / 0%) 70%);
+  }
+  img { display: block; width: 100%; height: auto; filter: drop-shadow(0 0.8em 1.2em rgb(0 0 0 / 30%)); }
 }
 
 .quien { display: grid; justify-items: center; gap: t.esp(2); min-width: 0; animation: aparecer 0.7s 0.2s ease-out both; }
 
 .movimiento { @include m.rotulo(0.9); font-size: 0.78em; }
 
+/* Rótulo manuscrito en blanco (afiche). */
+.manuscrito {
+  margin: 0;
+  font-family: t.$manuscrita;
+  font-size: clamp(1.15em, 1em + 1cqi, 1.6em);
+  line-height: 1.1;
+  transform: rotate(-2deg);
+}
+
+/* Titular del afiche: MAYÚSCULAS, blanco muy grueso, sobre una pincelada morada inclinada; la palabra clave en amarillo. */
 .nombre {
   margin: 0;
   font-family: t.$titulos;
-  font-size: clamp(2em, 1.4em + 3.4cqi, 3.4em);
+  font-size: clamp(1.9em, 1.3em + 3.4cqi, 3.3em);
   font-weight: 800;
-  line-height: 1.02;
-  letter-spacing: -0.01em;
+  line-height: 1.05;
+  text-transform: uppercase;
   text-wrap: balance;
-  text-shadow: 0 0.08em 0.4em rgb(0 0 0 / 30%);
   overflow-wrap: anywhere;
+
+  .clave { color: var(--peon-amarillo); }
 }
 
+.pincel { @include m.pincel; }
+
+/* Lema en cinta amarilla con texto morado (afiche). */
 .lema {
   margin: 0;
-  color: var(--peon-amarillo);
-  font-size: clamp(1em, 0.9em + 0.8cqi, 1.3em);
+  font-size: clamp(0.95em, 0.88em + 0.7cqi, 1.2em);
   font-style: italic;
-  font-weight: 600;
-  text-wrap: balance;
+  font-weight: 700;
+
+  span { @include m.cinta-amarilla; }
+}
+
+/* Hashtag con peón dorado (afiche). */
+.hashtag {
+  display: inline-flex;
+  align-items: center;
+  gap: t.esp(1);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+
+  iswc-icon { color: var(--peon-amarillo); font-size: 1.2em; }
 }
 
 .lugar { display: inline-flex; align-items: center; gap: t.esp(1); opacity: 0.85; }
@@ -153,10 +182,20 @@
   }
 }
 
-/* La cinta de la bandera, como en la pieza de campaña. */
+/* Pie del afiche: tablero morado/blanco y, debajo, la cinta de la bandera. */
+.portada .pie-tablero {
+  position: absolute;
+  inset: auto 0 0.55em;
+  z-index: 1;
+  height: 1em;
+  background: repeating-conic-gradient(var(--peon-morado-hondo) 0 25%, #fff 0 50%) 0 0 / 1em 1em;
+  opacity: 0.9;
+}
+
 .portada .cinta {
   position: absolute;
   inset: auto 0 0;
+  z-index: 1;
   height: 0.55em;
   background: var(--peon-cinta);
 }
@@ -168,11 +207,12 @@
     justify-items: start;
     align-items: center;
     gap: t.esp(8);
-    padding: t.esp(8) t.esp(10) t.esp(10);
+    padding: t.esp(6) t.esp(8) t.esp(10) t.esp(4);
     text-align: start;
   }
-  .foto { width: 14em; }
-  .quien { justify-items: start; }
+  .portada { padding-bottom: t.esp(10); }
+  .foto { width: clamp(17em, 34cqi, 24em); margin-bottom: calc(-1 * #{t.esp(10)}); }
+  .quien { justify-items: start; padding-bottom: t.esp(4); }
   .llamados { justify-content: flex-start; }
 }
 
@@ -216,10 +256,10 @@
   &:hover { transform: translateY(-0.12em); border-color: var(--iswc-brand); box-shadow: 0 0.6em 1.4em rgb(0 0 0 / 8%); }
   &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); }
 
-  /* Los accesos «de campaña» llevan el morado (noticias, publicidad, biografía). */
-  &[data-acceso="noticias"], &[data-acceso="publicidad"], &[data-acceso="biografia"] {
-    iswc-icon { background: var(--peon-morado-suave); color: var(--peon-morado-texto); }
-    &:hover { border-color: var(--peon-morado-borde); }
+  /* Morado (marca) en todos; los de votar y el puesto llevan el verde de la bandera (secundario). */
+  &[data-acceso="votar"], &[data-acceso="puesto"], &[data-acceso="registrar"] {
+    iswc-icon { background: var(--peon-verde-suave); color: var(--peon-verde); }
+    &:hover { border-color: var(--peon-verde-borde); }
   }
 }
 
@@ -232,7 +272,7 @@
   justify-content: space-between;
   gap: t.esp(2);
 
-  h3 { margin: 0; font-family: t.$titulos; font-size: 1.15em; }
+  h3 { @include m.titular-pincel; margin: 0; font-size: 1.05em; }
 }
 
 .ver-todo, .enlace {

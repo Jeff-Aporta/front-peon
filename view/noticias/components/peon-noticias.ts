@@ -125,7 +125,15 @@ class PeonNoticias extends Componente<VistaProps> {
   #candidato(): Node {
     const caja = document.createElement('div');
     caja.className = 'caja paginas';
-    caja.append(this.#pagina('biografia'), this.#pagina('trayectoria'));
+    caja.append(html`
+      <header class="ficha-candidato">
+        <img src=${CAMPANA.fotoChica} alt=${CAMPANA.candidato} width="238" height="180" loading="lazy">
+        <div>
+          <p class="manuscrito">Pequeño en apariencia, grande en propósito</p>
+          <h2 class="titular">${CAMPANA.candidato}</h2>
+          <p class="lema-cinta"><span>${CAMPANA.lema}</span></p>
+        </div>
+      </header>`, this.#pagina('biografia'), this.#pagina('trayectoria'));
     return caja;
   }
 
@@ -176,7 +184,7 @@ class PeonNoticias extends Componente<VistaProps> {
     }
     const app = location.href.split('#')[0]!.split('?')[0]!;
     caja.append(html`
-      <p class="nota-publicidad"><iswc-icon icon="mdi:information-outline"></iswc-icon>${CAMPANA.foto ? 'Las piezas llevan la foto oficial del candidato.' : 'Mientras llega la foto oficial del candidato, las piezas llevan el logo de la campaña.'}</p>
+      <p class="nota-publicidad"><iswc-icon icon="mdi:information-outline"></iswc-icon>${CAMPANA.fotoCompleta ? 'Las piezas llevan la foto oficial del candidato.' : 'Mientras llega la foto oficial del candidato, las piezas llevan el logo de la campaña.'}</p>
       ${piezas}
       <div class="extras">
         <figure class="pieza logo"><img src="./assets/logo-512.webp" alt="Logo de La Fuerza del Peón en Marcha" width="256" height="256"><figcaption><strong>Logo</strong><small>512×512</small></figcaption><div class="acciones"><a class="enlace-boton" href="./assets/logo-512.webp" download="logo-peon-en-marcha.webp"><iswc-icon icon="mdi:download-outline"></iswc-icon>Descargar</a></div></figure>

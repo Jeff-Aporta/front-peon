@@ -35,7 +35,8 @@
 }
 
 /// Botón del kit (`iswc-button color="brand"`) teñido con el morado de campaña: reasigna los tonos que lee
-/// `brand-tones` del kit. Para acciones de campaña (publicar, redactar con el VPS): el 10 % que se gana.
+/// `brand-tones` del kit. Desde que el morado es el color de marca (24-nov-2026) equivale al brand; se conserva para
+/// las acciones de campaña (publicar, redactar con el VPS) por si la marca vuelve a separarse del morado.
 @mixin boton-morado {
   --iswc-accent: var(--peon-morado);
   --iswc-color-brand: var(--peon-morado);
@@ -44,4 +45,57 @@
   --iswc-color-brand-strongest: var(--peon-morado-hondo);
   --iswc-brand-text: var(--peon-morado-texto);
   --iswc-on-brand: var(--peon-sobre-morado);
+}
+
+/* ── Guía visual del afiche de campaña (IDENTIDAD-VISUAL.md §6). Con mesura: titulares y lemas, no párrafos. ── */
+
+/// Pincelada morada inclinada detrás de un titular (texto blanco). Va en un `<span>` en línea: acompaña los saltos.
+@mixin pincel {
+  padding: 0.08em 0.35em;
+  background: linear-gradient(100deg, transparent 0 0.25em, var(--peon-morado-hondo) 0.6em calc(100% - 0.6em), transparent calc(100% - 0.25em));
+  color: #fff;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/// Titular de sección del afiche: MAYÚSCULAS gruesas en blanco sobre la pincelada morada.
+@mixin titular-pincel {
+  display: inline-block;
+  padding: 0.2em 0.8em 0.2em 0.6em;
+  font-family: t.$titulos;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--peon-morado);
+  clip-path: polygon(0.3em 0, 100% 0, calc(100% - 0.3em) 100%, 0 100%);
+}
+
+/// Cinta amarilla con texto morado (lemas: «Por eso, nunca subestimes a un peón»).
+@mixin cinta-amarilla {
+  display: inline;
+  padding: 0.12em 0.6em;
+  background: var(--peon-amarillo);
+  color: var(--peon-sobre-amarillo);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  clip-path: polygon(0.35em 0, 100% 0, calc(100% - 0.35em) 100%, 0 100%);
+}
+
+/// Viñetas con un peón morado (listas del afiche). El ícono es mdi:chess-pawn como máscara (sin imagen con texto).
+@mixin vinetas-peon {
+  list-style: none;
+  padding-inline-start: 1.6em;
+
+  > li { position: relative; }
+  > li::before {
+    content: "";
+    position: absolute;
+    top: 0.2em;
+    left: -1.45em;
+    width: 1.05em;
+    height: 1.05em;
+    background: var(--peon-vineta, var(--peon-morado));
+    mask: var(--peon-peon) center / contain no-repeat;
+  }
 }

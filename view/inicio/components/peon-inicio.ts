@@ -75,23 +75,31 @@ class PeonInicio extends Componente<VistaProps> {
     const version = document.createElement('span');
     version.textContent = `App ${VERSION_FRONT}`;
     void api<{ version: string }>('GET', 'info').then((i) => (version.textContent = `App ${VERSION_FRONT} · API ${i.version}`)).catch(() => {});
+    const [nombre, ...resto] = CAMPANA.candidato.split(' ');
+    const apellido = resto.join(' ');
     caja.append(html`
       <section class="portada" aria-label="El candidato">
         <div class="brillo" aria-hidden="true"></div>
-        <figure class="foto" ?data-logo=${!CAMPANA.foto}>
-          <img src=${CAMPANA.foto || './assets/logo-512.webp'} alt=${CAMPANA.foto ? CAMPANA.candidato : CAMPANA.movimiento} width="320" height="320">
+        <figure class="foto">
+          <picture>
+            <source media="(max-width: 30em)" srcset=${CAMPANA.fotoChica}>
+            <img src=${CAMPANA.foto} alt=${`${CAMPANA.candidato}, candidato de ${CAMPANA.movimiento}`} width="400" height="302" fetchpriority="high">
+          </picture>
         </figure>
         <div class="quien">
           <small class="movimiento">${CAMPANA.movimiento}</small>
-          <h2 class="nombre">${CAMPANA.candidato}</h2>
-          <p class="lema">«${CAMPANA.lema}»</p>
+          <p class="manuscrito">Pequeño en apariencia, grande en propósito</p>
+          <h2 class="nombre"><span class="pincel">${nombre}<span class="clave"> ${apellido}</span></span></h2>
+          <p class="lema"><span>${CAMPANA.lema}</span></p>
           <small class="lugar"><iswc-icon icon="mdi:map-marker-outline"></iswc-icon>${CAMPANA.lugar}</small>
+          <small class="hashtag"><iswc-icon icon="mdi:chess-pawn"></iswc-icon>#LaFuerzaDelPeónEnMarcha</small>
           <div class="llamados">
             ${u?.escribe ? html`<button type="button" class="llamado principal" data-registrar onclick=${() => ir('registro', 'persona')}><iswc-icon icon="mdi:account-plus-outline"></iswc-icon>Registrar a un amigo</button>` : null}
             <button type="button" class="llamado" data-ver-noticias onclick=${() => ir('noticias', 'noticias')}><iswc-icon icon="mdi:newspaper-variant-outline"></iswc-icon>Noticias</button>
           </div>
           ${redes.length ? html`<nav class="redes" aria-label="Redes sociales">${redes.map((r) => html`<a href=${r.url} target="_blank" rel="noopener noreferrer" title=${r.red} aria-label=${r.red}><iswc-icon icon=${r.icono}></iswc-icon></a>`)}</nav>` : null}
         </div>
+        <div class="pie-tablero" aria-hidden="true"></div>
         <div class="cinta" aria-hidden="true"></div>
       </section>
       <nav class="accesos" aria-label="Accesos de la campaña">
