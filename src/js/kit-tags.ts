@@ -38,6 +38,7 @@ export const KIT_TAGS = [
   'iswc-select',
   'iswc-session-menu',
   'iswc-share-button',
+  'iswc-split-panel',
   'iswc-spinner',
   'iswc-stat',
   'iswc-switch',

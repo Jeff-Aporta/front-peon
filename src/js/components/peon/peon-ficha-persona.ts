@@ -37,7 +37,7 @@ class PeonFichaPersona extends Componente<PeonFichaPersonaProps> {
   #cargando = '';
 
   protected override inicial(): PeonFichaPersonaProps {
-    return { ref: '', abierta: false };
+    return { ref: '', abierta: false, embebida: false };
   }
 
   override onConnected(): void {
@@ -50,7 +50,7 @@ class PeonFichaPersona extends Componente<PeonFichaPersonaProps> {
   }
 
   #alCambiar = (): void => {
-    if (this.props.abierta && this.props.ref && !this.#cargando) void this.#cargar(this.props.ref);
+    if ((this.props.abierta || this.props.embebida) && this.props.ref && !this.#cargando) void this.#cargar(this.props.ref);
   };
 
   async #cargar(ref: string): Promise<void> {
@@ -190,7 +190,28 @@ class PeonFichaPersona extends Componente<PeonFichaPersonaProps> {
     return caja;
   }
 
+  /** Embebida (split panel de Registros): la misma ficha sin diálogo, con su propio scroll. */
+  #pintarEmbebida(root: ShadowRoot, props: PeonFichaPersonaProps): void {
+    if (!props.ref) {
+      root.append(html`<iswc-empty-state class="elige" icono="mdi:card-account-details-outline" titulo="Elige un registro" texto="Toca una fila de la lista para ver aquí su ficha."></iswc-empty-state>`);
+      return;
+    }
+    const p = this.#persona;
+    if (!p || p.ref !== props.ref) {
+      if (this.#cargando !== props.ref) void this.#cargar(props.ref);
+      root.append(html`<div class="cargando"><iswc-spinner></iswc-spinner></div>`);
+      return;
+    }
+    root.append(html`
+      <section class="ficha embebida" aria-label=${`Ficha de ${p.nombres} ${p.apellidos}`}>
+        <h2 class="nombre">${p.nombres} ${p.apellidos}</h2>
+        <div class="cabeza">${estadoPuesto(p.puesto_estado)}<span>${p.puesto ?? 'Puesto sin verificar'}</span></div>
+        ${grupoPestanas('ficha', 'datos', (t) => (t === 'votacion' ? this.#votacion(p) : t === 'bitacora' ? this.#bitacora(p) : this.#datos(p)))}
+      </section>`);
+  }
+
   protected override pintar(root: ShadowRoot, props: PeonFichaPersonaProps): void {
+    if (props.embebida) return this.#pintarEmbebida(root, props);
     if (!props.abierta || !props.ref) return;
     const p = this.#persona;
     if (!p || p.ref !== props.ref) {

@@ -12,14 +12,14 @@ import type { PersonaFila, Puesto } from '../../../src/js/consts/schemas/api.sch
 import { api } from '../../../src/js/core/api.js';
 import { ESTADOS, fecha } from '../../../src/js/core/catalogos.js';
 import { grupoPestanas } from '../../../src/js/core/pestanas.js';
-import { abrirFicha, textoError, valor } from '../../../src/js/core/ui.js';
+import { abrirFicha, angosto, textoError, valor } from '../../../src/js/core/ui.js';
 
 type Grid = HTMLElement & { columns: unknown[]; rows: unknown[]; hooks?: unknown };
 
 class PeonListado extends Componente<VistaProps> {
   static tag = 'peon-listado';
   static css = css;
-  static deps = ['iswc-tab-group', 'iswc-data-grid', 'iswc-input', 'iswc-select', 'iswc-button', 'iswc-callout', 'iswc-empty-state'];
+  static deps = ['iswc-tab-group', 'iswc-split-panel', 'peon-ficha-persona', 'iswc-data-grid', 'iswc-input', 'iswc-select', 'iswc-button', 'iswc-callout', 'iswc-empty-state'];
 
   #recargas = new Set<() => void>();
   #puestos: Puesto[] = [];
@@ -61,9 +61,18 @@ class PeonListado extends Componente<VistaProps> {
       { field: 'registrado_por_nombre', headerName: 'Registró', width: 150 },
       { field: 'fecha', headerName: 'Fecha', width: 170 },
     ];
+    // Escritorio: lista | ficha en un split panel (la ficha al lado, cada zona con su scroll). Celular: diálogo.
+    const ancho = !angosto();
+    const ficha = ancho ? document.createElement('peon-ficha-persona') : null;
+    if (ficha) {
+      ficha.setAttribute('data-embebida', '');
+      Object.assign(ficha, { props: { ref: '', abierta: false, embebida: true } });
+    }
     grid.addEventListener('iswc-row-click', (e) => {
       const id = (e as CustomEvent<{ id?: string }>).detail?.id;
-      if (id) abrirFicha(String(id));
+      if (!id) return;
+      if (ficha) Object.assign(ficha, { props: { ref: String(id), abierta: false, embebida: true } });
+      else abrirFicha(String(id));
     });
     const info = document.createElement('p');
     info.className = 'nota';
@@ -117,7 +126,9 @@ class PeonListado extends Componente<VistaProps> {
     `);
     this.#recargas.add(() => void cargar());
     void cargar();
-    return caja;
+    if (!ficha) return caja;
+    caja.classList.add('zona');
+    return html`<iswc-split-panel class="dividido" position="58" snap="40 58 70">${Object.assign(caja, { slot: 'start' })}${Object.assign(ficha, { slot: 'end' })}</iswc-split-panel>`;
   }
 
   protected override pintar(root: ShadowRoot, props: VistaProps): void {
@@ -125,6 +136,7 @@ class PeonListado extends Componente<VistaProps> {
     const montar = () => {
       root.querySelector('.pestanas')?.remove();
       root.append(grupoPestanas('listado', props.pestana, (p) => this.#tabla(p === 'pendientes')));
+      if (!angosto()) root.querySelector('.pestanas')?.classList.add('llena');
     };
     if (this.#puestos.length) return montar();
     void api<Puesto[]>('GET', 'puestos').then((p) => {

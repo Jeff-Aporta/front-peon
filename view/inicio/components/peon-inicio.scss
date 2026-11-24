@@ -279,49 +279,92 @@
 /* Accesos (las funciones de la campaña). */
 .accesos {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 10.5em), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15em), 1fr));
   gap: t.esp(3);
 }
 
+/* Tarjetas de acceso: elegantes y comerciales. Ícono en baldosa con degradado, borde de luz, sombra suave que crece
+   al pasar y flecha que avanza. La franja superior toma el color del acceso (morado; verde para votar/puesto). */
 .acceso {
+  --tono: var(--peon-morado);
+  --tono-suave: var(--peon-morado-suave);
+  position: relative;
   display: grid;
-  align-content: start;
-  justify-items: start;
-  gap: t.esp(1);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: t.esp(3);
+  row-gap: 0.15em;
   min-width: 0;
-  padding: t.esp(4) t.esp(3);
-  border: 1px solid var(--iswc-border-soft);
-  border-radius: t.radio(lg);
-  background: var(--iswc-bg);
+  padding: t.esp(4);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--tono) 14%, transparent);
+  border-radius: calc(var(--iswc-radius) * 1.8);
+  background:
+    radial-gradient(120% 140% at 100% 0%, var(--tono-suave), transparent 55%),
+    var(--iswc-bg);
+  box-shadow: 0 0.15em 0.4em rgb(30 10 60 / 6%), 0 0.6em 1.4em rgb(30 10 60 / 5%);
   color: inherit;
   font: inherit;
   text-align: start;
   cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   animation: aparecer 0.45s calc(0.25s + var(--i, 0) * 0.04s) ease-out both;
 
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 0.22em;
+    background: linear-gradient(90deg, var(--tono), color-mix(in srgb, var(--tono) 30%, var(--peon-amarillo)));
+    opacity: 0.85;
+  }
+  &::after {
+    content: "›";
+    grid-row: 1 / 3;
+    grid-column: 3;
+    font-size: 1.6em;
+    line-height: 1;
+    color: var(--tono);
+    opacity: 0.5;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
   iswc-icon {
+    grid-row: 1 / 3;
     display: grid;
     place-items: center;
-    width: 2.2em;
-    height: 2.2em;
-    margin-bottom: t.esp(1);
-    border-radius: t.radio(md);
-    background: var(--iswc-brand-soft);
-    color: var(--iswc-brand);
-    font-size: 1.15em;
+    width: 2.6em;
+    height: 2.6em;
+    border-radius: 0.8em;
+    background: linear-gradient(140deg, var(--tono), color-mix(in srgb, var(--tono) 70%, #000));
+    color: #fff;
+    font-size: 1.1em;
+    box-shadow: 0 0.4em 0.9em color-mix(in srgb, var(--tono) 35%, transparent);
   }
-  strong { font-size: 0.95em; line-height: 1.2; overflow-wrap: anywhere; }
-  small { opacity: 0.65; font-size: 0.78em; }
-  &:hover { transform: translateY(-0.12em); border-color: var(--iswc-brand); box-shadow: 0 0.6em 1.4em rgb(0 0 0 / 8%); }
-  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); }
+  strong { align-self: end; font-size: 0.98em; line-height: 1.2; overflow-wrap: anywhere; }
+  small { align-self: start; opacity: 0.7; font-size: 0.8em; }
 
-  /* Morado (marca) en todos; los de votar y el puesto llevan el verde de la bandera (secundario). */
+  &:hover {
+    transform: translateY(-0.18em);
+    border-color: color-mix(in srgb, var(--tono) 35%, transparent);
+    box-shadow: 0 0.4em 0.8em rgb(30 10 60 / 8%), 0 1.2em 2.4em rgb(30 10 60 / 10%);
+  }
+  &:hover::after { transform: translateX(0.2em); opacity: 1; }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); outline-offset: 0.15em; }
+
   &[data-acceso="votar"], &[data-acceso="puesto"], &[data-acceso="registrar"] {
-    iswc-icon { background: var(--peon-verde-suave); color: var(--peon-verde); }
-    &:hover { border-color: var(--peon-verde-borde); }
+    --tono: var(--peon-verde);
+    --tono-suave: var(--peon-verde-suave);
   }
 }
+
+@media (prefers-reduced-motion: reduce) { .acceso, .acceso::after { transition: none; } }
+
+/* Inicio en una sola página: secciones con aire entre sí. */
+.pagina-inicio { display: grid; gap: t.esp(8); padding-bottom: t.esp(8); }
+.seccion { display: grid; gap: t.esp(3); }
+.seccion > .resumen, .seccion > .recientes { padding-top: 0; }
 
 /* Últimas noticias. */
 .bloque-noticias { display: grid; gap: t.esp(3); }

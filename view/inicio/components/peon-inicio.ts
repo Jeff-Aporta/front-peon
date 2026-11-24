@@ -16,7 +16,6 @@ import type { NoticiaFila, PersonaFila } from '../../../src/js/consts/schemas/ap
 import { api, puede, sesion, usuarioActivo } from '../../../src/js/core/api.js';
 import { HERRAMIENTAS_CHAT, fecha } from '../../../src/js/core/catalogos.js';
 import { CAMPANA, VERSION_FRONT } from '../../../src/js/core/config.js';
-import { grupoPestanas } from '../../../src/js/core/pestanas.js';
 import { abrirChat, abrirFicha, abrirNoticia, estadoPuesto, ir, textoError } from '../../../src/js/core/ui.js';
 
 type Resumen = { misRegistros: number; misRegistrosHoy: number; misPendientes: number; visibles: number; pendientes: number; verificados: number; avisos: { tipo: string; texto: string; ir?: string }[] };
@@ -196,7 +195,18 @@ class PeonInicio extends Componente<VistaProps> {
   }
 
   protected override pintar(root: ShadowRoot, props: VistaProps): void {
-    root.append(grupoPestanas('inicio', props.pestana, (p) => (p === 'recientes' ? this.#recientes() : p === 'resumen' ? this.#resumen() : this.#campana())));
+    // Inicio es UNA sola página (sin pestañas, pedido del autor): la campaña arriba y, con sesión, el resumen y los
+    // registros propios como secciones de la misma página.
+    void props;
+    const pagina = document.createElement('div');
+    pagina.className = 'pagina-inicio';
+    pagina.append(this.#campana());
+    if (usuarioActivo()) {
+      pagina.append(html`
+        <section class="seccion"><header class="cabeza-bloque"><h3>Mi resumen</h3></header>${this.#resumen()}</section>
+        <section class="seccion"><header class="cabeza-bloque"><h3>Mis registros</h3><button type="button" class="ver-todo" onclick=${() => ir('listado')}>Ver todos <iswc-icon icon="mdi:chevron-right"></iswc-icon></button></header>${this.#recientes()}</section>`);
+    }
+    root.append(pagina);
   }
 }
 

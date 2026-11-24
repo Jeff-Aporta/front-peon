@@ -7,7 +7,8 @@
  *     · en github.io u otro host: primero la en línea; luego `./api` relativa (nginx del VPS sirve `/peon/api/`).
  *   La en línea es `localStorage['peon:api']` si existe (pruebas) o `API_PUBLICA` (core/config.ts; vacía hasta que la
  *   API tenga dominio con TLS: mientras tanto esa candidata simplemente no está).
- *   Se prueba `GET {base}/info` con 1,5 s de límite y se usa la primera que responda; la elegida se recuerda en
+ *   Se prueba `OPTIONS {base}/info` (preflight de CORS, sin lógica) a todas a la vez con 1,5 s de límite y se usa la
+ *   primera, en orden de preferencia, que responda; la elegida se recuerda en
  *   `sessionStorage['peon:api-elegida']` y se vuelve a elegir si una llamada falla por red.
  *   Token en `localStorage['peon:token']` y cabecera `Authorization: Bearer <token>` en cada llamada.
  *   La app escucha el evento de ventana `peon:sesion` para repintarse cuando cambia la sesión.
@@ -80,8 +81,10 @@ async function responde(base: string): Promise<boolean> {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), LIMITE_PRUEBA_MS);
   try {
-    const r = await fetch(`${base}/info`, { signal: ctl.signal, cache: 'no-store' });
-    return r.ok;
+    // OPTIONS: el router de DER lo responde con el preflight de CORS sin ejecutar nada (ni base ni lógica): es la
+    // petición más barata para saber si el servidor está vivo. Cualquier 2xx cuenta.
+    const r = await fetch(`${base}/info`, { method: 'OPTIONS', signal: ctl.signal, cache: 'no-store' });
+    return r.status >= 200 && r.status < 300;
   } catch {
     return false;
   } finally {
@@ -97,13 +100,11 @@ export function elegirServidor(otraVez = false): Promise<string | null> {
   if (elegida && !otraVez) return Promise.resolve(elegida);
   eligiendo ??= (async () => {
     const antes = elegida;
-    let nueva: string | null = null;
-    for (const c of candidatas()) {
-      if (await responde(c)) {
-        nueva = c;
-        break;
-      }
-    }
+    // Todas las candidatas se prueban A LA VEZ (el cambio tarda como mucho el límite, no la suma); gana la primera
+    // en el orden de preferencia que respondió.
+    const lista = candidatas();
+    const vivas = await Promise.all(lista.map((c) => responde(c)));
+    const nueva = lista.find((_, i) => vivas[i]) ?? null;
     elegida = nueva;
     escribirSesion(CLAVE_ELEGIDA, nueva);
     if (nueva !== antes) window.dispatchEvent(new CustomEvent('peon:servidor', { detail: servidor() }));

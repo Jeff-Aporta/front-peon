@@ -3,6 +3,11 @@
 
 :host { display: contents; }
 
+/* Embebida en el split panel de Registros: ocupa su panel y desplaza por dentro. */
+:host([data-embebida]) { display: block; height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 t.esp(1) t.esp(4) t.esp(4); }
+.embebida .nombre { margin: 0 0 t.esp(2); font-family: t.$titulos; font-size: 1.2em; }
+.elige { display: block; margin-top: t.esp(8); }
+
 .ficha { --width: min(46em, 96vw); }
 
 .cargando { display: grid; place-items: center; min-height: 8em; }

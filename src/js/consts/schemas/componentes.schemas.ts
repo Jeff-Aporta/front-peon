@@ -26,6 +26,8 @@ export type PeonAccesoProps = z.infer<typeof PeonAccesoPropsSchema>;
 export const PeonFichaPersonaPropsSchema = z.object({
   ref: z.string().default(''),
   abierta: z.boolean().default(false),
+  /** Dentro de un split panel (lista | ficha): sin diálogo; sin `ref` muestra «elige un registro». */
+  embebida: z.boolean().default(false),
 });
 export type PeonFichaPersonaProps = z.infer<typeof PeonFichaPersonaPropsSchema>;
 
