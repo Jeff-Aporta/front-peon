@@ -146,6 +146,37 @@ class PeonChat extends Componente<PeonChatProps> {
   }
 
   /** Widget de grilling: la respuesta vuelve como mensaje normal del hilo. */
+  /** Qué se le pregunta al usuario según desde dónde abrió el asistente. */
+  #pregunta(): string {
+    const c = this.props.contexto;
+    if (c?.tipo === 'noticia') return '¿Qué quieres cambiar, completar o agregar en esta publicación?';
+    if (c?.pantalla) return `¿Qué quieres modificar en ${c.pantalla}? Puedes pedir cambiar un texto, agregar o quitar algo.`;
+    return '¿En qué te ayudo con la campaña?';
+  }
+
+  /** Herramientas según el contexto: en una publicación, editarla; en una vista, sus textos; sin contexto, las de campaña. */
+  #herramientas(): { id: string; titulo: string; icono: string; texto: string; ayuda: string }[] {
+    const c = this.props.contexto;
+    if (c?.tipo === 'noticia') {
+      const que = c.titulo ? `«${c.titulo}»` : 'esta publicación';
+      return [
+        { id: 'completar', titulo: 'Completar', icono: 'mdi:text-box-plus-outline', texto: `Completa ${que} con una sección nueva sobre: `, ayuda: 'Agrega una sección con lo que le digas' },
+        { id: 'redaccion', titulo: 'Mejorar redacción', icono: 'mdi:auto-fix', texto: `Mejora la redacción de ${que}: más clara y cercana, sin cambiar los datos.`, ayuda: 'Más clara, sin cambiar datos' },
+        { id: 'titulo', titulo: 'Cambiar título', icono: 'mdi:format-title', texto: `Cambia el título de ${que} por: `, ayuda: 'Escribe el nuevo título' },
+        { id: 'resumen', titulo: 'Resumen', icono: 'mdi:text-short', texto: `Escribe un resumen de una línea para ${que}.`, ayuda: 'Una línea para la tarjeta' },
+        { id: 'ortografia', titulo: 'Ortografía', icono: 'mdi:spellcheck', texto: `Corrige la ortografía y la puntuación de ${que}.`, ayuda: 'Sin cambiar el contenido' },
+      ];
+    }
+    if (c?.pantalla) {
+      return [
+        { id: 'texto', titulo: 'Cambiar un texto', icono: 'mdi:form-textbox', texto: `En ${c.pantalla}, cambia el texto «…» por: `, ayuda: 'Di cuál y por qué texto' },
+        { id: 'agregar', titulo: 'Agregar contenido', icono: 'mdi:plus-box-outline', texto: `Agrega en ${c.pantalla} una sección con: `, ayuda: 'Un bloque nuevo en esta vista' },
+        { id: 'quitar', titulo: 'Quitar algo', icono: 'mdi:minus-box-outline', texto: `Quita de ${c.pantalla}: `, ayuda: 'Di qué sección o texto' },
+      ];
+    }
+    return HERRAMIENTAS_CHAT;
+  }
+
   /** Barra de arriba, solo íconos (title/aria-label): lista de chats (vista completa), título del hilo y buscador. */
   #cabeza(props: PeonChatProps): DocumentFragment {
     const panel = document.createElement('div');
@@ -301,8 +332,8 @@ class PeonChat extends Componente<PeonChatProps> {
     if (!this.#lineas.length) {
       l.replaceChildren(html`
         <div class="recomendaciones">
-          <p class="nota"><iswc-icon icon="mdi:robot-happy-outline"></iswc-icon> Pídele al VPS lo que necesites. Por ejemplo:</p>
-          <div class="tarjetas">${HERRAMIENTAS_CHAT.map((h) => html`<button type="button" class="tarjeta" onclick=${() => this.borrador(h.texto)}><iswc-icon icon=${h.icono}></iswc-icon><strong>${h.titulo}</strong><small>${h.ayuda}</small></button>`)}</div>
+          <div class="donde"><iswc-icon icon="mdi:map-marker-radius-outline"></iswc-icon><div><strong>Estás en «${this.#hilo.titulo}»</strong><small>${this.#pregunta()}</small></div></div>
+          <div class="tarjetas">${this.#herramientas().map((h) => html`<button type="button" class="tarjeta" onclick=${() => this.borrador(h.texto)}><iswc-icon icon=${h.icono}></iswc-icon><strong>${h.titulo}</strong><small>${h.ayuda}</small></button>`)}</div>
         </div>`);
       return;
     }
@@ -561,7 +592,7 @@ class PeonChat extends Componente<PeonChatProps> {
     const aviso = document.createElement('div');
     caja.append(html`
       ${this.#cabeza(props)}
-      <div class="herramientas" role="toolbar" aria-label="Herramientas">${HERRAMIENTAS_CHAT.map((h) => html`<button type="button" class="herramienta" title=${h.ayuda} onclick=${() => this.borrador(h.texto)}><iswc-icon icon=${h.icono}></iswc-icon>${h.titulo}</button>`)}</div>
+      <div class="herramientas" role="toolbar" aria-label="Herramientas">${this.#herramientas().map((h) => html`<button type="button" class="herramienta" title=${h.ayuda} onclick=${() => this.borrador(h.texto)}><iswc-icon icon=${h.icono}></iswc-icon>${h.titulo}</button>`)}</div>
       ${aviso}
       ${this.#lista}
       <div class="escribir">

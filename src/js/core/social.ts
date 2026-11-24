@@ -286,7 +286,7 @@ export function bloqueSocial(espacio: string, ref: string): HTMLElement {
       totalComentarios++;
       pintarResumen();
     })
-    : html`<p class="entra-comentar"><iswc-icon icon="mdi:login"></iswc-icon>Entra para comentar y reaccionar.</p>`;
+    : null; // sin sesión no hay pie: al intentar reaccionar o comentar, el aviso (toast) lo dice
 
   const acciones = document.createElement('div');
   acciones.className = 'acciones-social';
@@ -294,7 +294,7 @@ export function bloqueSocial(espacio: string, ref: string): HTMLElement {
     botonReaccion(espacio, ref, r, (n) => { r = n; pintarResumen(); }),
     html`<button type="button" class="accion" onclick=${() => (caja.querySelector('.redactor input') as HTMLInputElement | null)?.focus()}><iswc-icon icon="mdi:comment-outline"></iswc-icon>Comentar</button>`,
   );
-  caja.append(resumen, acciones, principal, lista, masRaices);
+  caja.append(...[resumen, acciones, principal, lista, masRaices].filter((n): n is HTMLElement => !!n));
   void api<Record<string, Resumen>>('GET', `reacciones?espacio=${espacio}&refs=${encodeURIComponent(ref)}`).then((res) => {
     r = res[ref] ?? r;
     montarAcciones();

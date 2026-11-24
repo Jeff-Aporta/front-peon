@@ -441,3 +441,8 @@ audio { max-width: 100%; height: 2.25em; }
 .enviar-w { background: var(--peon-morado); color: #fff; justify-self: start; }
 .fila-w { display: flex; gap: t.esp(1); }
 .texto-w { flex: 1; min-width: 0; padding: t.esp(1) t.esp(3); border: 1px solid var(--iswc-border-soft); border-radius: 999px; font: inherit; }
+
+/* Dónde estamos (el asistente se abrió desde una vista o una publicación). */
+.donde { display: flex; gap: t.esp(2); align-items: flex-start; padding: t.esp(2) t.esp(3); border-radius: 0.8em; background: var(--peon-morado-suave); }
+.donde > iswc-icon { flex: none; margin-top: 0.15em; color: var(--peon-morado); font-size: 1.3em; }
+.donde div { display: grid; gap: 0.1em; } .donde small { opacity: 0.8; }
