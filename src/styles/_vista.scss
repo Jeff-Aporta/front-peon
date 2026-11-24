@@ -157,6 +157,7 @@ iswc-tab-panel {
 /* Vistas de zonas propias (chat, lista | detalle): el panel mide el cuerpo y cada zona desplaza por dentro. */
 .pestanas.llena::part(body) { overflow: hidden; padding-bottom: t.esp(3); }
 .pestanas.llena iswc-tab-panel { height: 100%; }
+.pestanas.llena iswc-tab-panel::part(base) { box-sizing: border-box; height: 100%; }
 
 /* El panel oculto sigue oculto (la regla de arriba no debe ganarle al `hidden` del kit). */
 iswc-tab-panel[hidden] { display: none; }

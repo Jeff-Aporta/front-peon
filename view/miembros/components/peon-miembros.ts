@@ -14,7 +14,7 @@ import type { FichaMiembro, Miembro } from '../../../src/js/consts/schemas/api.s
 import { api } from '../../../src/js/core/api.js';
 import { ROLES, fecha } from '../../../src/js/core/catalogos.js';
 import { grupoPestanas } from '../../../src/js/core/pestanas.js';
-import { estadoPuesto, tarjetaPuesto, textoError } from '../../../src/js/core/ui.js';
+import { angosto, estadoPuesto, tarjetaPuesto, textoError } from '../../../src/js/core/ui.js';
 
 type Nodo = { id: string; parent: string | null; name: string; rol: string; activo: boolean; registros: number; creados: number; creado: string; yo: boolean };
 
@@ -34,11 +34,13 @@ function dispositivo(ua: string | null): string {
 class PeonMiembros extends Componente<VistaProps> {
   static tag = 'peon-miembros';
   static css = css;
-  static deps = ['iswc-tab-group', 'iswc-input', 'iswc-person', 'iswc-tag', 'iswc-button', 'iswc-callout', 'iswc-empty-state', 'iswc-dialog', 'iswc-spinner', 'iswc-org-chart'];
+  static deps = ['iswc-tab-group', 'iswc-split-panel', 'iswc-input', 'iswc-person', 'iswc-tag', 'iswc-button', 'iswc-callout', 'iswc-empty-state', 'iswc-dialog', 'iswc-spinner', 'iswc-org-chart'];
 
   #miembros: Miembro[] = [];
   #ficha: FichaMiembro | null = null;
   #abriendo = '';
+  /** Escritorio: panel derecho del split (lista | ficha). Si está montado, la ficha se pinta ahí y no en diálogo. */
+  #panel: HTMLElement | null = null;
 
   #recargas = new Set<() => void>();
 
@@ -108,7 +110,23 @@ class PeonMiembros extends Componente<VistaProps> {
     return caja;
   }
 
+  /** Ficha en el panel derecho del split (sin repintar la lista: no se pierde la búsqueda ni el scroll). */
+  async #abrirEnPanel(panel: HTMLElement, ref: string): Promise<void> {
+    panel.replaceChildren(html`<div class="cargando"><iswc-spinner></iswc-spinner></div>`);
+    try {
+      const m = await api<FichaMiembro>('GET', `miembros/${encodeURIComponent(ref)}`);
+      panel.replaceChildren(html`
+        <h2 class="nombre-ficha">${m.nombre}</h2>
+        <div class="cabeza"><iswc-tag color="brand" pill>${ROLES[m.rol] ?? m.rol}</iswc-tag>${m.puesto ? estadoPuesto(m.puestoEstado) : null}<span>${m.puesto?.nombre ?? ''}</span></div>
+        ${grupoPestanas('miembro', 'datos', (t) => this.#fichaPestana(m, t))}`);
+    } catch (e) {
+      panel.replaceChildren(html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`);
+    }
+  }
+
   async #abrir(ref: string): Promise<void> {
+    // Solo si el panel se ve (pestaña Lista en escritorio); desde el Árbol la ficha sale en diálogo.
+    if (this.#panel?.isConnected && this.#panel.getClientRects().length) return this.#abrirEnPanel(this.#panel, ref);
     this.#abriendo = ref;
     this.#ficha = null;
     this.props = {};
@@ -148,7 +166,14 @@ class PeonMiembros extends Componente<VistaProps> {
     }).catch((e) => lista.replaceChildren(html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`));
     this.#recargas.add(cargar);
     cargar();
-    return caja;
+    if (angosto()) return caja;
+    // Escritorio: lista | ficha en un split panel; cada zona con su propio scroll.
+    caja.classList.add('zona');
+    const panel = document.createElement('div');
+    panel.className = 'zona ficha-lado';
+    panel.append(html`<iswc-empty-state icono="mdi:badge-account-horizontal-outline" titulo="Elige un miembro" texto="Toca un miembro de la lista para ver aquí su ficha."></iswc-empty-state>`);
+    this.#panel = panel;
+    return html`<iswc-split-panel class="dividido" position="50">${Object.assign(caja, { slot: 'start' })}${Object.assign(panel, { slot: 'end' })}</iswc-split-panel>`;
   }
 
   #fichaPestana(m: FichaMiembro, t: string): Node {
@@ -192,7 +217,9 @@ class PeonMiembros extends Componente<VistaProps> {
 
   protected override pintar(root: ShadowRoot, props: VistaProps): void {
     this.#recargas.clear();
+    this.#panel = null;
     root.append(grupoPestanas('miembros', props.pestana, (p) => (p === 'arbol' ? this.#arbol() : this.#lista())));
+    if (!angosto()) root.querySelector('.pestanas')?.classList.add('llena');
     if (!this.#abriendo) return;
     const m = this.#ficha;
     root.append(html`
