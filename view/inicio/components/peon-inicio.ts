@@ -70,6 +70,14 @@ class PeonInicio extends Componente<VistaProps> {
       { id: 'chat', icono: 'mdi:robot-outline', titulo: 'Pregúntale al VPS', texto: 'Informes, ideas y noticias', ir: () => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: 'Inicio' }), si: chat },
       { id: 'privacidad', icono: 'mdi:shield-lock-outline', titulo: 'Privacidad', texto: 'Cómo cuidamos tus datos', ir: () => ir('noticias', 'privacidad') },
     ];
+    // Bloques alternos (imagen | texto) de la sección en degradado, al estilo de las páginas de producto.
+    const visualIcono = (icono: string) => html`<span class="func-icono"><iswc-icon icon=${icono}></iswc-icon></span>`;
+    const funciones: { etiqueta: string; titulo: string; texto: string; boton: string; ir: () => void; visual: Node; si?: boolean }[] = [
+      { etiqueta: 'Elecciones', titulo: 'Tu voto, paso a paso', texto: 'Dónde votar, qué llevar y cómo marcar el tarjetón sin errores. Una guía sencilla para ti y tu familia.', boton: 'Ver la guía', ir: () => ir('noticias', 'votar'), visual: visualIcono('mdi:vote-outline') },
+      { etiqueta: 'Comparte', titulo: 'Lleva la campaña a tus redes', texto: 'Piezas listas para WhatsApp, historias y portadas, con la foto oficial. Descárgalas o compártelas en un toque.', boton: 'Descargar piezas', ir: () => ir('noticias', 'publicidad'), visual: html`<img class="func-foto" src=${CAMPANA.fotoCompleta} alt="" loading="lazy" width="330" height="384">` },
+      { etiqueta: 'Al día', titulo: 'Entérate cada día', texto: 'Recorridos, propuestas y encuentros en los barrios. Las noticias de la campaña, apenas pasan.', boton: 'Leer noticias', ir: () => ir('noticias', 'noticias'), visual: visualIcono('mdi:newspaper-variant-multiple-outline') },
+      { etiqueta: 'Equipo', titulo: 'Suma gente a la marcha', texto: 'Registra a tus amigos y vecinos; la app verifica su puesto de votación por ti.', boton: 'Registrar a alguien', ir: () => ir('registro', 'persona'), visual: visualIcono('mdi:account-group-outline'), si: !!u?.escribe },
+    ];
     this.#noticias = document.createElement('div');
     this.#noticias.className = 'nt-rejilla';
     const [nombre, ...resto] = CAMPANA.candidato.split(' ');
@@ -101,12 +109,33 @@ class PeonInicio extends Componente<VistaProps> {
         <div class="pie-tablero" aria-hidden="true"></div>
         <div class="cinta" aria-hidden="true"></div>
       </section>
-      <nav class="accesos" aria-label="Accesos de la campaña">
-        ${accesos.filter((a) => a.si !== false).map((a, i) => html`<button type="button" class="acceso" data-acceso=${a.id} style=${`--i:${i}`} onclick=${a.ir}><iswc-icon icon=${a.icono}></iswc-icon><strong>${a.titulo}</strong><small>${a.texto}</small></button>`)}
+      <nav class="carrusel" aria-label="Todo lo de la campaña">
+        ${accesos.filter((a) => a.si !== false).map((a, i) => html`<button type="button" class="tarjeta-c" data-acceso=${a.id} style=${`--i:${i}`} onclick=${a.ir}><strong>${a.titulo}</strong><small>${a.texto}</small><iswc-icon icon=${a.icono}></iswc-icon></button>`)}
       </nav>
+      <section class="ola" aria-label="Lo que puedes hacer">
+        <h2 class="ola-titulo">Una campaña que <em>avanza contigo</em></h2>
+        <p class="ola-sub">Todo lo que necesitas para votar, compartir y estar al día, en un solo lugar.</p>
+        ${funciones.filter((f) => f.si !== false).map((f, i) => html`
+          <article class="func" ?data-invertida=${i % 2 === 1}>
+            <div class="func-visual">${f.visual}</div>
+            <div class="func-texto">
+              <span class="func-etiqueta">${f.etiqueta}</span>
+              <h3>${f.titulo}</h3>
+              <p>${f.texto}</p>
+              <button type="button" class="func-boton" onclick=${f.ir}>${f.boton}<iswc-icon icon="mdi:arrow-right"></iswc-icon></button>
+            </div>
+          </article>`)}
+      </section>
       <section class="bloque-noticias">
         <header class="cabeza-bloque"><h3>Últimas noticias</h3><button type="button" class="ver-todo" onclick=${() => ir('noticias', 'noticias')}>Ver todas <iswc-icon icon="mdi:chevron-right"></iswc-icon></button></header>
         ${this.#noticias}
+      </section>
+      <section class="cierre" aria-label="El candidato">
+        <h2>Conoce la historia detrás de <span>${CAMPANA.candidato}</span></h2>
+        <p>Pequeño en apariencia, grande en propósito: su camino, sus propuestas y por qué marcha con Armenia.</p>
+        <div class="cierre-botones">
+          <button type="button" class="func-boton claro" onclick=${() => ir('noticias', 'candidato')}>Biografía y trayectoria<iswc-icon icon="mdi:arrow-right"></iswc-icon></button>
+        </div>
       </section>
     `);
     void this.#cargarNoticias();

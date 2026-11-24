@@ -460,3 +460,188 @@
 @media (prefers-reduced-motion: reduce) {
   .portada, .foto, .quien, .acceso, .brillo { animation: none; }
 }
+
+/* ── Página de campaña al estilo de las páginas de producto (pedido del autor), con los colores de la marca ── */
+
+/* Carrusel de tarjetas de color (desliza a lo ancho, se detiene en cada tarjeta). */
+.carrusel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(12.5em, 15em);
+  gap: t.esp(3);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: t.esp(1) t.esp(1) t.esp(3);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+.tarjeta-c {
+  --a: var(--peon-morado);
+  --b: hsl(calc(var(--peon-morado-h) + 25) 70% 52%);
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 0.3em;
+  min-height: 9.5em;
+  padding: t.esp(4);
+  overflow: hidden;
+  border: 0;
+  border-radius: 1.1em;
+  background: linear-gradient(150deg, var(--a), var(--b));
+  color: #fff;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  scroll-snap-align: start;
+  box-shadow: 0 0.35em 0.9em hsl(var(--peon-morado-h) 50% 45% / 14%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: aparecer 0.45s calc(0.2s + var(--i, 0) * 0.05s) ease-out both;
+
+  strong { font-family: t.$titulos; font-size: 1.05em; line-height: 1.2; }
+  small { opacity: 0.9; font-size: 0.82em; line-height: 1.3; }
+  iswc-icon {
+    position: absolute;
+    right: -0.15em;
+    bottom: -0.2em;
+    font-size: 4.2em;
+    opacity: 0.28;
+    transform: rotate(-12deg);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  &:hover { transform: translateY(-0.2em); box-shadow: 0 0.7em 1.5em hsl(var(--peon-morado-h) 50% 45% / 20%); }
+  &:hover iswc-icon { transform: rotate(0) scale(1.08); opacity: 0.4; }
+  &:focus-visible { outline: 0.18em solid var(--iswc-color-contrast); outline-offset: 0.15em; }
+
+  /* Paleta de las tarjetas: morados de la marca y, de acento, el verde y el amarillo de la bandera. */
+  &:nth-child(4n + 2) { --a: hsl(calc(var(--peon-morado-h) + 18) 62% 42%); --b: hsl(calc(var(--peon-morado-h) + 45) 70% 55%); }
+  &:nth-child(4n + 3) { --a: var(--peon-verde); --b: hsl(150 60% 40%); }
+  &:nth-child(4n + 4) { --a: hsl(var(--iswc-contrast-h) 95% 52%); --b: hsl(28 95% 55%); color: var(--peon-sobre-amarillo); }
+}
+
+/* Sección en degradado (morado → violeta → magenta suave → amarillo), titular grande al centro y bloques alternos. */
+.ola {
+  display: grid;
+  gap: t.esp(8);
+  padding: t.esp(10) clamp(1em, 5cqi, 4em) t.esp(10);
+  border-radius: 1.6em;
+  background: linear-gradient(180deg,
+    hsl(var(--peon-morado-h) 70% 96%) 0%,
+    hsl(var(--peon-morado-h) 68% 62%) 18%,
+    var(--peon-morado) 42%,
+    hsl(calc(var(--peon-morado-h) + 25) 65% 45%) 68%,
+    hsl(calc(var(--peon-morado-h) + 50) 70% 52%) 86%,
+    hsl(var(--iswc-contrast-h) 95% 58%) 100%);
+  color: #fff;
+}
+
+.ola-titulo {
+  margin: 0;
+  font-family: t.$titulos;
+  font-size: clamp(1.7em, 1.1em + 3.4cqi, 3em);
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--peon-morado-hondo);
+
+  em { font-style: normal; color: var(--peon-morado); }
+}
+
+.ola-sub { margin: calc(-1 * #{t.esp(6)}) auto 0; max-width: 34em; text-align: center; color: var(--peon-morado-hondo); opacity: 0.8; }
+
+.func {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: t.esp(5);
+  align-items: center;
+}
+
+.func-visual {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 1.2em;
+  background: linear-gradient(150deg, rgb(255 255 255 / 22%), rgb(255 255 255 / 6%));
+  box-shadow: inset 0 0.1em 0 rgb(255 255 255 / 25%), 0 1em 2.2em rgb(30 0 60 / 12%);
+  backdrop-filter: blur(6px);
+}
+
+.func-icono {
+  display: grid;
+  place-items: center;
+  width: 7em;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 45%), rgb(255 255 255 / 10%));
+  font-size: 1.2em;
+
+  iswc-icon { font-size: 3.4em; }
+}
+
+.func-foto { width: 72%; height: 100%; object-fit: contain; object-position: 50% 100%; align-self: end; filter: drop-shadow(0 0.6em 1em rgb(20 0 40 / 30%)); }
+
+.func-texto { display: grid; justify-items: start; gap: t.esp(2); }
+
+.func-etiqueta {
+  padding: 0.25em 0.75em;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 22%);
+  font-size: 0.75em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.func h3 { margin: 0; font-family: t.$titulos; font-size: clamp(1.4em, 1.1em + 1.6cqi, 2em); font-weight: 800; line-height: 1.12; }
+.func p { margin: 0; max-width: 30em; line-height: 1.5; opacity: 0.92; }
+
+.func-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: t.esp(2);
+  min-height: 2.6em;
+  padding: 0 t.esp(5);
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--peon-morado-hondo);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 0.3em 0.8em rgb(30 0 60 / 15%);
+  transition: transform 0.15s ease;
+
+  iswc-icon { transition: transform 0.15s ease; }
+  &:hover { transform: translateY(-0.1em); }
+  &:hover iswc-icon { transform: translateX(0.2em); }
+  &:focus-visible { outline: 0.18em solid var(--iswc-color-contrast); outline-offset: 0.15em; }
+}
+
+/* Con ancho: imagen | texto, alternando de lado. */
+@container (min-width: 44em) {
+  .func { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: t.esp(8); }
+  .func[data-invertida] .func-visual { order: 2; }
+}
+
+/* Banner de cierre (como «Conoce la historia…»). */
+.cierre {
+  display: grid;
+  justify-items: center;
+  gap: t.esp(3);
+  padding: t.esp(10) t.esp(5);
+  border-radius: 1.6em;
+  background:
+    radial-gradient(80% 120% at 100% 100%, hsl(var(--iswc-contrast-h) 95% 58% / 55%), transparent 60%),
+    linear-gradient(135deg, var(--peon-morado-hondo), var(--peon-morado) 55%, hsl(calc(var(--peon-morado-h) + 30) 65% 50%));
+  color: #fff;
+  text-align: center;
+
+  h2 { margin: 0; max-width: 18em; font-family: t.$titulos; font-size: clamp(1.5em, 1.1em + 2.4cqi, 2.5em); font-weight: 800; line-height: 1.12; text-wrap: balance; }
+  h2 span { color: var(--peon-amarillo); }
+  p { margin: 0; max-width: 32em; opacity: 0.9; }
+}
+
+@media (prefers-reduced-motion: reduce) { .tarjeta-c, .tarjeta-c iswc-icon, .func-boton, .func-boton iswc-icon { transition: none; } }
