@@ -21,7 +21,7 @@ export type Usuario = z.infer<typeof UsuarioSchema>;
 /** `publica`: se ve sin sesión (app abierta). */
 export type Pestana = { id: string; titulo: string; icono: string; publica?: boolean };
 /** `visible(null)` = sin sesión. `ir`: atajo del menú que abre otra vista en una pestaña (no tiene tag propio). */
-export type Vista = { id: string; titulo: string; icono: string; tag: string; pestanas: Pestana[]; visible: (u: Usuario | null) => boolean; ir?: { vista: string; pestana: string } };
+export type Vista = { id: string; titulo: string; icono: string; tag: string; pestanas: Pestana[]; visible: (u: Usuario | null) => boolean; ir?: { vista: string; pestana: string }; seccion?: string };
 
 export type Puesto = { codigo: string; nombre: string; municipio: string; departamento: string | null; direccion: string | null; lat: number | null; lon: number | null; fuente: string };
 export type ResultadoPuesto = { estado: 'verificado' | 'pendiente' | 'error'; puesto: Puesto | null; mesa: string | null; desdeCache: boolean; aviso: string | null; captcha: string | null; yaRegistrada?: boolean };

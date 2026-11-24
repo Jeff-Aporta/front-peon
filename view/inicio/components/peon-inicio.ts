@@ -63,19 +63,19 @@ class PeonInicio extends Componente<VistaProps> {
     const accesos: { id: string; icono: string; titulo: string; texto: string; ir: () => void; si?: boolean }[] = [
       { id: 'noticias', icono: 'mdi:newspaper-variant-outline', titulo: 'Noticias diarias', texto: 'Lo último de la campaña', ir: () => ir('noticias', 'noticias') },
       { id: 'registrar', icono: 'mdi:account-plus-outline', titulo: 'Registra a tus amigos', texto: 'Suma gente a la marcha', ir: () => ir('registro', 'persona'), si: !!u?.escribe },
-      { id: 'puesto', icono: 'mdi:map-marker-radius-outline', titulo: 'Puesto de votación', texto: u?.escribe ? 'Dónde y en qué mesa' : 'Cómo consultarlo, paso a paso', ir: () => (u?.escribe ? ir('registro', 'consulta') : ir('noticias', 'votar')) },
-      { id: 'publicidad', icono: 'mdi:download-outline', titulo: 'Publicidad descargable', texto: 'Piezas para redes y WhatsApp', ir: () => ir('noticias', 'publicidad') },
-      { id: 'biografia', icono: 'mdi:account-star-outline', titulo: 'Biografía', texto: `Quién es ${CAMPANA.candidato.split(' ')[0]}`, ir: () => ir('noticias', 'candidato') },
-      { id: 'trayectoria', icono: 'mdi:timeline-text-outline', titulo: 'Trayectoria', texto: 'El camino recorrido', ir: () => ir('noticias', 'candidato') },
-      { id: 'votar', icono: 'mdi:vote-outline', titulo: 'Cómo votar', texto: 'Paso a paso, sin errores', ir: () => ir('noticias', 'votar') },
+      { id: 'puesto', icono: 'mdi:map-marker-radius-outline', titulo: 'Puesto de votación', texto: u?.escribe ? 'Dónde y en qué mesa' : 'Cómo consultarlo, paso a paso', ir: () => (u?.escribe ? ir('registro', 'consulta') : ir('votar')) },
+      { id: 'publicidad', icono: 'mdi:download-outline', titulo: 'Publicidad descargable', texto: 'Piezas para redes y WhatsApp', ir: () => ir('comparte') },
+      { id: 'biografia', icono: 'mdi:account-star-outline', titulo: 'Biografía', texto: `Quién es ${CAMPANA.candidato.split(' ')[0]}`, ir: () => ir('candidato') },
+      { id: 'trayectoria', icono: 'mdi:timeline-text-outline', titulo: 'Trayectoria', texto: 'El camino recorrido', ir: () => ir('candidato') },
+      { id: 'votar', icono: 'mdi:vote-outline', titulo: 'Cómo votar', texto: 'Paso a paso, sin errores', ir: () => ir('votar') },
       { id: 'chat', icono: 'mdi:robot-outline', titulo: 'Pregúntale al VPS', texto: 'Informes, ideas y noticias', ir: () => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: 'Inicio' }), si: chat },
-      { id: 'privacidad', icono: 'mdi:shield-lock-outline', titulo: 'Privacidad', texto: 'Cómo cuidamos tus datos', ir: () => ir('noticias', 'privacidad') },
+      { id: 'privacidad', icono: 'mdi:shield-lock-outline', titulo: 'Privacidad', texto: 'Cómo cuidamos tus datos', ir: () => ir('privacidad') },
     ];
     // Bloques alternos (imagen | texto) de la sección en degradado, al estilo de las páginas de producto.
     const visualIcono = (icono: string) => html`<span class="func-icono"><iswc-icon icon=${icono}></iswc-icon></span>`;
     const funciones: { etiqueta: string; titulo: string; texto: string; boton: string; ir: () => void; visual: Node; si?: boolean }[] = [
-      { etiqueta: 'Elecciones', titulo: 'Tu voto, paso a paso', texto: 'Dónde votar, qué llevar y cómo marcar el tarjetón sin errores. Una guía sencilla para ti y tu familia.', boton: 'Ver la guía', ir: () => ir('noticias', 'votar'), visual: visualIcono('mdi:vote-outline') },
-      { etiqueta: 'Comparte', titulo: 'Lleva la campaña a tus redes', texto: 'Piezas listas para WhatsApp, historias y portadas, con la foto oficial. Descárgalas o compártelas en un toque.', boton: 'Descargar piezas', ir: () => ir('noticias', 'publicidad'), visual: html`<img class="func-foto" src=${CAMPANA.fotoCompleta} alt="" loading="lazy" width="330" height="384">` },
+      { etiqueta: 'Elecciones', titulo: 'Tu voto, paso a paso', texto: 'Dónde votar, qué llevar y cómo marcar el tarjetón sin errores. Una guía sencilla para ti y tu familia.', boton: 'Ver la guía', ir: () => ir('votar'), visual: visualIcono('mdi:vote-outline') },
+      { etiqueta: 'Comparte', titulo: 'Lleva la campaña a tus redes', texto: 'Piezas listas para WhatsApp, historias y portadas, con la foto oficial. Descárgalas o compártelas en un toque.', boton: 'Descargar piezas', ir: () => ir('comparte'), visual: html`<img class="func-foto" src=${CAMPANA.fotoCompleta} alt="" loading="lazy" width="330" height="384">` },
       { etiqueta: 'Al día', titulo: 'Entérate cada día', texto: 'Recorridos, propuestas y encuentros en los barrios. Las noticias de la campaña, apenas pasan.', boton: 'Leer noticias', ir: () => ir('noticias', 'noticias'), visual: visualIcono('mdi:newspaper-variant-multiple-outline') },
       { etiqueta: 'Equipo', titulo: 'Suma gente a la marcha', texto: 'Registra a tus amigos y vecinos; la app verifica su puesto de votación por ti.', boton: 'Registrar a alguien', ir: () => ir('registro', 'persona'), visual: visualIcono('mdi:account-group-outline'), si: !!u?.escribe },
     ];
@@ -159,7 +159,7 @@ class PeonInicio extends Componente<VistaProps> {
         <h2>Conoce la historia detrás de <span>${CAMPANA.candidato}</span></h2>
         <p>Pequeño en apariencia, grande en propósito: su camino, sus propuestas y por qué marcha con Armenia.</p>
         <div class="cierre-botones">
-          <button type="button" class="func-boton claro" onclick=${() => ir('noticias', 'candidato')}>Biografía y trayectoria<iswc-icon icon="mdi:arrow-right"></iswc-icon></button>
+          <button type="button" class="func-boton claro" onclick=${() => ir('candidato')}>Biografía y trayectoria<iswc-icon icon="mdi:arrow-right"></iswc-icon></button>
         </div>
       </section>
     `);

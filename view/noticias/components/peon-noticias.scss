@@ -265,3 +265,5 @@ iswc-button.morado {
 @container (min-width: 46em) {
   .creador { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
 }
+
+.seccion-titulo { @include m.titular-pincel; margin: t.esp(4) 0 t.esp(2); font-size: 1em; justify-self: start; }

@@ -31,7 +31,7 @@ export default definirPruebas([
           acceso: !!raiz.querySelector('peon-acceso'),
         };
       }, null);
-      expect('menú público', r.nav.join('|') === 'Inicio|Noticias|Cómo votar|Privacidad', r.nav.join('|'));
+      expect('menú público', r.nav.join('|') === 'Inicio|Noticias|El candidato|Cómo votar|Comparte|Privacidad', r.nav.join('|'));
       expect('desplegable de sesión sin sesión', r.menu && !r.logged);
       expect('sin pantalla de acceso completa', !r.acceso);
       expect('Inicio con la portada del candidato', (await enSombra(s.page, ['peon-app', 'peon-inicio', '.nombre'])) === true);

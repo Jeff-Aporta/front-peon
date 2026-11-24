@@ -25,8 +25,14 @@ export const VISTAS: Vista[] = [
   },
   {
     id: 'noticias', titulo: 'Noticias', icono: 'mdi:newspaper-variant-outline', tag: 'peon-noticias', visible: siempre,
-    pestanas: [{ id: 'noticias', titulo: 'Noticias', icono: 'mdi:newspaper-variant-outline', publica: true }, { id: 'candidato', titulo: 'El candidato', icono: 'mdi:account-star-outline', publica: true }, { id: 'votar', titulo: 'Cómo votar', icono: 'mdi:vote-outline', publica: true }, { id: 'publicidad', titulo: 'Publicidad', icono: 'mdi:download-outline', publica: true }, { id: 'redes', titulo: 'Para redes', icono: 'mdi:image-edit-outline', publica: true }, { id: 'privacidad', titulo: 'Privacidad', icono: 'mdi:shield-lock-outline', publica: true }],
+    pestanas: [{ id: 'noticias', titulo: 'Noticias', icono: 'mdi:newspaper-variant-outline', publica: true }],
   },
+  // Páginas de la campaña: cada una es su propia vista del menú (no van dentro de Noticias). Las pinta el mismo
+  // <peon-noticias> con `seccion` fija.
+  { id: 'candidato', titulo: 'El candidato', icono: 'mdi:account-star-outline', tag: 'peon-noticias', seccion: 'candidato', visible: siempre, pestanas: [{ id: 'candidato', titulo: 'El candidato', icono: 'mdi:account-star-outline', publica: true }] },
+  { id: 'votar', titulo: 'Cómo votar', icono: 'mdi:vote-outline', tag: 'peon-noticias', seccion: 'votar', visible: siempre, pestanas: [{ id: 'votar', titulo: 'Cómo votar', icono: 'mdi:vote-outline', publica: true }] },
+  { id: 'comparte', titulo: 'Comparte', icono: 'mdi:share-variant-outline', tag: 'peon-noticias', seccion: 'comparte', visible: siempre, pestanas: [{ id: 'comparte', titulo: 'Comparte', icono: 'mdi:share-variant-outline', publica: true }] },
+  { id: 'privacidad', titulo: 'Privacidad', icono: 'mdi:shield-lock-outline', tag: 'peon-noticias', seccion: 'privacidad', visible: siempre, pestanas: [{ id: 'privacidad', titulo: 'Privacidad', icono: 'mdi:shield-lock-outline', publica: true }] },
   {
     id: 'registro', titulo: 'Registrar', icono: 'mdi:account-plus-outline', tag: 'peon-registro', visible: (u) => !!u?.escribe,
     pestanas: [{ id: 'persona', titulo: 'Nueva persona', icono: 'mdi:card-account-details-outline' }, { id: 'consulta', titulo: 'Consultar puesto', icono: 'mdi:map-marker-question-outline' }],
@@ -51,9 +57,6 @@ export const VISTAS: Vista[] = [
     id: 'ajustes', titulo: 'Ajustes', icono: 'mdi:cog-outline', tag: 'peon-ajustes', visible: conSesion,
     pestanas: [{ id: 'perfil', titulo: 'Mi perfil', icono: 'mdi:account-circle-outline' }, { id: 'clave', titulo: 'Cambiar clave', icono: 'mdi:lock-reset' }, { id: 'sesion', titulo: 'Sesión', icono: 'mdi:monitor-cellphone' }],
   },
-  // Atajos públicos del menú (solo sin sesión; con sesión son pestañas de Noticias)
-  { id: 'votar', titulo: 'Cómo votar', icono: 'mdi:vote-outline', tag: '', visible: sinSesion, pestanas: [], ir: { vista: 'noticias', pestana: 'votar' } },
-  { id: 'privacidad', titulo: 'Privacidad', icono: 'mdi:shield-lock-outline', tag: '', visible: sinSesion, pestanas: [], ir: { vista: 'noticias', pestana: 'privacidad' } },
   // Pestañas de las fichas (no salen en el menú)
   {
     id: 'ficha', titulo: 'Ficha de la persona', icono: 'mdi:card-account-details-outline', tag: '', visible: () => false,

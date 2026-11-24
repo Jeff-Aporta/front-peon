@@ -20,9 +20,7 @@ import { api, puede, sesion, usuarioActivo } from '../../../src/js/core/api.js';
 import { CATEGORIAS_NOTICIA, fecha } from '../../../src/js/core/catalogos.js';
 import { CAMPANA } from '../../../src/js/core/config.js';
 import { portadaNoticias } from '../../../src/js/core/noticias.js';
-import { carruselSecciones } from '../../../src/js/core/carrusel.js';
 import { creadorPiezas } from '../../../src/js/core/piezas-redes.js';
-import { vista } from '../../../src/js/core/catalogos.js';
 import { FORMATOS, archivoPieza, dibujarPieza } from '../../../src/js/core/publicidad.js';
 import { abrirChat, abrirNoticia, ir, textoError, valor } from '../../../src/js/core/ui.js';
 
@@ -34,7 +32,6 @@ class PeonNoticias extends Componente<VistaProps> {
 
   #lista: HTMLElement | null = null;
   #filas: NoticiaFila[] = [];
-  #seccion = 'noticias';
 
   protected override inicial(): VistaProps {
     return { pestana: '' };
@@ -237,17 +234,18 @@ class PeonNoticias extends Componente<VistaProps> {
     return caja;
   }
 
+  /** Una sección por vista: Noticias (solo noticias) o la página de campaña que fija el catálogo (`seccion`). */
   protected override pintar(root: ShadowRoot, props: VistaProps): void {
-    const secciones = vista('noticias').pestanas.filter((p) => p.publica || usuarioActivo());
-    if (props.pestana && secciones.some((p) => p.id === props.pestana)) this.#seccion = props.pestana;
-    const cuerpo = document.createElement('div');
-    cuerpo.className = 'cuerpo-seccion';
-    const mostrar = (id: string) => {
-      this.#seccion = id;
-      cuerpo.replaceChildren(id === 'candidato' ? this.#candidato() : id === 'votar' ? this.#votar() : id === 'publicidad' ? this.#publicidad() : id === 'redes' ? creadorPiezas(() => this.#filas) : id === 'privacidad' ? this.#privacidad() : this.#noticias());
-    };
-    root.append(carruselSecciones(secciones.map((p) => ({ id: p.id, titulo: p.titulo, icono: p.icono })), this.#seccion, mostrar), cuerpo);
-    mostrar(this.#seccion);
+    const id = props.pestana || 'noticias';
+    root.append(id === 'candidato' ? this.#candidato() : id === 'votar' ? this.#votar() : id === 'comparte' ? this.#comparte() : id === 'privacidad' ? this.#privacidad() : this.#noticias());
+  }
+
+  /** Comparte: piezas descargables y el creador de piezas para redes, en la misma página. */
+  #comparte(): Node {
+    const caja = document.createElement('div');
+    caja.className = 'caja';
+    caja.append(html`<h2 class="seccion-titulo">Piezas listas para descargar</h2>`, this.#publicidad(), html`<h2 class="seccion-titulo">Crea tu pieza para redes</h2>`, creadorPiezas(() => this.#filas));
+    return caja;
   }
 }
 

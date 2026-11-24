@@ -328,7 +328,7 @@ class PeonApp extends Componente<PeonAppProps> {
     this.#menu = null;
     const v = vista(actual);
     const contenido = document.createElement(v.tag);
-    Object.assign(contenido, { props: { pestana: this.#pestana } });
+    Object.assign(contenido, { props: { pestana: v.seccion ?? this.#pestana } });
     this.#pestana = '';
     const chico = angosto();
     root.append(html`
