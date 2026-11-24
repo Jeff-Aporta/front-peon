@@ -25,7 +25,7 @@ export const VISTAS: Vista[] = [
   },
   {
     id: 'noticias', titulo: 'Noticias', icono: 'mdi:newspaper-variant-outline', tag: 'peon-noticias', visible: siempre,
-    pestanas: [{ id: 'noticias', titulo: 'Noticias', icono: 'mdi:newspaper-variant-outline', publica: true }, { id: 'candidato', titulo: 'El candidato', icono: 'mdi:account-star-outline', publica: true }, { id: 'votar', titulo: 'Cómo votar', icono: 'mdi:vote-outline', publica: true }, { id: 'publicidad', titulo: 'Publicidad', icono: 'mdi:download-outline', publica: true }, { id: 'privacidad', titulo: 'Privacidad', icono: 'mdi:shield-lock-outline', publica: true }],
+    pestanas: [{ id: 'noticias', titulo: 'Noticias', icono: 'mdi:newspaper-variant-outline', publica: true }, { id: 'candidato', titulo: 'El candidato', icono: 'mdi:account-star-outline', publica: true }, { id: 'votar', titulo: 'Cómo votar', icono: 'mdi:vote-outline', publica: true }, { id: 'publicidad', titulo: 'Publicidad', icono: 'mdi:download-outline', publica: true }, { id: 'redes', titulo: 'Para redes', icono: 'mdi:image-edit-outline', publica: true }, { id: 'privacidad', titulo: 'Privacidad', icono: 'mdi:shield-lock-outline', publica: true }],
   },
   {
     id: 'registro', titulo: 'Registrar', icono: 'mdi:account-plus-outline', tag: 'peon-registro', visible: (u) => !!u?.escribe,

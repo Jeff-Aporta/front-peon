@@ -1,5 +1,6 @@
 @use "vista";
 @use "noticia-tarjeta";
+@use "carrusel";
 @use "tokens" as t;
 @use "mixins" as m;
 
@@ -181,4 +182,86 @@ iswc-button.morado {
   text-decoration: none;
 
   &:hover { background: var(--iswc-brand-soft); }
+}
+
+
+/* Administrar con IA (editores). */
+.admin-ia {
+  display: grid;
+  gap: t.esp(3);
+  margin-bottom: t.esp(5);
+  padding: t.esp(4);
+  border: 1px solid var(--peon-morado-borde);
+  border-radius: 1em;
+  background: radial-gradient(120% 140% at 100% 0%, var(--peon-morado-suave), transparent 60%), var(--iswc-bg);
+
+  &:empty { display: none; }
+  .sin-ia { display: grid; gap: t.esp(3); }
+  .sin-ia summary { cursor: pointer; font-size: 0.88em; opacity: 0.8; }
+}
+
+/* Sin pestañas: la vista desplaza ella misma (scroll por sección). */
+.cuerpo-seccion { padding-bottom: t.esp(8); }
+
+/* Creador de piezas para redes: panel de opciones | vista previa (SVG). En celular, apilado. */
+.creador {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: t.esp(5);
+  container-type: inline-size;
+}
+
+.creador-panel { display: grid; align-content: start; gap: t.esp(4); }
+.creador-campo { display: grid; gap: t.esp(1); font-size: 0.9em; }
+.creador-campo > span { font-weight: 600; }
+
+.creador-select,
+.creador-campo textarea {
+  width: 100%;
+  padding: t.esp(2) t.esp(3);
+  border: 1px solid var(--iswc-border-soft);
+  border-radius: 0.6em;
+  background: var(--iswc-bg);
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+}
+
+.opciones { display: flex; flex-wrap: wrap; gap: t.esp(2); }
+
+.opcion,
+.func-boton {
+  @include m.toque;
+  min-height: 2.4em;
+  padding: 0 t.esp(4);
+  border: 1px solid var(--peon-morado-borde);
+  border-radius: 999px;
+  background: var(--iswc-bg);
+  color: var(--peon-morado);
+  font: inherit;
+  font-size: 0.88em;
+  font-weight: 600;
+  cursor: pointer;
+
+  &[data-activa] { border-color: transparent; background: var(--peon-morado); color: #fff; }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); outline-offset: 0.15em; }
+}
+
+.func-boton { border-color: transparent; background: linear-gradient(135deg, var(--peon-morado), hsl(calc(var(--peon-morado-h) + 25) 65% 50%)); color: #fff; }
+
+.creador-nota { margin: 0; font-size: 0.8em; opacity: 0.7; }
+
+.creador-previa {
+  justify-self: center;
+  width: min(100%, 26em);
+  overflow: hidden;
+  border-radius: 1em;
+  box-shadow: 0 0.6em 1.6em hsl(var(--peon-morado-h) 50% 40% / 18%);
+
+  &[data-formato="historia"] { width: min(100%, 18em); }
+  svg { display: block; width: 100%; height: auto; }
+}
+
+@container (min-width: 46em) {
+  .creador { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
 }

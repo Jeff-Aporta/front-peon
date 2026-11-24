@@ -34,7 +34,8 @@ export type Catalogo = { permisos: { clave: string; texto: string }[]; roles: { 
 
 /** Noticias y páginas de la campaña (`GET /api/noticias`): Markdown con HTML y componentes iswc-*. */
 export type CategoriaNoticia = 'noticia' | 'biografia' | 'trayectoria' | 'tutorial' | 'privacidad';
-export type NoticiaFila = { id: number; categoria: CategoriaNoticia; titulo: string; resumen: string | null; imagen: string | null; estado: 'borrador' | 'publicada' | 'archivada'; destacada: boolean; orden: number; autor: string | null; creado: string; actualizado: string | null; publicada: string | null; adelanto: string };
+/** `tipo`: propia · adaptada (de otro medio, cita `fuente` y `enlace_original`) · enlace (abre la original). */
+export type NoticiaFila = { id: number; categoria: CategoriaNoticia; titulo: string; resumen: string | null; imagen: string | null; tipo?: 'propia' | 'adaptada' | 'enlace'; fuente?: string | null; enlace_original?: string | null; estado: 'borrador' | 'publicada' | 'archivada'; destacada: boolean; orden: number; autor: string | null; creado: string; actualizado: string | null; publicada: string | null; adelanto: string };
 export type Noticia = Omit<NoticiaFila, 'adelanto'> & { cuerpo_md: string };
 
 /** Campana (plugin `notificaciones` de DER): bandeja de la sesión y contador. */

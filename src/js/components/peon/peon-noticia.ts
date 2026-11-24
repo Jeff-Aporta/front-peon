@@ -18,6 +18,7 @@ import { Componente, avisar, html } from '../../base/componente.js';
 import type { PeonNoticiaProps } from '../../consts/schemas/componentes.schemas.js';
 import type { Noticia, NoticiaFila } from '../../consts/schemas/api.schemas.js';
 import { api, puede } from '../../core/api.js';
+import { tiempoNoticia } from '../../core/noticias.js';
 import { CATEGORIAS_NOTICIA, fecha } from '../../core/catalogos.js';
 import { pintarMd } from '../../core/md.js';
 import { abrirChat, copiar, textoError, valor } from '../../core/ui.js';
@@ -176,18 +177,20 @@ class PeonNoticia extends Componente<PeonNoticiaProps> {
       <article class="noticia" data-categoria=${n.categoria}>
         ${this.props.sinTitulo ? null : html`
           <header class="cabeza">
-            <div class="etiquetas">
-              <iswc-tag size="small" pill class="cat"><iswc-icon icon=${cat?.icono ?? 'mdi:newspaper-variant-outline'}></iswc-icon> ${cat?.titulo ?? n.categoria}</iswc-tag>
+            <p class="antetitulo"><span>${cat?.titulo ?? n.categoria}</span>${n.tipo && n.tipo !== 'propia' && n.fuente ? html` · ${n.tipo === 'adaptada' ? 'Adaptada de' : 'En'} <strong>${n.fuente}</strong>` : null}
               ${n.estado === 'borrador' ? html`<iswc-tag size="small" pill color="warning">Borrador</iswc-tag>` : null}
-              ${n.destacada ? html`<iswc-tag size="small" pill color="brand">Destacada</iswc-tag>` : null}
-            </div>
+              ${n.destacada ? html`<iswc-tag size="small" pill color="brand">Destacada</iswc-tag>` : null}</p>
             <h2 class="titulo">${n.titulo}</h2>
             ${n.resumen ? html`<p class="resumen">${n.resumen}</p>` : null}
-            <small class="fecha">${n.publicada ? `Publicada ${fecha(n.publicada)}` : `Creada ${fecha(n.creado)}`}${n.actualizado && n.actualizado !== n.creado ? ` · editada ${fecha(n.actualizado)}` : ''}</small>
+            <div class="firma">
+              <img src="./assets/logo-160.webp" alt="" width="36" height="36">
+              <span><strong>${n.tipo && n.tipo !== 'propia' && n.fuente ? n.fuente : 'La Fuerza del Peón en Marcha'}</strong>
+                <small title=${fecha(n.publicada ?? n.creado)}>${n.publicada ? `Publicada ${tiempoNoticia(n.publicada)}` : `Creada ${tiempoNoticia(n.creado)}`}${n.actualizado && n.actualizado !== n.creado ? ` · editada ${tiempoNoticia(n.actualizado)}` : ''}</small></span>
+            </div>
           </header>`}
-        <div class="cinta" aria-hidden="true"></div>
-        ${n.imagen ? html`<img class="portada" src=${n.imagen} alt="" loading="lazy">` : null}
+        ${n.imagen ? html`<figure class="portada"><img src=${n.imagen} alt="" loading="lazy">${n.fuente && n.tipo !== 'propia' ? html`<figcaption>Imagen: ${n.fuente}</figcaption>` : null}</figure>` : html`<div class="cinta" aria-hidden="true"></div>`}
         ${cuerpo}
+        ${n.enlace_original ? html`<a class="original" href=${n.enlace_original} target="_blank" rel="noopener noreferrer"><iswc-icon icon="mdi:open-in-new"></iswc-icon>Leer la noticia original${n.fuente ? ` en ${n.fuente}` : ''}</a>` : null}
         ${menu}
         <p class="pista"><iswc-icon icon="mdi:gesture-tap-hold"></iswc-icon>${chat ? 'Mantén presionado (o clic derecho) un párrafo para enviarlo al VPS y editarlo.' : 'Mantén presionado (o clic derecho) un párrafo para copiarlo.'}</p>
         <footer class="acciones">
@@ -229,6 +232,9 @@ class PeonNoticia extends Componente<PeonNoticiaProps> {
         <iswc-select data-campo="categoria" label="Sección" value=${n.categoria} full-width>${Object.entries(CATEGORIAS_NOTICIA).map(([k, v]) => html`<iswc-option value=${k}>${v.titulo}</iswc-option>`)}</iswc-select>
         <iswc-input data-campo="resumen" label="Resumen (una línea)" value=${n.resumen ?? ''} maxlength="400" full-width></iswc-input>
         <iswc-input data-campo="imagen" label="Imagen (URL https o ./assets/…)" value=${n.imagen ?? ''} full-width></iswc-input>
+        <iswc-select data-campo="tipo" label="Tipo" value=${n.tipo ?? 'propia'} full-width><iswc-option value="propia">Propia</iswc-option><iswc-option value="adaptada">Adaptada de otro medio</iswc-option><iswc-option value="enlace">Enlace a la original</iswc-option></iswc-select>
+        <iswc-input data-campo="fuente" label="Medio (fuente)" value=${n.fuente ?? ''} maxlength="80" full-width></iswc-input>
+        <iswc-input data-campo="enlace_original" label="Enlace a la noticia original (https)" value=${n.enlace_original ?? ''} full-width></iswc-input>
       </div>
       <div class="dos">
         <iswc-textarea data-campo="cuerpo" label="Contenido (Markdown: acepta HTML y componentes iswc-*)" rows="14" value=${n.cuerpo_md} oniswc-input=${alEscribir}></iswc-textarea>
@@ -238,7 +244,7 @@ class PeonNoticia extends Componente<PeonNoticiaProps> {
       <footer class="acciones">
         <iswc-button size="small" color="brand" data-guardar onclick=${(e: Event) => {
           const raiz = caja;
-          void this.#guardar({ titulo: valor(raiz, 'titulo'), categoria: valor(raiz, 'categoria') as Noticia['categoria'], resumen: valor(raiz, 'resumen') || null, imagen: valor(raiz, 'imagen') || null, cuerpo_md: String((raiz.querySelector('[data-campo="cuerpo"]') as HTMLElement & { value?: string } | null)?.value ?? '') }, e.currentTarget as HTMLElement);
+          void this.#guardar({ titulo: valor(raiz, 'titulo'), categoria: valor(raiz, 'categoria') as Noticia['categoria'], resumen: valor(raiz, 'resumen') || null, imagen: valor(raiz, 'imagen') || null, tipo: (valor(raiz, 'tipo') || 'propia') as Noticia['tipo'], fuente: valor(raiz, 'fuente') || null, enlace_original: valor(raiz, 'enlace_original') || null, cuerpo_md: String((raiz.querySelector('[data-campo="cuerpo"]') as HTMLElement & { value?: string } | null)?.value ?? '') }, e.currentTarget as HTMLElement);
         }}><iswc-icon slot="start" icon="mdi:content-save-outline"></iswc-icon>Guardar</iswc-button>
         <iswc-button size="small" variant="text" data-cancelar onclick=${() => { this.#editando = false; this.props = {}; }}>Cancelar</iswc-button>
       </footer>`);

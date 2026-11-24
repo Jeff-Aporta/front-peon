@@ -42,6 +42,8 @@
   font-weight: 600;
 
   img { width: 1.35em; height: 1.35em; border-radius: 0.25em; object-fit: cover; }
+  iswc-icon { font-size: 1.2em; color: var(--peon-morado); }
+  .nt-externa { font-size: 1em; opacity: 0.6; }
 }
 
 .nt-titulo {
@@ -96,3 +98,82 @@
 .nt[data-adelanto] .nt-imagen { width: 7em; }
 
 @media (prefers-reduced-motion: reduce) { .nt-imagen { transition: none; } }
+
+/* ── Portada de noticias (periódico digital) ── */
+.np { display: grid; gap: t.esp(5); container-type: inline-size; }
+
+.np-principal,
+.np-sec {
+  @include m.toque(0.985);
+  display: grid;
+  gap: t.esp(3);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover .np-titulo, &:hover .nt-titulo { text-decoration: underline; text-underline-offset: 0.15em; }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); outline-offset: 0.3em; border-radius: t.radio(md); }
+}
+
+.np-imagen {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 1em;
+  background: radial-gradient(80% 90% at 30% 20%, hsl(var(--iswc-contrast-h) 100% 65% / 35%), transparent 60%), linear-gradient(140deg, var(--peon-morado-hondo), var(--peon-morado)) center / cover;
+
+  img { width: 30%; height: auto; border-radius: 50%; box-shadow: 0 0 0 0.25em rgb(255 255 255 / 70%); }
+}
+
+.np-texto { display: grid; align-content: center; gap: t.esp(2); min-width: 0; }
+
+.np-titulo {
+  font-family: t.$titulos;
+  font-size: clamp(1.35em, 1.05em + 1.6cqi, 2.1em);
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--iswc-text);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.np-adelanto {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.np-secundarias {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12em), 1fr));
+  gap: t.esp(5) t.esp(4);
+  padding-top: t.esp(4);
+  border-top: 1px solid var(--iswc-border-soft);
+}
+
+.np-sec { align-content: start; gap: t.esp(2); }
+.np-sec .np-imagen { aspect-ratio: 3 / 2; border-radius: 0.75em; }
+.np-sec .np-imagen img { width: 34%; }
+
+.np-mas {
+  margin: t.esp(6) 0 0;
+  padding-bottom: t.esp(2);
+  border-bottom: 0.15em solid var(--peon-morado);
+  font-family: t.$titulos;
+  font-size: 1.1em;
+}
+
+/* Con ancho: la principal en dos columnas (imagen | texto). */
+@container (min-width: 32em) {
+  .np-principal { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: t.esp(6); align-items: center; }
+}

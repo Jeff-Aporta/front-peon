@@ -1,11 +1,14 @@
 // @contexto HANDOFF.md §2b puntos 3 y 4
 /**
- * <peon-noticias> — noticias diarias y páginas de la campaña. Pestañas:
+ * <peon-noticias> — noticias diarias y páginas de la campaña. Secciones en un CARRUSEL (no pestañas):
  *   Noticias      tarjetas (con `publicar_noticias` también los borradores) · «Nueva noticia» · «Redactar con el VPS»
  *   El candidato  biografía + trayectoria (páginas editables: `<peon-noticia categoria=…>`)
  *   Cómo votar    tutorial paso a paso + acceso a la consulta del puesto
  *   Publicidad    piezas descargables dibujadas en el navegador (core/publicidad.ts) y el logo
+ *   Para redes    creador de piezas para redes a partir de una noticia (SVG determinista → PNG, core/piezas-redes.ts)
  *   Privacidad    política de tratamiento de datos + aviso «no es app oficial del Gobierno»
+ * Noticias tiene portada de periódico (core/noticias.ts) y, para editores, «Administrar con IA»: pegar el enlace de
+ * otro medio y elegir Enlazar (tarjeta que abre la original), Adaptar o Replicar (con fuente y enlace) vía el VPS.
  * Todo se refresca solo con `peon:datos` (evento «cambio» de la API).
  */
 import { define } from '@jeff-aporta/iswc-base/core/iswc-element.min.mjs';
@@ -13,11 +16,13 @@ import css from 'iswc:css';
 import { Componente, avisar, html } from '../../../src/js/base/componente.js';
 import type { VistaProps } from '../../../src/js/consts/schemas/componentes.schemas.js';
 import type { Noticia, NoticiaFila } from '../../../src/js/consts/schemas/api.schemas.js';
-import { api, puede, sesion } from '../../../src/js/core/api.js';
+import { api, puede, sesion, usuarioActivo } from '../../../src/js/core/api.js';
 import { CATEGORIAS_NOTICIA, fecha } from '../../../src/js/core/catalogos.js';
 import { CAMPANA } from '../../../src/js/core/config.js';
-import { tarjetaNoticia } from '../../../src/js/core/noticias.js';
-import { grupoPestanas } from '../../../src/js/core/pestanas.js';
+import { portadaNoticias } from '../../../src/js/core/noticias.js';
+import { carruselSecciones } from '../../../src/js/core/carrusel.js';
+import { creadorPiezas } from '../../../src/js/core/piezas-redes.js';
+import { vista } from '../../../src/js/core/catalogos.js';
 import { FORMATOS, archivoPieza, dibujarPieza } from '../../../src/js/core/publicidad.js';
 import { abrirChat, abrirNoticia, ir, textoError, valor } from '../../../src/js/core/ui.js';
 
@@ -28,6 +33,8 @@ class PeonNoticias extends Componente<VistaProps> {
   static deps = ['iswc-tab-group', 'iswc-button', 'iswc-input', 'iswc-tag', 'iswc-icon', 'iswc-empty-state', 'iswc-callout', 'iswc-qrcode', 'peon-noticia'];
 
   #lista: HTMLElement | null = null;
+  #filas: NoticiaFila[] = [];
+  #seccion = 'noticias';
 
   protected override inicial(): VistaProps {
     return { pestana: '' };
@@ -53,8 +60,9 @@ class PeonNoticias extends Componente<VistaProps> {
     if (!l) return;
     try {
       const filas = await api<NoticiaFila[]>('GET', `noticias?categoria=noticia${puede('publicar_noticias') ? '&todas=1' : ''}`);
+      this.#filas = filas;
       l.replaceChildren(filas.length
-        ? html`${filas.map((n) => tarjetaNoticia(n, true))}`
+        ? portadaNoticias(filas)
         : html`<iswc-empty-state icono="mdi:newspaper-variant-outline" titulo="Aún no hay noticias" texto=${puede('publicar_noticias') ? 'Crea la primera o pídesela al VPS.' : 'Las noticias de la campaña aparecerán aquí.'}></iswc-empty-state>`);
     } catch (e) {
       l.replaceChildren(html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`);
@@ -81,22 +89,63 @@ class PeonNoticias extends Componente<VistaProps> {
     const caja = document.createElement('div');
     caja.className = 'caja';
     this.#lista = document.createElement('div');
-    this.#lista.className = 'nt-rejilla';
+    this.#lista.className = 'portada-lista';
     this.#lista.append(html`<iswc-empty-state estado="cargando"></iswc-empty-state>`);
     const editor = puede('publicar_noticias');
     const form = document.createElement('div');
-    form.className = 'nueva';
+    form.className = 'admin-ia';
     if (editor) {
+      const conVps = puede('chat_con_vps');
+      const pedirVps = (modo: 'enlace' | 'adaptada' | 'replica') => {
+        const url = valor(form, 'n-url');
+        if (!/^https:\/\//.test(url)) return avisar('Pega el enlace https de la noticia original', 'warning');
+        const instruccion = modo === 'enlace'
+          ? `Crea una noticia de tipo «enlace» a ${url}: saca el título, un resumen de 2 líneas, la imagen principal (URL https) y el nombre del medio (fuente). Sin cuerpo propio. Déjala como borrador.`
+          : modo === 'adaptada'
+            ? `Adapta para la campaña la noticia de ${url} (tipo «adaptada»): reescríbela corta y clara en Markdown, con título, resumen e imagen, y cita la fuente y el enlace original. Déjala como borrador.`
+            : `Replica la noticia de ${url} (tipo «adaptada», fiel al original): título, resumen, imagen y cuerpo en Markdown, citando la fuente y con el enlace original al final. Déjala como borrador.`;
+        abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: 'Noticias' }, instruccion);
+      };
+      const enlazarManual = async (boton: HTMLElement) => {
+        const url = valor(form, 'n-url');
+        const titulo = valor(form, 'n-titulo');
+        if (!/^https:\/\//.test(url) || !titulo) return avisar('Para enlazar sin IA escribe el título y pega el enlace https', 'warning');
+        boton.setAttribute('loading', '');
+        try {
+          const fuente = valor(form, 'n-fuente') || new URL(url).hostname.replace(/^www\./, '');
+          await api('POST', 'noticias', { titulo, tipo: 'enlace', enlace_original: url, fuente, estado: 'borrador' });
+          avisar('Enlace creado como borrador: revísalo y publícalo', 'success');
+          void this.#cargarLista();
+        } catch (e) {
+          avisar(textoError(e), 'danger');
+        } finally {
+          boton.removeAttribute('loading');
+        }
+      };
       form.append(html`
-        <div class="cabeza-nueva"><iswc-icon icon="mdi:newspaper-plus"></iswc-icon><strong>Nueva noticia</strong><small>Queda como borrador hasta que la publiques; al publicarla les llega a todos en la campana.</small></div>
+        <div class="cabeza-nueva"><iswc-icon icon="mdi:robot-happy-outline"></iswc-icon><strong>Administrar noticias con IA</strong><small>Pega el enlace de una noticia de otro medio y elige: enlazarla (se abre la original), adaptarla o replicarla citando la fuente. O pídele al VPS que redacte una nueva.</small></div>
         <div class="campos-nueva">
-          <iswc-input data-campo="n-titulo" label="Título" maxlength="160" full-width></iswc-input>
-          <iswc-input data-campo="n-cuerpo" label="Primer párrafo (opcional)" full-width></iswc-input>
+          <iswc-input data-campo="n-url" label="Enlace de la noticia original" placeholder="https://…" full-width><iswc-icon slot="prefix" icon="mdi:link-variant"></iswc-icon></iswc-input>
         </div>
         <div class="acciones">
-          <iswc-button size="small" color="brand" data-crear onclick=${(e: Event) => void this.#crear(form, e.currentTarget as HTMLElement)}><iswc-icon slot="start" icon="mdi:plus"></iswc-icon>Crear borrador</iswc-button>
-          ${puede('chat_con_vps') ? html`<iswc-button size="small" color="brand" class="morado" data-redactar-vps onclick=${() => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: 'Noticias' }, 'Redacta una noticia corta para la campaña sobre: ')}><iswc-icon slot="start" icon="mdi:robot-outline"></iswc-icon>Redactar con el VPS</iswc-button>` : null}
-        </div>`);
+          ${conVps ? html`
+            <iswc-button size="small" color="brand" onclick=${() => pedirVps('enlace')}><iswc-icon slot="start" icon="mdi:open-in-new"></iswc-icon>Enlazar</iswc-button>
+            <iswc-button size="small" color="brand" onclick=${() => pedirVps('adaptada')}><iswc-icon slot="start" icon="mdi:auto-fix"></iswc-icon>Adaptar</iswc-button>
+            <iswc-button size="small" variant="outlined" onclick=${() => pedirVps('replica')}><iswc-icon slot="start" icon="mdi:content-copy"></iswc-icon>Replicar</iswc-button>
+            <iswc-button size="small" variant="outlined" data-redactar-vps onclick=${() => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: 'Noticias' }, 'Redacta una noticia corta para la campaña sobre: ')}><iswc-icon slot="start" icon="mdi:pencil-outline"></iswc-icon>Redactar con el VPS</iswc-button>` : null}
+        </div>
+        <details class="sin-ia">
+          <summary>Sin IA: enlace manual o borrador propio</summary>
+          <div class="campos-nueva">
+            <iswc-input data-campo="n-titulo" label="Título" maxlength="160" full-width></iswc-input>
+            <iswc-input data-campo="n-fuente" label="Medio (fuente)" placeholder="El Tiempo, La Crónica…" full-width></iswc-input>
+            <iswc-input data-campo="n-cuerpo" label="Primer párrafo (para un borrador propio)" full-width></iswc-input>
+          </div>
+          <div class="acciones">
+            <iswc-button size="small" variant="outlined" onclick=${(e: Event) => void enlazarManual(e.currentTarget as HTMLElement)}><iswc-icon slot="start" icon="mdi:link-plus"></iswc-icon>Crear enlace</iswc-button>
+            <iswc-button size="small" variant="outlined" data-crear onclick=${(e: Event) => void this.#crear(form, e.currentTarget as HTMLElement)}><iswc-icon slot="start" icon="mdi:plus"></iswc-icon>Crear borrador propio</iswc-button>
+          </div>
+        </details>`);
     }
     caja.append(html`${editor ? form : null}${this.#lista}`);
     void this.#cargarLista();
@@ -189,13 +238,16 @@ class PeonNoticias extends Componente<VistaProps> {
   }
 
   protected override pintar(root: ShadowRoot, props: VistaProps): void {
-    root.append(grupoPestanas('noticias', props.pestana, (p) => {
-      if (p === 'candidato') return this.#candidato();
-      if (p === 'votar') return this.#votar();
-      if (p === 'publicidad') return this.#publicidad();
-      if (p === 'privacidad') return this.#privacidad();
-      return this.#noticias();
-    }));
+    const secciones = vista('noticias').pestanas.filter((p) => p.publica || usuarioActivo());
+    if (props.pestana && secciones.some((p) => p.id === props.pestana)) this.#seccion = props.pestana;
+    const cuerpo = document.createElement('div');
+    cuerpo.className = 'cuerpo-seccion';
+    const mostrar = (id: string) => {
+      this.#seccion = id;
+      cuerpo.replaceChildren(id === 'candidato' ? this.#candidato() : id === 'votar' ? this.#votar() : id === 'publicidad' ? this.#publicidad() : id === 'redes' ? creadorPiezas(() => this.#filas) : id === 'privacidad' ? this.#privacidad() : this.#noticias());
+    };
+    root.append(carruselSecciones(secciones.map((p) => ({ id: p.id, titulo: p.titulo, icono: p.icono })), this.#seccion, mostrar), cuerpo);
+    mostrar(this.#seccion);
   }
 }
 
