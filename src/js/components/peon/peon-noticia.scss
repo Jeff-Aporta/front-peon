@@ -50,14 +50,6 @@ iswc-tag.cat { --iswc-tag-bg: var(--peon-morado-suave); color: var(--peon-morado
   :is(p, li, h2, h3, blockquote):hover { background: var(--iswc-bg-soft); border-radius: t.radio(sm); }
 }
 
-.pista {
-  display: flex;
-  align-items: center;
-  gap: t.esp(2);
-  margin: 0;
-  opacity: 0.6;
-  font-size: 0.78em;
-}
 
 .acciones {
   display: flex;
@@ -71,14 +63,6 @@ iswc-button.morado {
   @include m.boton-morado;
 }
 
-.menu-fragmento {
-  max-width: 18em;
-  padding: t.esp(1) t.esp(2);
-  opacity: 0.65;
-  font-size: 0.78em;
-  font-style: italic;
-  overflow-wrap: anywhere;
-}
 
 /* Editor: campos arriba; contenido y vista previa lado a lado si hay ancho. */
 .editor { display: grid; gap: t.esp(3); min-width: 0; }

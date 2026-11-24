@@ -7,9 +7,7 @@
  *   props.sinTitulo  oculta la cabecera (cuando quien lo embebe ya pone el título).
  *
  * El cuerpo es Markdown con HTML y componentes `iswc-*` (core/md.ts: md-lite + md-hydrate del kit, saneado).
- * EDITAR UN FRAGMENTO: mantener presionado (táctil) o clic derecho sobre un párrafo → `<iswc-context-menu>` del kit
- * → «Enviar al VPS para editar» abre el chat (cajón) con ese fragmento citado; también «Copiar fragmento». Si hay
- * texto seleccionado, el fragmento es la selección; si no, el bloque (párrafo, ítem, título, fila) bajo el dedo.
+ * Editar con IA: el botón «Pedir al VPS» (y el asistente flotante) abren el chat con esta noticia como contexto.
  * Editor: título, resumen, imagen, categoría y cuerpo con vista previa en vivo; publicar, pasar a borrador, archivar.
  */
 import { define } from '@jeff-aporta/iswc-base/core/iswc-element.min.mjs';
@@ -21,9 +19,8 @@ import { api, puede } from '../../core/api.js';
 import { tiempoNoticia } from '../../core/noticias.js';
 import { CATEGORIAS_NOTICIA, fecha } from '../../core/catalogos.js';
 import { pintarMd } from '../../core/md.js';
-import { abrirChat, copiar, textoError, valor } from '../../core/ui.js';
+import { abrirChat, textoError, valor } from '../../core/ui.js';
 
-type Menu = HTMLElement & { openAt?(x: number, y: number): void; close?(): void };
 
 const BLOQUES = 'p, li, h1, h2, h3, h4, blockquote, tr, iswc-callout, figure';
 const PRESION_MS = 550;
@@ -31,11 +28,10 @@ const PRESION_MS = 550;
 class PeonNoticia extends Componente<PeonNoticiaProps> {
   static tag = 'peon-noticia';
   static css = css;
-  static deps = ['iswc-icon', 'iswc-tag', 'iswc-button', 'iswc-context-menu', 'iswc-share-button', 'iswc-input', 'iswc-textarea', 'iswc-select', 'iswc-empty-state', 'iswc-callout', 'iswc-confirm-modal'];
+  static deps = ['iswc-icon', 'iswc-tag', 'iswc-button', 'iswc-share-button', 'iswc-input', 'iswc-textarea', 'iswc-select', 'iswc-empty-state', 'iswc-callout', 'iswc-confirm-modal'];
 
   #noticia: Noticia | null = null;
   #editando = false;
-  #fragmento = '';
   #hidratacion: { cancelar(): void } | null = null;
 
   protected override inicial(): PeonNoticiaProps {
@@ -71,59 +67,6 @@ class PeonNoticia extends Componente<PeonNoticiaProps> {
     }
     if (!id) return null;
     return await api<Noticia>('GET', `noticias/${id}`);
-  }
-
-  /** El fragmento bajo el dedo/puntero: la selección, o el bloque más cercano dentro del cuerpo. */
-  #fragmentoEn(e: Event, cuerpo: HTMLElement): string {
-    const sel = (this.shadow as ShadowRoot & { getSelection?(): Selection | null })?.getSelection?.() ?? document.getSelection();
-    const elegido = sel?.toString().trim() ?? '';
-    if (elegido) return elegido.slice(0, 2000);
-    const origen = e.composedPath().find((n) => n instanceof Element && n.matches(BLOQUES) && cuerpo.contains(n)) as Element | undefined;
-    return (origen ?? cuerpo).textContent?.replace(/\s+/g, ' ').trim().slice(0, 2000) ?? '';
-  }
-
-  /** Menú contextual: clic derecho, o mantener presionado en pantallas táctiles. */
-  #engancharMenu(cuerpo: HTMLElement, menu: Menu): void {
-    const abrir = (e: Event, x: number, y: number) => {
-      this.#fragmento = this.#fragmentoEn(e, cuerpo);
-      if (!this.#fragmento) return;
-      menu.querySelector('[data-fragmento]')?.replaceChildren(this.#fragmento.length > 90 ? `${this.#fragmento.slice(0, 90)}…` : this.#fragmento);
-      menu.openAt?.(x, y);
-    };
-    cuerpo.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      abrir(e, e.clientX, e.clientY);
-    });
-    let temporizador: ReturnType<typeof setTimeout> | undefined;
-    let inicio = { x: 0, y: 0 };
-    cuerpo.addEventListener('pointerdown', (e) => {
-      if (e.pointerType === 'mouse') return;
-      inicio = { x: e.clientX, y: e.clientY };
-      clearTimeout(temporizador);
-      temporizador = setTimeout(() => {
-        cuerpo.setAttribute('data-presionado', '');
-        abrir(e, inicio.x, inicio.y);
-      }, PRESION_MS);
-    });
-    const cancelar = () => {
-      clearTimeout(temporizador);
-      cuerpo.removeAttribute('data-presionado');
-    };
-    cuerpo.addEventListener('pointerup', cancelar);
-    cuerpo.addEventListener('pointercancel', cancelar);
-    cuerpo.addEventListener('pointermove', (e) => {
-      if (Math.hypot(e.clientX - inicio.x, e.clientY - inicio.y) > 10) cancelar();
-    });
-  }
-
-  #alElegir(valorMenu: string): void {
-    const n = this.#noticia;
-    if (!n) return;
-    if (valorMenu === 'vps') {
-      abrirChat({ tipo: 'noticia', id: n.id, titulo: n.titulo, fragmento: this.#fragmento, pantalla: null });
-    } else if (valorMenu === 'copiar') {
-      void copiar(this.#fragmento).then((ok) => avisar(ok ? 'Fragmento copiado' : 'No se pudo copiar', ok ? 'success' : 'warning'));
-    }
   }
 
   async #guardar(cambios: Partial<Noticia>, boton?: HTMLElement): Promise<void> {
@@ -165,13 +108,6 @@ class PeonNoticia extends Componente<PeonNoticiaProps> {
     cuerpo.setAttribute('data-cuerpo', '');
     this.#hidratacion?.cancelar();
     this.#hidratacion = pintarMd(cuerpo, n.cuerpo_md);
-    const menu = document.createElement('iswc-context-menu') as Menu;
-    menu.append(html`
-      <div class="menu-fragmento" data-fragmento></div>
-      ${chat ? html`<button class="item" data-value="vps"><iswc-icon icon="mdi:robot-outline"></iswc-icon> Enviar al VPS para editar</button>` : null}
-      <button class="item" data-value="copiar"><iswc-icon icon="mdi:content-copy"></iswc-icon> Copiar fragmento</button>`);
-    menu.addEventListener('iswc-select', (e) => this.#alElegir((e as CustomEvent<{ value: string }>).detail.value));
-    this.#engancharMenu(cuerpo, menu);
     void root;
     return html`
       <article class="noticia" data-categoria=${n.categoria}>
@@ -191,8 +127,6 @@ class PeonNoticia extends Componente<PeonNoticiaProps> {
         ${n.imagen ? html`<figure class="portada"><img src=${n.imagen} alt="" loading="lazy">${n.fuente && n.tipo !== 'propia' ? html`<figcaption>Imagen: ${n.fuente}</figcaption>` : null}</figure>` : html`<div class="cinta" aria-hidden="true"></div>`}
         ${cuerpo}
         ${n.enlace_original ? html`<a class="original" href=${n.enlace_original} target="_blank" rel="noopener noreferrer"><iswc-icon icon="mdi:open-in-new"></iswc-icon>Leer la noticia original${n.fuente ? ` en ${n.fuente}` : ''}</a>` : null}
-        ${menu}
-        <p class="pista"><iswc-icon icon="mdi:gesture-tap-hold"></iswc-icon>${chat ? 'Mantén presionado (o clic derecho) un párrafo para enviarlo al VPS y editarlo.' : 'Mantén presionado (o clic derecho) un párrafo para copiarlo.'}</p>
         <footer class="acciones">
           ${n.estado === 'publicada' ? html`<iswc-share-button share-title=${n.titulo} text=${n.resumen ?? n.titulo}></iswc-share-button>` : null}
           ${chat ? html`<iswc-button size="small" variant="outlined" data-pedir-vps onclick=${() => abrirChat({ tipo: 'noticia', id: n.id, titulo: n.titulo, fragmento: null, pantalla: null }, 'Mejora esta noticia: hazla más clara y cercana, sin cambiar los datos.')}><iswc-icon slot="start" icon="mdi:robot-outline"></iswc-icon>Pedir al VPS</iswc-button>` : null}
