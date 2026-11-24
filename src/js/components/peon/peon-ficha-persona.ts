@@ -1,6 +1,6 @@
 // @contexto PROMPT-CLAUDE.md §4 (vista 5 · Ficha de la persona)
 /**
- * <peon-ficha-persona> — ficha en diálogo, por `ref` opaco (la cédula nunca va en la URL).
+ * <peon-ficha-persona> — ficha en un cajón derecho (`iswc-drawer` end; los detalles van en cajones, no en paneles), por `ref` opaco (la cédula nunca va en la URL).
  * Pestañas: Datos (editar) · Votación (puesto, mesa, ubicación, re-verificar) · Bitácora (quién hizo qué y cuándo).
  * Lo que el backend recortó (contacto, cédula completa) se muestra como «oculto»: la vista no inventa nada.
  * Eliminar pide confirmación (`iswc-confirm-delete`); la API archiva (nada se borra) y lo deja en la bitácora.
@@ -31,7 +31,7 @@ const oculto = (v: string | null) => (v ? v : html`<span class="oculto">oculto</
 class PeonFichaPersona extends Componente<PeonFichaPersonaProps> {
   static tag = 'peon-ficha-persona';
   static css = css;
-  static deps = ['iswc-dialog', 'iswc-tab-group', 'iswc-input', 'iswc-textarea', 'iswc-button', 'iswc-callout', 'iswc-confirm-delete', 'iswc-empty-state', 'iswc-tag', 'iswc-spinner'];
+  static deps = ['iswc-drawer', 'iswc-tab-group', 'iswc-input', 'iswc-textarea', 'iswc-button', 'iswc-callout', 'iswc-confirm-delete', 'iswc-empty-state', 'iswc-tag', 'iswc-spinner'];
 
   #persona: PersonaFila | null = null;
   #cargando = '';
@@ -216,14 +216,14 @@ class PeonFichaPersona extends Componente<PeonFichaPersonaProps> {
     const p = this.#persona;
     if (!p || p.ref !== props.ref) {
       if (this.#cargando !== props.ref) void this.#cargar(props.ref);
-      root.append(html`<iswc-dialog open label="Ficha de la persona" oniswc-after-hide=${this.#cerrar}><div class="cargando"><iswc-spinner></iswc-spinner></div></iswc-dialog>`);
+      root.append(html`<iswc-drawer class="ficha" placement="end" light-dismiss open label="Ficha de la persona" oniswc-after-hide=${this.#cerrar}><div class="cargando"><iswc-spinner></iswc-spinner></div></iswc-drawer>`);
       return;
     }
     root.append(html`
-      <iswc-dialog open class="ficha" label=${`${p.nombres} ${p.apellidos}`} oniswc-after-hide=${this.#cerrar}>
+      <iswc-drawer open class="ficha" placement="end" light-dismiss label=${`${p.nombres} ${p.apellidos}`} oniswc-after-hide=${this.#cerrar}>
         <div class="cabeza">${estadoPuesto(p.puesto_estado)}<span>${p.puesto ?? 'Puesto sin verificar'}</span></div>
         ${grupoPestanas('ficha', 'datos', (t) => (t === 'votacion' ? this.#votacion(p) : t === 'bitacora' ? this.#bitacora(p) : this.#datos(p)))}
-      </iswc-dialog>`);
+      </iswc-drawer>`);
   }
 }
 

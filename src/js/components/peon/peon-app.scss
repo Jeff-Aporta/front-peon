@@ -228,12 +228,12 @@
   min-width: 0;
   min-height: 0;
   height: 100%;
-  overflow: hidden;
+  overflow: clip; /* ni el usuario ni un scrollIntoView lo desplazan: solo desplaza la vista de adentro */
   padding: t.esp(5) t.esp(6) 0;
 }
 
 /* La vista activa: todo el alto que queda; si no arma zonas propias, desplaza ella misma (red de seguridad). */
-.trabajo > :not(.titulo-vista) {
+.trabajo > :not(.titulo-vista, .fab) {
   min-width: 0;
   min-height: 0;
   height: 100%;
@@ -311,3 +311,34 @@
 .campana-barra { padding: 0; }
 /* Sin sesión, el cuarto destino de la barra es «Entrar» (menú de sesión del kit). */
 .entrar-barra { padding: 0; place-items: center; }
+
+/* FAB del chat con el VPS: las herramientas flotan (no ocupan un panel); los detalles van en cajones derechos.
+   Va dentro de .trabajo (posición relativa), abajo a la derecha y por encima del contenido que desplaza. */
+.trabajo { position: relative; }
+
+.fab {
+  position: absolute;
+  right: t.esp(5);
+  bottom: t.esp(5);
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 3.4em;
+  height: 3.4em;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(140deg, var(--peon-morado), var(--peon-morado-hondo));
+  color: #fff;
+  font-size: 1em;
+  box-shadow: 0 0.5em 1.2em rgb(40 10 80 / 35%), 0 0 0 0.2em rgb(255 255 255 / 70%);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  iswc-icon { font-size: 1.5em; }
+  &:hover { transform: translateY(-0.12em) scale(1.04); box-shadow: 0 0.8em 1.6em rgb(40 10 80 / 40%), 0 0 0 0.2em rgb(255 255 255 / 80%); }
+  &:focus-visible { outline: 0.18em solid var(--iswc-color-contrast); outline-offset: 0.2em; }
+}
+
+[data-angosto] .fab { right: t.esp(3); bottom: t.esp(3); width: 3em; height: 3em; }
+
+@media (prefers-reduced-motion: reduce) { .fab { transition: none; } }

@@ -12,7 +12,7 @@
   small { opacity: 0.7; }
 }
 
-.ficha { --width: min(46em, 96vw); }
+.ficha { --iswc-drawer-size: min(36em, 100vw); }
 
 .cargando { display: grid; place-items: center; min-height: 8em; }
 
@@ -61,9 +61,5 @@
   iswc-org-chart { display: block; min-width: max-content; }
 }
 
-/* Escritorio: lista | ficha (split panel), cada zona con su propio scroll; el Árbol desplaza su panel. */
-.dividido { display: block; height: 100%; min-height: 0; }
-.zona { height: 100%; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; padding-right: t.esp(3); align-content: start; }
-.ficha-lado { padding: 0 t.esp(1) t.esp(4) t.esp(4); }
-.nombre-ficha { margin: 0 0 t.esp(2); font-family: t.$titulos; font-size: 1.2em; }
+/* El Árbol desplaza su propio panel. */
 iswc-tab-panel[name="arbol"] { overflow-y: auto; }

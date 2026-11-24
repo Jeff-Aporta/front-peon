@@ -15,8 +15,9 @@ import type { VistaProps } from '../../../src/js/consts/schemas/componentes.sche
 import type { NoticiaFila, PersonaFila } from '../../../src/js/consts/schemas/api.schemas.js';
 import { api, puede, sesion, usuarioActivo } from '../../../src/js/core/api.js';
 import { HERRAMIENTAS_CHAT, fecha } from '../../../src/js/core/catalogos.js';
-import { CAMPANA, VERSION_FRONT } from '../../../src/js/core/config.js';
-import { abrirChat, abrirFicha, abrirNoticia, estadoPuesto, ir, textoError } from '../../../src/js/core/ui.js';
+import { CAMPANA } from '../../../src/js/core/config.js';
+import { tarjetaNoticia } from '../../../src/js/core/noticias.js';
+import { abrirChat, abrirFicha, estadoPuesto, ir, textoError } from '../../../src/js/core/ui.js';
 
 type Resumen = { misRegistros: number; misRegistrosHoy: number; misPendientes: number; visibles: number; pendientes: number; verificados: number; avisos: { tipo: string; texto: string; ir?: string }[] };
 
@@ -70,10 +71,7 @@ class PeonInicio extends Componente<VistaProps> {
       { id: 'privacidad', icono: 'mdi:shield-lock-outline', titulo: 'Privacidad', texto: 'Cómo cuidamos tus datos', ir: () => ir('noticias', 'privacidad') },
     ];
     this.#noticias = document.createElement('div');
-    this.#noticias.className = 'ultimas';
-    const version = document.createElement('span');
-    version.textContent = `App ${VERSION_FRONT}`;
-    void api<{ version: string }>('GET', 'info').then((i) => (version.textContent = `App ${VERSION_FRONT} · API ${i.version}`)).catch(() => {});
+    this.#noticias.className = 'nt-rejilla';
     const [nombre, ...resto] = CAMPANA.candidato.split(' ');
     const apellido = resto.join(' ');
     caja.append(html`
@@ -110,10 +108,6 @@ class PeonInicio extends Componente<VistaProps> {
         <header class="cabeza-bloque"><h3>Últimas noticias</h3><button type="button" class="ver-todo" onclick=${() => ir('noticias', 'noticias')}>Ver todas <iswc-icon icon="mdi:chevron-right"></iswc-icon></button></header>
         ${this.#noticias}
       </section>
-      <footer class="legal">
-        <p><iswc-icon icon="mdi:information-outline"></iswc-icon><span>${CAMPANA.aviso}</span></p>
-        <small>${version} · <button type="button" class="enlace" onclick=${() => ir('noticias', 'privacidad')}>Política de privacidad</button></small>
-      </footer>
     `);
     void this.#cargarNoticias();
     return caja;
@@ -123,9 +117,9 @@ class PeonInicio extends Componente<VistaProps> {
     const l = this.#noticias;
     if (!l) return;
     try {
-      const filas = await api<NoticiaFila[]>('GET', 'noticias?categoria=noticia&limite=3');
+      const filas = await api<NoticiaFila[]>('GET', 'noticias?categoria=noticia&limite=6');
       l.replaceChildren(filas.length
-        ? html`${filas.map((n) => html`<button type="button" class="noticia-mini" data-noticia=${String(n.id)} onclick=${() => abrirNoticia(n.id)}><small>${fecha(n.publicada ?? n.creado, false)}</small><strong>${n.titulo}</strong><span>${n.adelanto}</span></button>`)}`
+        ? html`${filas.map((n) => tarjetaNoticia(n))}`
         : html`<p class="vacio"><iswc-icon icon="mdi:newspaper-variant-outline"></iswc-icon>Muy pronto, las noticias de la campaña.</p>`);
     } catch (e) {
       l.replaceChildren(html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`);

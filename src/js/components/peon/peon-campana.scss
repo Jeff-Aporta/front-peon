@@ -47,22 +47,26 @@
   }
 }
 
+/* Contador: pequeño y redondo (un dígito = círculo; con dos, píldora con el mismo relleno a los lados), en la
+   esquina del ícono sin taparlo. */
 .insignia {
   position: absolute;
-  top: -0.55em;
-  right: -0.75em;
+  top: -0.35em;
+  right: -0.45em;
   display: inline-grid;
   place-items: center;
-  min-width: 1.55em;
-  height: 1.55em;
-  padding: 0 0.35em;
-  border: 0.12em solid var(--iswc-bg);
+  box-sizing: border-box;
+  min-width: 1.15em;
+  height: 1.15em;
+  padding: 0 0.25em;
+  border: 0.1em solid var(--iswc-bg);
   border-radius: 999px;
   background: var(--iswc-color-danger, #e41e3f);
   color: #fff;
-  font-size: 0.72em;
+  font-size: 0.6em;
   font-weight: 700;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 
   &[hidden] { display: none; }
 }

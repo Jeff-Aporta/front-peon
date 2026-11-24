@@ -16,24 +16,12 @@ import type { Noticia, NoticiaFila } from '../../../src/js/consts/schemas/api.sc
 import { api, puede, sesion } from '../../../src/js/core/api.js';
 import { CATEGORIAS_NOTICIA, fecha } from '../../../src/js/core/catalogos.js';
 import { CAMPANA } from '../../../src/js/core/config.js';
+import { tarjetaNoticia } from '../../../src/js/core/noticias.js';
 import { grupoPestanas } from '../../../src/js/core/pestanas.js';
 import { FORMATOS, archivoPieza, dibujarPieza } from '../../../src/js/core/publicidad.js';
 import { abrirChat, abrirNoticia, ir, textoError, valor } from '../../../src/js/core/ui.js';
 
 /** Tarjeta de una noticia (también la usa Inicio a través de su propio marcado). */
-function tarjeta(n: NoticiaFila): DocumentFragment {
-  const cat = CATEGORIAS_NOTICIA[n.categoria];
-  return html`
-    <button type="button" class="tarjeta-noticia" data-noticia=${String(n.id)} data-estado=${n.estado} onclick=${() => abrirNoticia(n.id)}>
-      <span class="imagen" style=${n.imagen ? `background-image:url("${n.imagen.replace(/"/g, '')}")` : ''}>${n.imagen ? null : html`<iswc-icon icon=${cat?.icono ?? 'mdi:newspaper-variant-outline'}></iswc-icon>`}</span>
-      <span class="texto">
-        <span class="etiquetas">${n.estado === 'borrador' ? html`<iswc-tag size="small" pill color="warning">Borrador</iswc-tag>` : null}<small>${fecha(n.publicada ?? n.creado, false)}</small></span>
-        <strong>${n.titulo}</strong>
-        <small class="adelanto">${n.adelanto}</small>
-      </span>
-    </button>`;
-}
-
 class PeonNoticias extends Componente<VistaProps> {
   static tag = 'peon-noticias';
   static css = css;
@@ -66,7 +54,7 @@ class PeonNoticias extends Componente<VistaProps> {
     try {
       const filas = await api<NoticiaFila[]>('GET', `noticias?categoria=noticia${puede('publicar_noticias') ? '&todas=1' : ''}`);
       l.replaceChildren(filas.length
-        ? html`${filas.map((n) => tarjeta(n))}`
+        ? html`${filas.map((n) => tarjetaNoticia(n, true))}`
         : html`<iswc-empty-state icono="mdi:newspaper-variant-outline" titulo="Aún no hay noticias" texto=${puede('publicar_noticias') ? 'Crea la primera o pídesela al VPS.' : 'Las noticias de la campaña aparecerán aquí.'}></iswc-empty-state>`);
     } catch (e) {
       l.replaceChildren(html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`);
@@ -93,7 +81,7 @@ class PeonNoticias extends Componente<VistaProps> {
     const caja = document.createElement('div');
     caja.className = 'caja';
     this.#lista = document.createElement('div');
-    this.#lista.className = 'tarjetas-noticias';
+    this.#lista.className = 'nt-rejilla';
     this.#lista.append(html`<iswc-empty-state estado="cargando"></iswc-empty-state>`);
     const editor = puede('publicar_noticias');
     const form = document.createElement('div');
