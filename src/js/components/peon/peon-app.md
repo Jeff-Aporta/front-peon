@@ -10,17 +10,23 @@ Shell de Peón en Marcha. Úsalo una sola vez, en index.html: panel izquierdo (o
 - **Cuándo usarlo:** Una sola vez, en index.html.
 - **Cuándo no:** No lo montes dentro de otra vista.
 
+App **abierta**: sin sesión pinta el shell con lo público (Inicio, Noticias, Cómo votar, Privacidad) y el
+desplegable «Entrar» (`iswc-session-menu`); al entrar aparecen las vistas protegidas sin recargar. Una vista
+protegida pedida sin sesión despliega «Entrar». La clave temporal se cambia en un diálogo pequeño.
+
 ## Anatomía
 
 ```
 <peon-app>
   #shadow-root
     <div class="marco">                      ← grid: panel · tirador · contenido (sm/xs: contenido · barra)
-      <aside class="lateral">                ← md+: marca (colapsa) · nav plana · <peon-campana> · usuario y salir
+      <aside class="lateral">                ← md+: marca (colapsa) · nav plana · <peon-campana> · <iswc-session-menu>
       <div class="tirador" role="separator"> ← ancho del panel 13–26 em (se recuerda)
       <main class="trabajo">                 ← título + vista activa (<peon-inicio>, <peon-noticias>…)
       <nav class="barra">                    ← sm/xs: Inicio · Chat/Registros · Registrar/Noticias · Avisos · Menú
-    <iswc-drawer class="cajon">              ← sm/xs: «Menú» con todas las vistas, el usuario y salir
+                                               (sin sesión: Inicio · Noticias · Cómo votar · Entrar · Menú)
+    <iswc-drawer class="cajon">              ← sm/xs: «Menú» con las vistas y el menú de sesión
+    <iswc-dialog class="dialogo-clave">      ← solo con clave temporal: <peon-acceso modo="cambiar">
 ```
 
 ## Atributos observados

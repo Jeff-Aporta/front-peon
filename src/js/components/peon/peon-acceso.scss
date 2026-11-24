@@ -1,106 +1,35 @@
 @use "tokens" as t;
 @use "mixins" as m;
 
-/* peon-acceso — pantalla completa: superficie blanca (60), franja verde de marca (30), acento amarillo (10). */
+/* peon-acceso — formulario compacto (va dentro del diálogo de la clave temporal). Sin pantalla completa. */
 :host {
   @include m.host-bloque;
-  /* Ocupa el alto que le da <peon-app> (nunca 100dvh adentro). */
-  height: 100%;
-}
-
-/* La sección desplaza su propio contenido: si no cabe (móvil acostado, ventana baja) se recorre sin cortar nada.
-   La tarjeta se centra con `margin: auto` (y no con place-items) para que, al sobrar contenido, crezca hacia abajo
-   en lugar de salirse por arriba. El logo sobresale de la tarjeta, así que la sección deja ese aire arriba. */
-.pantalla {
-  box-sizing: border-box;
-  display: grid;
-  height: 100%;
-  overflow-y: auto;
-  padding: calc(var(--logo) / 2 + #{t.esp(5)}) t.esp(4) t.esp(5);
-  background:
-    linear-gradient(180deg, var(--iswc-brand) 0 34%, transparent 34%),
-    var(--iswc-bg);
-  --logo: 7em;
-}
-
-.tarjeta {
-  display: grid;
-  justify-items: center;
-  gap: t.esp(2);
-  box-sizing: border-box;
-  width: min(25em, 100%);
-  margin: auto;
-  padding: calc(var(--logo) / 2 + #{t.esp(2)}) t.esp(6) t.esp(6);
-  border: 1px solid var(--iswc-border-soft);
-  border-radius: t.radio(lg);
-  background: var(--iswc-bg);
-  box-shadow: var(--iswc-shadow-md, 0 0.5em 1.5em rgb(0 0 0 / 15%));
-  position: relative;
-}
-
-/* El logo queda mitad fuera y mitad dentro de la tarjeta, siempre dentro del aire que deja la sección. */
-.logo {
-  position: absolute;
-  top: calc(var(--logo) / -2);
-  left: 50%;
-  translate: -50% 0;
-  box-sizing: border-box;
-  width: var(--logo);
-  height: var(--logo);
-  object-fit: contain;
-  border-radius: 50%;
-  border: 0.25em solid var(--iswc-bg);
-  background: var(--iswc-bg);
-  box-shadow: 0 0.25em 0.75em rgb(0 0 0 / 12%);
-}
-
-@media (max-width: 400px) {
-  .pantalla { --logo: 6em; padding-inline: t.esp(3); }
-  .tarjeta { padding-inline: t.esp(4); }
-}
-
-.titulo {
-  margin: 0;
-  font-family: t.$titulos;
-  font-size: 1.6em;
-  color: var(--iswc-brand-text, var(--iswc-brand));
-
-  .peon { color: var(--iswc-color-contrast); text-shadow: 0 0 0.04em var(--iswc-text); }
-}
-
-.lema {
-  margin: 0 0 t.esp(3);
-  font-style: italic;
-  opacity: 0.75;
-  text-align: center;
+  width: min(24em, 100%);
 }
 
 .campos {
   display: grid;
   gap: t.esp(3);
   width: 100%;
+  margin: 0;
 }
 
-.explica,
-.ayuda {
+.explica {
   margin: 0;
   font-size: 0.9em;
-  opacity: 0.8;
-  text-align: center;
+  opacity: 0.85;
 }
 
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: t.esp(2);
+}
 
 /* Campos compactos: el texto fluido ya escala; los controles un punto por debajo del cuerpo. */
 iswc-input,
 iswc-masked-input,
-iswc-select,
-iswc-textarea,
 iswc-button {
   font-size: 0.9em;
-}
-
-/* Badges: algo secundario, siempre pequeños. */
-iswc-tag {
-  font-size: 0.72em;
-  vertical-align: middle;
 }

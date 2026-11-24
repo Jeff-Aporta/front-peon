@@ -227,9 +227,17 @@ export async function salir(): Promise<void> {
   cerrarLocal();
 }
 
+/**
+ * Usuario con sesión COMPLETA (ya cambió la clave temporal). La app es abierta: con `null` se ve solo lo público,
+ * y con la clave temporal también (el backend responde 403 a lo demás hasta que la cambie).
+ */
+export function usuarioActivo(): Usuario | null {
+  return sesion.usuario && !sesion.usuario.claveTemporal ? sesion.usuario : null;
+}
+
 /** ¿El usuario tiene este interruptor? (el backend manda: esto solo oculta lo que no podría usar). */
 export function puede(permiso: string): boolean {
-  return sesion.usuario?.permisos[permiso] === true;
+  return usuarioActivo()?.permisos[permiso] === true;
 }
 
 /* ── Tiempo real: UNA conexión SSE compartida (`GET /api/eventos`) para toda la app ── */

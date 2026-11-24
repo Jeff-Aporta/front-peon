@@ -13,7 +13,7 @@
  *   let s: Awaited<ReturnType<typeof abrir>>;
  *   export default definirPruebas([
  *     { nombre: 'bienvenida W-CAT-02 título', categoria: 'what', async correr({ expect }) {
- *       expect('título', (await enSombra(s.page, ['peon-app', 'peon-acceso', '.titulo'], 'text')) === 'Peón en Marcha');
+ *       expect('candidato', String(await enSombra(s.page, ['peon-app', 'peon-inicio', '.nombre'], 'text')).length > 0);
  *       expect('sin errores de consola', s.errores().length === 0, s.errores().join(' | '));
  *     } },
  *   ], { antes: async () => { s = await abrir('index.html'); }, despues: async () => { await s?.cerrar(); } });

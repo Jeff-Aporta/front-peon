@@ -13,7 +13,7 @@ import css from 'iswc:css';
 import { Componente, html } from '../../../src/js/base/componente.js';
 import type { VistaProps } from '../../../src/js/consts/schemas/componentes.schemas.js';
 import type { NoticiaFila, PersonaFila } from '../../../src/js/consts/schemas/api.schemas.js';
-import { api, puede, sesion } from '../../../src/js/core/api.js';
+import { api, puede, sesion, usuarioActivo } from '../../../src/js/core/api.js';
 import { HERRAMIENTAS_CHAT, fecha } from '../../../src/js/core/catalogos.js';
 import { CAMPANA, VERSION_FRONT } from '../../../src/js/core/config.js';
 import { grupoPestanas } from '../../../src/js/core/pestanas.js';
@@ -53,15 +53,16 @@ class PeonInicio extends Componente<VistaProps> {
 
   /** Portada del candidato y accesos de la campaña. */
   #campana(): Node {
-    const u = sesion.usuario!;
+    // PÚBLICA (app abierta): sin sesión se ve igual, solo sin los accesos operativos.
+    const u = usuarioActivo();
     const caja = document.createElement('div');
     caja.className = 'campana';
     const redes = CAMPANA.redes.filter((r) => r.url);
     const chat = puede('chat_con_vps');
     const accesos: { id: string; icono: string; titulo: string; texto: string; ir: () => void; si?: boolean }[] = [
       { id: 'noticias', icono: 'mdi:newspaper-variant-outline', titulo: 'Noticias diarias', texto: 'Lo último de la campaña', ir: () => ir('noticias', 'noticias') },
-      { id: 'registrar', icono: 'mdi:account-plus-outline', titulo: 'Registra a tus amigos', texto: 'Suma gente a la marcha', ir: () => ir('registro', 'persona'), si: u.escribe },
-      { id: 'puesto', icono: 'mdi:map-marker-radius-outline', titulo: 'Puesto de votación', texto: 'Dónde y en qué mesa', ir: () => ir('registro', 'consulta'), si: u.escribe },
+      { id: 'registrar', icono: 'mdi:account-plus-outline', titulo: 'Registra a tus amigos', texto: 'Suma gente a la marcha', ir: () => ir('registro', 'persona'), si: !!u?.escribe },
+      { id: 'puesto', icono: 'mdi:map-marker-radius-outline', titulo: 'Puesto de votación', texto: u?.escribe ? 'Dónde y en qué mesa' : 'Cómo consultarlo, paso a paso', ir: () => (u?.escribe ? ir('registro', 'consulta') : ir('noticias', 'votar')) },
       { id: 'publicidad', icono: 'mdi:download-outline', titulo: 'Publicidad descargable', texto: 'Piezas para redes y WhatsApp', ir: () => ir('noticias', 'publicidad') },
       { id: 'biografia', icono: 'mdi:account-star-outline', titulo: 'Biografía', texto: `Quién es ${CAMPANA.candidato.split(' ')[0]}`, ir: () => ir('noticias', 'candidato') },
       { id: 'trayectoria', icono: 'mdi:timeline-text-outline', titulo: 'Trayectoria', texto: 'El camino recorrido', ir: () => ir('noticias', 'candidato') },
@@ -86,7 +87,7 @@ class PeonInicio extends Componente<VistaProps> {
           <p class="lema">«${CAMPANA.lema}»</p>
           <small class="lugar"><iswc-icon icon="mdi:map-marker-outline"></iswc-icon>${CAMPANA.lugar}</small>
           <div class="llamados">
-            ${u.escribe ? html`<button type="button" class="llamado principal" data-registrar onclick=${() => ir('registro', 'persona')}><iswc-icon icon="mdi:account-plus-outline"></iswc-icon>Registrar a un amigo</button>` : null}
+            ${u?.escribe ? html`<button type="button" class="llamado principal" data-registrar onclick=${() => ir('registro', 'persona')}><iswc-icon icon="mdi:account-plus-outline"></iswc-icon>Registrar a un amigo</button>` : null}
             <button type="button" class="llamado" data-ver-noticias onclick=${() => ir('noticias', 'noticias')}><iswc-icon icon="mdi:newspaper-variant-outline"></iswc-icon>Noticias</button>
           </div>
           ${redes.length ? html`<nav class="redes" aria-label="Redes sociales">${redes.map((r) => html`<a href=${r.url} target="_blank" rel="noopener noreferrer" title=${r.red} aria-label=${r.red}><iswc-icon icon=${r.icono}></iswc-icon></a>`)}</nav>` : null}

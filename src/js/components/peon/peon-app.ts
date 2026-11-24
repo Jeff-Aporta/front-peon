@@ -4,15 +4,18 @@
  *
  *   panel izquierdo   arriba: marca (logo) + botón que colapsa a solo iconos
  *                     centro: navegación PLANA (icono + rótulo; sin grupos ni acordeones)
- *                     abajo:  usuario (avatar con iniciales, nombre y rol) + salir
+ *                     abajo:  menú de sesión (`iswc-session-menu`): «Entrar» sin sesión; con sesión avatar, nombre, rol,
+ *                             Ajustes y Salir (desplegable, como en Avatar)
  *   contenido         la vista activa; dentro, sus herramientas en pestañas (`iswc-tab-group`)
  *
  * Grid CSS (no `iswc-split-panel`). El panel se redimensiona con el tirador (13–26 em, se recuerda) y se colapsa
  * tocando la marca (logo + rótulo). En sm/xs (< 48rem) no va en el layout: barra inferior fija (4 destinos + «Menú»,
  * como FB/IG) y el «Menú» abre un cajón izquierdo (`iswc-drawer`) con todas las vistas, el usuario y salir.
  * Sin scroll en html/body: desplazan sus secciones (la navegación y el contenido).
- * Sin router: `activo` es estado (y se recuerda en `localStorage['peon:vista']`). Sin sesión → `<peon-acceso>`;
- * con clave temporal → `<peon-acceso modo="cambiar">` antes de cualquier vista.
+ * App ABIERTA: sin sesión se ve el shell con lo público (Inicio, Noticias, Cómo votar, Privacidad); entrar es desde
+ * el desplegable, sin recargar. Si se pide una vista protegida sin sesión, se despliega el menú de entrar (sin página
+ * de error) y, al entrar, se abre esa vista. Clave temporal → diálogo pequeño con `<peon-acceso modo="cambiar">`.
+ * Sin router: `activo` es estado (y se recuerda en `localStorage['peon:vista']`).
  * Otras vistas piden cambiar de vista con el evento de ventana `peon:ir` `{ vista, pestana? }`.
  */
 import { define } from '@jeff-aporta/iswc-base/core/iswc-element.min.mjs';
@@ -20,9 +23,13 @@ import css from 'iswc:css';
 import { Componente, html } from '../../base/componente.js';
 import type { PeonAppProps } from '../../consts/schemas/componentes.schemas.js';
 import type { Vista } from '../../consts/schemas/api.schemas.js';
-import { cargarSesion, escuchar, salir, sesion } from '../../core/api.js';
+import { cargarSesion, entrar, escuchar, salir, sesion, usuarioActivo } from '../../core/api.js';
+import { tituloConContador } from '../../core/avisos-navegador.js';
 import { VISTAS, vista } from '../../core/catalogos.js';
-import { MEDIO_ANGOSTO, angosto } from '../../core/ui.js';
+import { MEDIO_ANGOSTO, angosto, textoError } from '../../core/ui.js';
+
+/** API pública de `<iswc-session-menu>` que usa el shell. */
+type MenuSesion = HTMLElement & { loading: boolean; error: string; reset(): void; show(): void; hide(): void };
 
 const leer = (k: string): string | null => {
   try {
@@ -53,13 +60,17 @@ const anchoGuardado = (): number => {
 class PeonApp extends Componente<PeonAppProps> {
   static tag = 'peon-app';
   static css = css;
-  static deps = ['iswc-icon', 'iswc-person', 'iswc-drawer', 'iswc-spinner', 'peon-acceso', 'peon-campana'];
+  static deps = ['iswc-icon', 'iswc-session-menu', 'iswc-dropdown-item', 'iswc-dialog', 'iswc-drawer', 'iswc-spinner', 'peon-acceso', 'peon-campana'];
 
   #listo = false;
   #soltarCambios: (() => void) | null = null;
   #ancho = anchoGuardado();
   #pestana = '';
   #medio = matchMedia(MEDIO_ANGOSTO);
+  /** Menú de sesión visible ahora (panel en md+, barra inferior en móvil sin sesión). */
+  #menu: MenuSesion | null = null;
+  /** Vista protegida para la que ya se desplegó «Entrar» (una vez por pedido). */
+  #pidioEntrar = '';
 
   protected override inicial(): PeonAppProps {
     return { activo: leer('peon:vista') ?? 'inicio', colapsado: leer('peon:menu') === 'colapsado', cajon: false };
@@ -99,6 +110,8 @@ class PeonApp extends Componente<PeonAppProps> {
   }
 
   #alCambiarSesion = (): void => {
+    // Al salir, el «(n)» de notificaciones no debe quedarse en el título de la pestaña.
+    if (!sesion.usuario) tituloConContador(0);
     this.props = { cajon: false };
   };
 
@@ -115,6 +128,12 @@ class PeonApp extends Componente<PeonAppProps> {
   };
 
   #abrir(id: string): void {
+    const atajo = VISTAS.find((v) => v.id === id)?.ir;
+    if (atajo) {
+      this.#pestana = atajo.pestana;
+      id = atajo.vista;
+    }
+    this.#pidioEntrar = '';
     guardar('peon:vista', id);
     this.props = { activo: id, cajon: false };
   }
@@ -165,12 +184,62 @@ class PeonApp extends Componente<PeonAppProps> {
   }
 
   #visibles(): Vista[] {
+    const u = usuarioActivo();
+    return VISTAS.filter((v) => v.visible(u));
+  }
+
+  /**
+   * Menú de sesión del kit (como en Avatar): sin sesión, «Entrar» abre el acceso (cédula + clave) en un desplegable;
+   * con sesión, avatar + nombre, rol, Ajustes y Salir. La app autentica con la API; el kit solo pinta.
+   */
+  #menuSesion(placement: string): MenuSesion {
     const u = sesion.usuario;
-    return u ? VISTAS.filter((v) => v.visible(u)) : [];
+    const m = document.createElement('iswc-session-menu') as MenuSesion;
+    m.className = 'sesion';
+    m.setAttribute('placement', placement);
+    m.setAttribute('label', 'Entrar');
+    m.setAttribute('heading', 'Entra con tu cédula y tu clave');
+    if (u) {
+      m.setAttribute('logged', '');
+      m.setAttribute('name', u.nombre);
+      m.setAttribute('subtitle', u.rolNombre);
+      m.append(html`
+        <iswc-dropdown-item value="ajustes"><iswc-icon slot="icon" icon="mdi:cog-outline"></iswc-icon>Ajustes</iswc-dropdown-item>
+        <iswc-dropdown-item value="clave"><iswc-icon slot="icon" icon="mdi:lock-reset"></iswc-icon>Cambiar clave</iswc-dropdown-item>`);
+    }
+    m.addEventListener('iswc-login-submit', (e) => {
+      const d = (e as CustomEvent<{ username?: string; password?: string }>).detail;
+      void (async () => {
+        m.loading = true;
+        m.error = '';
+        try {
+          await entrar(String(d?.username ?? '').replace(/\D/g, ''), String(d?.password ?? ''));
+          m.reset();
+        } catch (err) {
+          m.error = textoError(err);
+        } finally {
+          m.loading = false;
+        }
+      })();
+    });
+    m.addEventListener('iswc-logout', () => void salir().then(() => this.#abrir('inicio')));
+    m.addEventListener('iswc-select', (e) => {
+      const v = (e as CustomEvent<{ item?: HTMLElement }>).detail?.item?.getAttribute('value');
+      if (v === 'clave') this.#pestana = 'clave';
+      if (v === 'ajustes' || v === 'clave') this.#abrir('ajustes');
+    });
+    return m;
+  }
+
+  /** Despliega «Entrar» (vista protegida pedida sin sesión): sin página de error, solo el desplegable. */
+  #pedirEntrar(): void {
+    const m = this.#menu;
+    if (!m) return;
+    void customElements.whenDefined('iswc-session-menu').then(() => requestAnimationFrame(() => m.show()));
   }
 
   #lateral(props: PeonAppProps, actual: string, enCajon: boolean): DocumentFragment {
-    const u = sesion.usuario!;
+    const u = usuarioActivo();
     const colapsado = props.colapsado && !enCajon;
     return html`
       <aside class="lateral" part="lateral" ?data-colapsado=${colapsado} aria-label="Navegación">
@@ -181,12 +250,16 @@ class PeonApp extends Componente<PeonAppProps> {
         <nav class="nav" aria-label="Vistas">
           ${this.#visibles().map((v) => html`<button class="item" type="button" title=${v.titulo} data-vista=${v.id} ?data-actual=${v.id === actual} aria-current=${v.id === actual ? 'page' : 'false'} onclick=${() => this.#abrir(v.id)}><iswc-icon icon=${v.icono}></iswc-icon><span class="texto">${v.titulo}</span></button>`)}
         </nav>
-        ${enCajon ? null : html`<div class="avisos-panel">${this.#campana(colapsado, false)}</div>`}
-        <footer class="pie" part="pie">
-          <iswc-person class="usuario" nombre=${u.nombre} detalle=${u.rolNombre} ?compacto=${colapsado}></iswc-person>
-          <button class="icono salir" type="button" title="Cerrar sesión" data-salir onclick=${() => void salir()}><iswc-icon icon="mdi:logout"></iswc-icon></button>
-        </footer>
+        ${enCajon || !u ? null : html`<div class="avisos-panel">${this.#campana(colapsado, false)}</div>`}
+        <footer class="pie" part="pie">${this.#pie(enCajon)}</footer>
       </aside>`;
+  }
+
+  /** Pie del panel: el menú de sesión (el del cajón móvil abre hacia arriba, igual que el del panel). */
+  #pie(enCajon: boolean): Node {
+    const m = this.#menuSesion('top-start');
+    if (!enCajon) this.#menu = m;
+    return m;
   }
 
   /** Campana con contador (plugin `notificaciones` de DER): en el panel (md+) o en la barra inferior (sm/xs). */
@@ -203,20 +276,36 @@ class PeonApp extends Componente<PeonAppProps> {
    * no está en la barra.
    */
   #barra(actual: string): DocumentFragment {
-    const u = sesion.usuario!;
+    const u = usuarioActivo();
     const ids = new Set(this.#visibles().map((x) => x.id));
-    const destinos = ['inicio', ids.has('chat') ? 'chat' : 'listado', ids.has('registro') ? 'registro' : 'noticias'].filter((id) => ids.has(id));
+    // Sin sesión: Inicio · Noticias · Cómo votar · Entrar (menú de sesión) · Menú.
+    const destinos = u ? ['inicio', ids.has('chat') ? 'chat' : 'listado', ids.has('registro') ? 'registro' : 'noticias'].filter((id) => ids.has(id)) : ['inicio', 'noticias', 'votar'];
     const enBarra = destinos.includes(actual);
-    void u;
+    let cuarto: Node;
+    if (u) cuarto = html`<div class="pestana-barra campana-barra">${this.#campana(false, true)}</div>`;
+    else {
+      const m = this.#menuSesion('top-end');
+      this.#menu = m;
+      cuarto = html`<div class="pestana-barra entrar-barra">${m}</div>`;
+    }
     return html`
       <nav class="barra" aria-label="Navegación principal">
         ${destinos.map((id) => {
           const x = vista(id);
           return html`<button type="button" class="pestana-barra" data-barra=${id} ?data-actual=${id === actual} aria-current=${id === actual ? 'page' : 'false'} onclick=${() => this.#abrir(id)}><iswc-icon icon=${x.icono}></iswc-icon><span>${CORTOS[id] ?? x.titulo}</span></button>`;
         })}
-        <div class="pestana-barra campana-barra">${this.#campana(false, true)}</div>
+        ${cuarto}
         <button type="button" class="pestana-barra" data-menu ?data-actual=${!enBarra} aria-expanded=${this.props.cajon ? 'true' : 'false'} onclick=${() => { this.props = { cajon: true }; }}><iswc-icon icon="mdi:menu"></iswc-icon><span>Menú</span></button>
       </nav>`;
+  }
+
+  /** Clave temporal: diálogo pequeño que no se deja cerrar hasta cambiarla (o salir). */
+  #dialogoClave(): Node {
+    const acceso = document.createElement('peon-acceso');
+    Object.assign(acceso, { props: { modo: 'cambiar' } });
+    return html`<iswc-dialog class="dialogo-clave" open label="Cambia tu clave temporal" oniswc-after-hide=${(e: Event) => {
+      if (sesion.usuario?.claveTemporal) (e.currentTarget as HTMLElement & { open: boolean }).open = true;
+    }}>${acceso}</iswc-dialog>`;
   }
 
   protected override pintar(root: ShadowRoot, props: PeonAppProps): void {
@@ -224,15 +313,13 @@ class PeonApp extends Componente<PeonAppProps> {
       root.append(html`<div class="cargando"><img src="./assets/logo-160.webp" alt="" width="96" height="96"><iswc-spinner></iswc-spinner></div>`);
       return;
     }
-    const u = sesion.usuario;
-    if (!u || u.claveTemporal) {
-      const acceso = document.createElement('peon-acceso');
-      Object.assign(acceso, { props: { modo: u ? 'cambiar' : 'entrar' } });
-      root.append(acceso);
-      return;
-    }
+    const temporal = !!sesion.usuario?.claveTemporal;
     const visibles = this.#visibles();
-    const actual = visibles.some((v) => v.id === props.activo) ? props.activo : 'inicio';
+    const pedida = visibles.some((v) => v.id === props.activo && v.tag);
+    const actual = pedida ? props.activo : 'inicio';
+    // Vista protegida pedida sin sesión (enlace, push o la última vista guardada): se despliega «Entrar», una vez.
+    const protegida = !pedida && !usuarioActivo() && VISTAS.some((v) => v.id === props.activo && v.tag && !v.visible(null));
+    this.#menu = null;
     const v = vista(actual);
     const contenido = document.createElement(v.tag);
     Object.assign(contenido, { props: { pestana: this.#pestana } });
@@ -248,11 +335,16 @@ class PeonApp extends Componente<PeonAppProps> {
         </main>
         ${chico ? this.#barra(actual) : null}
       </div>
+      ${temporal ? this.#dialogoClave() : null}
       ${chico
         ? html`
           <iswc-drawer class="cajon" placement="start" without-header light-dismiss ?open=${props.cajon} oniswc-after-hide=${() => { if (this.props.cajon) this.props = { cajon: false }; }}>${this.#lateral(props, actual, true)}</iswc-drawer>`
         : null}
     `);
+    if (protegida && this.#pidioEntrar !== props.activo) {
+      this.#pidioEntrar = props.activo;
+      this.#pedirEntrar();
+    }
   }
 }
 

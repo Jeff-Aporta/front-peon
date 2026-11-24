@@ -191,7 +191,8 @@
   padding: t.esp(3);
   border-top: 1px solid var(--iswc-border-soft);
 
-  .usuario { flex: 1; min-width: 0; overflow: hidden; }
+  /* Menú de sesión del kit: ocupa el pie; sin sesión es el botón «Entrar». */
+  .sesion { flex: 1; min-width: 0; }
 }
 
 /* Colapsado: SOLO iconos (nada de texto cortado ni filas a la mitad). */
@@ -201,6 +202,8 @@
   .texto { display: none; }
   .item { justify-content: center; padding: 0; }
   .pie { flex-direction: column; padding: t.esp(2) t.esp(1); }
+  /* Colapsado: solo el avatar (o el ícono de entrar), sin el nombre. */
+  .sesion::part(name) { display: none; }
 }
 
 /* El scroll vive en las secciones, nunca en html/body. */
@@ -229,6 +232,8 @@
 
 .cajon {
   .lateral { position: static; height: 100%; border-right: 0; }
+  /* En el cajón hay espacio: se ve el nombre junto al avatar (el kit lo oculta en pantallas angostas). */
+  .sesion::part(name) { display: inline; }
 }
 
 /* Barra inferior móvil (FB/IG): 4 destinos + «Menú». Respeta la zona segura del teléfono (muesca/gestos). */
@@ -279,3 +284,5 @@
 }
 
 .campana-barra { padding: 0; }
+/* Sin sesión, el cuarto destino de la barra es «Entrar» (menú de sesión del kit). */
+.entrar-barra { padding: 0; place-items: center; }

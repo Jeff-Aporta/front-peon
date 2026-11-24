@@ -2,35 +2,41 @@
 /**
  * catalogos.ts — navegación plana y pestañas de cada vista como DATO declarativo (sin router: el shell guarda
  * `activo` y monta el tag). `visible` solo oculta: el backend filtra cada ruta por permiso.
+ * App ABIERTA: `visible(null)` decide qué se ve sin sesión (Inicio, Noticias y los atajos Cómo votar y Privacidad);
+ * en las vistas públicas, solo las pestañas `publica` se ven sin sesión. La tabla de rutas públicas de la API está en
+ * `api-peon/docs/RUTAS-PUBLICAS.md`.
  */
 import type { Usuario, Vista } from '../consts/schemas/api.schemas.js';
 
-const p = (u: Usuario, permiso: string) => u.permisos[permiso] === true;
-const esAdmin = (u: Usuario) => u.rol === 'ADMIN';
+const p = (u: Usuario | null, permiso: string) => u?.permisos[permiso] === true;
+const esAdmin = (u: Usuario | null) => u?.rol === 'ADMIN';
+const siempre = () => true;
+const conSesion = (u: Usuario | null) => !!u;
+const sinSesion = (u: Usuario | null) => !u;
 
 export const VISTAS: Vista[] = [
   {
-    id: 'inicio', titulo: 'Inicio', icono: 'mdi:home-outline', tag: 'peon-inicio', visible: () => true,
-    pestanas: [{ id: 'campana', titulo: 'Campaña', icono: 'mdi:flag-variant-outline' }, { id: 'resumen', titulo: 'Mi resumen', icono: 'mdi:view-dashboard-outline' }, { id: 'recientes', titulo: 'Mis registros', icono: 'mdi:history' }],
+    id: 'inicio', titulo: 'Inicio', icono: 'mdi:home-outline', tag: 'peon-inicio', visible: siempre,
+    pestanas: [{ id: 'campana', titulo: 'Campaña', icono: 'mdi:flag-variant-outline', publica: true }, { id: 'resumen', titulo: 'Mi resumen', icono: 'mdi:view-dashboard-outline' }, { id: 'recientes', titulo: 'Mis registros', icono: 'mdi:history' }],
   },
   {
     id: 'chat', titulo: 'Chat con el VPS', icono: 'mdi:robot-outline', tag: 'peon-chat-vps', visible: (u) => p(u, 'chat_con_vps'),
     pestanas: [{ id: 'chat', titulo: 'Conversación', icono: 'mdi:chat-processing-outline' }],
   },
   {
-    id: 'noticias', titulo: 'Noticias', icono: 'mdi:newspaper-variant-outline', tag: 'peon-noticias', visible: () => true,
-    pestanas: [{ id: 'noticias', titulo: 'Noticias', icono: 'mdi:newspaper-variant-outline' }, { id: 'candidato', titulo: 'El candidato', icono: 'mdi:account-star-outline' }, { id: 'votar', titulo: 'Cómo votar', icono: 'mdi:vote-outline' }, { id: 'publicidad', titulo: 'Publicidad', icono: 'mdi:download-outline' }, { id: 'privacidad', titulo: 'Privacidad', icono: 'mdi:shield-lock-outline' }],
+    id: 'noticias', titulo: 'Noticias', icono: 'mdi:newspaper-variant-outline', tag: 'peon-noticias', visible: siempre,
+    pestanas: [{ id: 'noticias', titulo: 'Noticias', icono: 'mdi:newspaper-variant-outline', publica: true }, { id: 'candidato', titulo: 'El candidato', icono: 'mdi:account-star-outline', publica: true }, { id: 'votar', titulo: 'Cómo votar', icono: 'mdi:vote-outline', publica: true }, { id: 'publicidad', titulo: 'Publicidad', icono: 'mdi:download-outline', publica: true }, { id: 'privacidad', titulo: 'Privacidad', icono: 'mdi:shield-lock-outline', publica: true }],
   },
   {
-    id: 'registro', titulo: 'Registrar', icono: 'mdi:account-plus-outline', tag: 'peon-registro', visible: (u) => u.escribe,
+    id: 'registro', titulo: 'Registrar', icono: 'mdi:account-plus-outline', tag: 'peon-registro', visible: (u) => !!u?.escribe,
     pestanas: [{ id: 'persona', titulo: 'Nueva persona', icono: 'mdi:card-account-details-outline' }, { id: 'consulta', titulo: 'Consultar puesto', icono: 'mdi:map-marker-question-outline' }],
   },
   {
-    id: 'listado', titulo: 'Registros', icono: 'mdi:format-list-bulleted', tag: 'peon-listado', visible: () => true,
+    id: 'listado', titulo: 'Registros', icono: 'mdi:format-list-bulleted', tag: 'peon-listado', visible: conSesion,
     pestanas: [{ id: 'todos', titulo: 'Todos', icono: 'mdi:table' }, { id: 'pendientes', titulo: 'Pendientes', icono: 'mdi:timer-sand' }],
   },
   {
-    id: 'lider', titulo: 'Panel del líder', icono: 'mdi:account-group-outline', tag: 'peon-panel-lider', visible: (u) => u.rol === 'ADMIN' || u.rol === 'LIDER',
+    id: 'lider', titulo: 'Panel del líder', icono: 'mdi:account-group-outline', tag: 'peon-panel-lider', visible: (u) => u?.rol === 'ADMIN' || u?.rol === 'LIDER',
     pestanas: [{ id: 'equipo', titulo: 'Equipo', icono: 'mdi:account-multiple-outline' }, { id: 'vivo', titulo: 'En vivo', icono: 'mdi:access-point' }],
   },
   {
@@ -42,9 +48,12 @@ export const VISTAS: Vista[] = [
     pestanas: [{ id: 'perfiles', titulo: 'Perfiles', icono: 'mdi:account-key-outline' }, { id: 'crear', titulo: 'Crear perfil', icono: 'mdi:account-plus' }, { id: 'mensajes', titulo: 'Mensajes', icono: 'mdi:whatsapp' }, { id: 'captchas', titulo: 'Verificaciones', icono: 'mdi:shield-check-outline' }, { id: 'bitacora', titulo: 'Bitácora', icono: 'mdi:clipboard-text-clock-outline' }],
   },
   {
-    id: 'ajustes', titulo: 'Ajustes', icono: 'mdi:cog-outline', tag: 'peon-ajustes', visible: () => true,
+    id: 'ajustes', titulo: 'Ajustes', icono: 'mdi:cog-outline', tag: 'peon-ajustes', visible: conSesion,
     pestanas: [{ id: 'perfil', titulo: 'Mi perfil', icono: 'mdi:account-circle-outline' }, { id: 'clave', titulo: 'Cambiar clave', icono: 'mdi:lock-reset' }, { id: 'sesion', titulo: 'Sesión', icono: 'mdi:monitor-cellphone' }],
   },
+  // Atajos públicos del menú (solo sin sesión; con sesión son pestañas de Noticias)
+  { id: 'votar', titulo: 'Cómo votar', icono: 'mdi:vote-outline', tag: '', visible: sinSesion, pestanas: [], ir: { vista: 'noticias', pestana: 'votar' } },
+  { id: 'privacidad', titulo: 'Privacidad', icono: 'mdi:shield-lock-outline', tag: '', visible: sinSesion, pestanas: [], ir: { vista: 'noticias', pestana: 'privacidad' } },
   // Pestañas de las fichas (no salen en el menú)
   {
     id: 'ficha', titulo: 'Ficha de la persona', icono: 'mdi:card-account-details-outline', tag: '', visible: () => false,

@@ -15,7 +15,7 @@ import css from 'iswc:css';
 import { Componente, avisar, html } from '../../base/componente.js';
 import type { PeonCampanaProps } from '../../consts/schemas/componentes.schemas.js';
 import type { Bandeja, Notificacion } from '../../consts/schemas/api.schemas.js';
-import { api } from '../../core/api.js';
+import { api, sesion } from '../../core/api.js';
 import { haceCuanto, iniciales } from '../../core/catalogos.js';
 import { avisarNuevas, escucharIrDesdePush, pedirPermisoAvisos, permisoAvisos, suscribirPush, tituloConContador } from '../../core/avisos-navegador.js';
 import { irEnlace, textoError } from '../../core/ui.js';
@@ -77,6 +77,8 @@ class PeonCampana extends Componente<PeonCampanaProps> {
     } catch {
       return;
     }
+    // Si la sesión se cerró mientras llegaba la respuesta (o la campana ya no está), no se toca el título.
+    if (!sesion.token || !this.isConnected) return;
     if (lider === this || !lider?.isConnected) {
       lider = this;
       if (!pushListo) {

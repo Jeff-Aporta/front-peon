@@ -5,13 +5,15 @@
  * La pestaña activa queda en la URL (`url-key` = id de la vista) para recargar sin perderla.
  */
 import { html } from '../base/componente.js';
+import { usuarioActivo } from './api.js';
 import { vista } from './catalogos.js';
 
 export type Fabrica = (pestana: string) => Node;
 
 export function grupoPestanas(idVista: string, activa: string, fabricar: Fabrica, visibles?: (id: string) => boolean): DocumentFragment {
   const v = vista(idVista);
-  const lista = v.pestanas.filter((p) => !visibles || visibles(p.id));
+  // App abierta: sin sesión solo las pestañas públicas.
+  const lista = v.pestanas.filter((p) => (usuarioActivo() || p.publica) && (!visibles || visibles(p.id)));
   const actual = lista.some((p) => p.id === activa) ? activa : lista[0]?.id ?? '';
   const paneles = new Map<string, HTMLElement>();
   const llenar = (id: string) => {

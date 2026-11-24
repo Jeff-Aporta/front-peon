@@ -25,6 +25,7 @@ export const KIT_TAGS = [
   'iswc-data-grid',
   'iswc-dialog',
   'iswc-drawer',
+  'iswc-dropdown-item',
   'iswc-empty-state',
   'iswc-icon',
   'iswc-input',
@@ -35,6 +36,7 @@ export const KIT_TAGS = [
   'iswc-popover',
   'iswc-qrcode',
   'iswc-select',
+  'iswc-session-menu',
   'iswc-share-button',
   'iswc-spinner',
   'iswc-stat',
@@ -49,7 +51,7 @@ export const KIT_TAGS = [
  * Shell crítico: tags del kit que se ven en el primer pintado (barra y toaster). El build lee su cierre de módulos en
  * `src/vendor/iswc-base/deps.json` (`tags[tag]`) y emite un `<link rel="modulepreload">` por ruta en cada HTML.
  */
-export const SHELL_CRITICO = ['iswc-icon', 'iswc-person', 'iswc-toast'] as const satisfies readonly (typeof KIT_TAGS)[number][];
+export const SHELL_CRITICO = ['iswc-icon', 'iswc-person', 'iswc-session-menu', 'iswc-toast'] as const satisfies readonly (typeof KIT_TAGS)[number][];
 
 export const PREFIJO = 'peon';
 

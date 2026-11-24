@@ -17,6 +17,8 @@ con el kit iswc-base (`iswc-*`) y componentes propios `peon-*`.
 - [W-PLAT-05] Un solo comando produce todos los artefactos servibles; otro lo hace en modo vigilancia.
 - [W-PLAT-06] Cada módulo propio se sirve con una URL que cambia si y solo si cambia su contenido, y la misma en toda la app.
 - [W-PLAT-07] El kit se usa siempre en la misma versión congelada en toda la app (página, vistas aisladas, demos).
+- [W-PLAT-13] La app es abierta: sin sesión se ve el shell con lo público (Inicio, Noticias, Cómo votar, Privacidad) y se entra desde un desplegable, sin pantalla de acceso; lo de usuarios y lo operativo aparece al entrar (tabla de rutas en `api-peon/docs/RUTAS-PUBLICAS.md`).
+- [W-PLAT-14] Con la API local caída la app pasa sola a la API en línea (y al revés en el host publicado); Ajustes → Sesión dice a cuál está conectada.
 
 ## 3. Guía HOW WEAK
 
