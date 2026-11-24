@@ -25,6 +25,19 @@ import { abrirChat, textoError, valor } from '../../core/ui.js';
 const BLOQUES = 'p, li, h1, h2, h3, h4, blockquote, tr, iswc-callout, figure';
 const PRESION_MS = 550;
 
+/** Compartir con el menú del sistema (celular) o copiar el enlace (escritorio). */
+async function compartir(n: Noticia): Promise<void> {
+  const url = n.enlace_original && n.tipo === 'enlace' ? n.enlace_original : location.href.split('#')[0]!;
+  try {
+    const nav = navigator as Navigator;
+    if (typeof nav.share === 'function') await nav.share({ title: n.titulo, text: n.resumen ?? n.titulo, url });
+    else {
+      await nav.clipboard.writeText(`${n.titulo} — ${url}`);
+      avisar('Enlace copiado', 'success');
+    }
+  } catch { /* cancelado */ }
+}
+
 class PeonNoticia extends Componente<PeonNoticiaProps> {
   static tag = 'peon-noticia';
   static css = css;
@@ -111,6 +124,17 @@ class PeonNoticia extends Componente<PeonNoticiaProps> {
     void root;
     return html`
       <article class="noticia" data-categoria=${n.categoria}>
+        <nav class="herramientas" aria-label="Herramientas de la noticia">
+          ${n.estado === 'publicada' ? html`<button type="button" class="herr" title="Compartir" aria-label="Compartir" onclick=${() => void compartir(n)}><iswc-icon icon="mdi:share-variant-outline"></iswc-icon></button>` : null}
+          ${chat ? html`<button type="button" class="herr" data-pedir-vps title="Pedir cambios al asistente" aria-label="Pedir cambios al asistente" onclick=${() => abrirChat({ tipo: 'noticia', id: n.id, titulo: n.titulo, fragmento: null, pantalla: null }, '')}><iswc-icon icon="mdi:robot-outline"></iswc-icon></button>` : null}
+          ${editor ? html`
+            <button type="button" class="herr" data-editar title="Editar" aria-label="Editar" onclick=${() => { this.#editando = true; this.props = {}; }}><iswc-icon icon="mdi:pencil-outline"></iswc-icon></button>
+            ${n.estado === 'borrador'
+              ? html`<button type="button" class="herr destacada" data-publicar title="Publicar" aria-label="Publicar" onclick=${(e: Event) => void this.#guardar({ estado: 'publicada' }, e.currentTarget as HTMLElement)}><iswc-icon icon="mdi:send-check-outline"></iswc-icon></button>`
+              : html`<button type="button" class="herr" data-despublicar title="Pasar a borrador" aria-label="Pasar a borrador" onclick=${(e: Event) => void this.#guardar({ estado: 'borrador' }, e.currentTarget as HTMLElement)}><iswc-icon icon="mdi:file-undo-outline"></iswc-icon></button>`}
+            <button type="button" class="herr peligro" data-archivar title="Archivar" aria-label="Archivar" onclick=${(e: Event) => ((e.currentTarget as HTMLElement).parentElement?.querySelector('iswc-confirm-modal') as HTMLElement | null)?.setAttribute('open', '')}><iswc-icon icon="mdi:archive-outline"></iswc-icon></button>
+            <iswc-confirm-modal heading="Archivar noticia" message="Deja de verse en la app. No se borra: queda en la bitácora." color="danger" confirm-label="Archivar" oniswc-confirm-confirm=${() => void this.#archivar()}></iswc-confirm-modal>` : null}
+        </nav>
         ${this.props.sinTitulo ? null : html`
           <header class="cabeza">
             <p class="antetitulo"><span>${cat?.titulo ?? n.categoria}</span>${n.tipo && n.tipo !== 'propia' && n.fuente ? html` · ${n.tipo === 'adaptada' ? 'Adaptada de' : 'En'} <strong>${n.fuente}</strong>` : null}
@@ -127,20 +151,6 @@ class PeonNoticia extends Componente<PeonNoticiaProps> {
         ${n.imagen ? html`<figure class="portada"><img src=${n.imagen} alt="" loading="lazy">${n.fuente && n.tipo !== 'propia' ? html`<figcaption>Imagen: ${n.fuente}</figcaption>` : null}</figure>` : html`<div class="cinta" aria-hidden="true"></div>`}
         ${cuerpo}
         ${n.enlace_original ? html`<a class="original" href=${n.enlace_original} target="_blank" rel="noopener noreferrer"><iswc-icon icon="mdi:open-in-new"></iswc-icon>Leer la noticia original${n.fuente ? ` en ${n.fuente}` : ''}</a>` : null}
-        <footer class="acciones">
-          ${n.estado === 'publicada' ? html`<iswc-share-button share-title=${n.titulo} text=${n.resumen ?? n.titulo}></iswc-share-button>` : null}
-          ${chat ? html`<iswc-button size="small" variant="outlined" data-pedir-vps onclick=${() => abrirChat({ tipo: 'noticia', id: n.id, titulo: n.titulo, fragmento: null, pantalla: null }, 'Mejora esta noticia: hazla más clara y cercana, sin cambiar los datos.')}><iswc-icon slot="start" icon="mdi:robot-outline"></iswc-icon>Pedir al VPS</iswc-button>` : null}
-          ${editor ? html`
-            <iswc-button size="small" variant="outlined" data-editar onclick=${() => { this.#editando = true; this.props = {}; }}><iswc-icon slot="start" icon="mdi:pencil-outline"></iswc-icon>Editar</iswc-button>
-            ${n.estado === 'borrador'
-              ? html`<iswc-button size="small" color="brand" class="morado" data-publicar onclick=${(e: Event) => void this.#guardar({ estado: 'publicada' }, e.currentTarget as HTMLElement)}><iswc-icon slot="start" icon="mdi:send-check-outline"></iswc-icon>Publicar</iswc-button>`
-              : html`<iswc-button size="small" variant="text" data-despublicar onclick=${(e: Event) => void this.#guardar({ estado: 'borrador' }, e.currentTarget as HTMLElement)}>Pasar a borrador</iswc-button>`}
-            <iswc-button size="small" variant="text" color="danger" data-archivar onclick=${(e: Event) => {
-              const m = (e.currentTarget as HTMLElement).nextElementSibling as HTMLElement | null;
-              m?.setAttribute('open', '');
-            }}><iswc-icon slot="start" icon="mdi:archive-outline"></iswc-icon>Archivar</iswc-button>
-            <iswc-confirm-modal heading="Archivar noticia" message="Deja de verse en la app. No se borra: queda en la bitácora." color="danger" confirm-label="Archivar" oniswc-confirm-confirm=${() => void this.#archivar()}></iswc-confirm-modal>` : null}
-        </footer>
       </article>`;
   }
 

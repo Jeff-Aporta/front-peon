@@ -157,3 +157,34 @@ iswc-button.morado {
 
   &:active { transform: scale(0.97); }
 }
+
+
+/* Herramientas arriba del título, solo íconos (como en el correo): el rótulo va en `title`/`aria-label`. */
+.herramientas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.25em;
+  margin-bottom: 0.4em;
+}
+.herr {
+  display: grid;
+  place-items: center;
+  width: 2.4em;
+  height: 2.4em;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--iswc-text-muted, var(--iswc-text));
+  font-size: 1em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+
+  iswc-icon { font-size: 1.3em; }
+  &:hover { background: var(--peon-morado-suave); color: var(--peon-morado); }
+  &:active { transform: scale(0.92); }
+  &:focus-visible { outline: 0.15em solid var(--iswc-color-contrast); }
+  &.destacada { background: var(--peon-morado); color: #fff; }
+  &.peligro:hover { background: color-mix(in srgb, var(--iswc-color-danger, #c00) 12%, transparent); color: var(--iswc-color-danger, #c00); }
+}
