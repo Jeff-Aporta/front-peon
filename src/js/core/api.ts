@@ -35,6 +35,8 @@ function escribir(k: string, v: string | null): void {
 }
 
 const CLAVE_ELEGIDA = 'peon:api-elegida';
+/** Base del API en uso, a la vista de las páginas sueltas del mismo origen (la ventana de captura asistida). */
+export const CLAVE_BASE = 'peon:api-base';
 const LIMITE_PRUEBA_MS = 1500;
 export const SIN_SERVIDOR = 'No pudimos conectar con el servidor local ni con el en línea. Inténtalo de nuevo en un momento.';
 
@@ -77,6 +79,16 @@ let elegida: string | null = leerSesion(CLAVE_ELEGIDA);
 if (elegida && !candidatas().includes(elegida)) elegida = null;
 let eligiendo: Promise<string | null> | null = null;
 
+/**
+ * Publica la base del API en uso para las páginas sueltas del mismo origen (la ventana de captura asistida).
+ * `localStorage` sí se comparte entre ventanas del mismo origen; `sessionStorage` no, si la ventana se abrió desde
+ * otra página.
+ */
+function publicarBase(): void {
+  if (elegida) escribir(CLAVE_BASE, elegida);
+}
+publicarBase();
+
 async function responde(base: string): Promise<boolean> {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), LIMITE_PRUEBA_MS);
@@ -107,6 +119,12 @@ export function elegirServidor(otraVez = false): Promise<string | null> {
     const nueva = lista.find((_, i) => vivas[i]) ?? null;
     elegida = nueva;
     escribirSesion(CLAVE_ELEGIDA, nueva);
+    // La ventanita de la captura asistida (captura.html) es una página suelta que no puede importar este módulo:
+    // se queda con la API que la app está usando, que es la que contestará. Se guarda en localStorage porque
+    // localStorage sí se comparte entre pestañas y ventanas del mismo origen (sessionStorage no, si la ventana se
+    // abrió desde otra página).
+    if (nueva) escribir(CLAVE_BASE, nueva);
+    publicarBase();
     if (nueva !== antes) window.dispatchEvent(new CustomEvent('peon:servidor', { detail: servidor() }));
     return nueva;
   })().finally(() => {

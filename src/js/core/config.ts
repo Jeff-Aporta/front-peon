@@ -10,6 +10,13 @@
  * La en línea es `localStorage['peon:api']` (pruebas) o API_PUBLICA. API_PUBLICA sigue VACÍA hasta que la API tenga
  * dominio con TLS válido (GitHub Pages es https y no puede llamar a http ni a un certificado autofirmado): al
  * publicarla, poner aquí la URL completa terminada en `/api` y nada más cambia.
+ *
+ * Ojo con la **ventana de captura asistida** (`captura.html`): es una página suelta y no puede importar este
+ * módulo, así que lee la base que la app deja publicada en `localStorage['peon:api-base']` (la escribe
+ * `core/api.ts` cuando elige servidor). Por eso la API tiene que estar en una dirección **pública con TLS
+ * válido**: desde una página https (GitHub Pages) el navegador **no deja llamar a una dirección privada** (Chrome
+ * lo bloquea: «Private Network Access»), y con `API_PUBLICA` vacía la ventana solo tendría la vía relativa
+ * (`./api`), que en GitHub Pages no existe.
  */
 export const API_PUBLICA = '';
 

@@ -28,3 +28,9 @@ El marcador **no consulta nada por su cuenta**.
 
 Detalle técnico (qué habla con qué y lo que costó aprender probando en la página oficial real):
 `api-peon/docs/PUESTOS.md` §5.1.
+
+**Para que funcione en producción, la API tiene que estar en una dirección pública con TLS válido** (y en
+`src/js/core/config.ts` hay que poner esa URL en `API_PUBLICA`). La ventana es una página suelta: no puede importar el
+módulo de la API, así que lee de `localStorage['peon:api-base']` la base que la app está usando. Y desde una página
+https (GitHub Pages) el navegador no deja llamar a una dirección privada, así que una API en `http://localhost` o en
+una IP de la red interna no sirve para la web publicada.

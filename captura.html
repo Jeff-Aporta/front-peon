@@ -58,12 +58,19 @@
   // una con GET /info y se usa la primera que conteste.
   function candidatas() {
     const lista = [];
+    // 1. la API que la app está usando ahora mismo (la publica la app en 'peon:api-base'); es la que va a
+    //    contestar, y la unica que se sabe cuando esta ventanita se abre desde la pagina oficial.
+    const enUso = localStorage.getItem("peon:api-base");
+    if (enUso) lista.push(enUso.replace(/\/$/, ""));
+    // 2. lo que la persona haya elegido a mano, o lo que quedo elegido en esta pestana
     const guardada = sessionStorage.getItem("peon:api-elegida") || localStorage.getItem("peon:api");
     if (guardada) lista.push(guardada.replace(/\/$/, ""));
+    // 3. la API local, si estamos en localhost
     const host = location.hostname;
     if (host === "localhost" || host === "127.0.0.1" || host === "[::1]") {
       lista.push("http://" + (host === "[::1]" ? "localhost" : host) + ":8098/api");
     }
+    // 4. la relativa (el nginx del VPS sirve /peon/ y /peon/api/)
     lista.push("./api");
     return lista.filter(function (b, i) { return b && lista.indexOf(b) === i; });
   }
