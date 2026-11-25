@@ -3,7 +3,9 @@
   Página del marcador (bookmarklet) de la captura asistida · Peón en Marcha.
   Página estática: se publica tal cual (no entra en el build de la app).
 -->
-<html lang="es" data-theme="light" data-palette="peon">
+<!-- data-app-ready: la hoja de la app oculta el body hasta que la app arranca (para que no se vea a medias).
+     Esta página es suelta y no arranca la app, así que se marca como lista. -->
+<html lang="es" data-theme="light" data-palette="peon" data-app-ready>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,7 +14,9 @@
 <link rel="icon" type="image/png" href="../assets/logo-96.png">
 <link rel="stylesheet" href="../dist/cdn/styles/app.css">
 <style>
-  body { margin: 0; padding: 1.2rem; font-family: system-ui, sans-serif; background: #faf9f7; color: #1b1b1b; }
+  /* La hoja de la app oculta el body hasta que la app arranca (para que no se vea a medias); estas páginas
+     son sueltas y no arrancan la app, así que hay que volverlo visible. */
+  body { margin: 0; padding: 1.2rem; font-family: system-ui, sans-serif; background: #faf9f7; color: #1b1b1b; visibility: visible; }
   main { max-width: 44rem; margin: 0 auto; }
   h1 { font-size: 1.35rem; margin: 0 0 .3rem; color: #5B1FA6; }
   ol { padding-left: 1.1rem; }
@@ -57,13 +61,16 @@
   // El marcador: lee el texto visible de la página y se lo pasa a la app por una ventanita.
   // No consulta nada a la Registraduría ni a la API por su cuenta.
   const destino = "https://jeff-aporta.github.io/front-peon/captura.html";
+  // OJO: quien ESCUCHA la petición es esta página (la oficial), no la ventanita: la ventanita pide y esta
+  // página contesta. Y se repite el saludo con "listo" porque la ventanita puede abrirse antes de que el
+  // marcador deje puesto su oyente.
   const codigo = [
     "javascript:(function(){var t=document.body?(document.body.innerText||document.body.textContent||''):'';",
     "var w=window.open('" + destino + "','peon_captura','width=560,height=720');",
     "if(!w){alert('Permite las ventanas emergentes para este sitio y vuelve a pulsar el marcador.');return;}",
     "var n=0,t1=setInterval(function(){if(n++>40){clearInterval(t1);return;}",
     "try{w.postMessage({tipo:'peon:censo:listo'},'*');}catch(e){}},300);",
-    "w.addEventListener('message',function(ev){if(!ev.data||ev.data.tipo!=='peon:censo:pedir')return;",
+    "window.addEventListener('message',function(ev){if(!ev.data||ev.data.tipo!=='peon:censo:pedir')return;",
     "clearInterval(t1);w.postMessage({tipo:'peon:censo',texto:t},'*');});})()",
   ].join("");
   document.getElementById("cod").value = codigo;
