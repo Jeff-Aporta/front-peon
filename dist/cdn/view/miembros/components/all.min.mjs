@@ -2,7 +2,7 @@ import{define as Oe}from"https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponent
     <iswc-tab-group class="pestanas" active=${d} url-key=${t} oniswc-tab-show=${s=>{let p=s.detail;p?.name&&r(p.name)}}>
       ${l.map(s=>c`<iswc-tab slot="nav" panel=${s.id}><iswc-icon icon=${s.icono}></iswc-icon><span>${s.titulo}</span></iswc-tab>`)}
       ${l.map(s=>{let p=document.createElement("iswc-tab-panel");return p.setAttribute("name",s.id),u.set(s.id,p),p})}
-    </iswc-tab-group>`;return r(d),m}function O(t){let e=I[t]??I.pendiente;return c`<iswc-tag color=${e.color} pill><iswc-icon icon=${e.icono}></iswc-icon> ${e.texto}</iswc-tag>`}var $=t=>t instanceof Error?t.message:"Algo sali\xF3 mal";function xe(t,e=!1){return e?c`<div class="puesto cargando"><iswc-spinner></iswc-spinner><span>Consultando el puesto de votación…</span></div>`:t?c`
+    </iswc-tab-group>`;return r(d),setTimeout(()=>{for(let[s,p]of u)if(!p.hasAttribute("hidden")){r(s);break}},0),m}function O(t){let e=I[t]??I.pendiente;return c`<iswc-tag color=${e.color} pill><iswc-icon icon=${e.icono}></iswc-icon> ${e.texto}</iswc-tag>`}var $=t=>t instanceof Error?t.message:"Algo sali\xF3 mal";function xe(t,e=!1){return e?c`<div class="puesto cargando"><iswc-spinner></iswc-spinner><span>Consultando el puesto de votación…</span></div>`:t?c`
     <div class="puesto" data-estado=${t.estado}>
       <div class="cabeza">${O(t.estado)}${t.desdeCache?c`<small>consultado antes</small>`:null}${t.yaRegistrada?c`<iswc-tag color="warning" pill>Ya registrada</iswc-tag>`:null}</div>
       ${t.puesto?c`<strong>${t.puesto.nombre}</strong><span>${t.puesto.direccion??""} · ${t.puesto.municipio}${t.mesa?` \xB7 Mesa ${t.mesa}`:""}</span>`:c`<span>${t.aviso??"Sin datos del puesto."}</span>`}

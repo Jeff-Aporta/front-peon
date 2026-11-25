@@ -2,7 +2,7 @@ import{define as De}from"https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponent
     <iswc-tab-group class="pestanas" active=${s} url-key=${e} oniswc-tab-show=${l=>{let d=l.detail;d?.name&&u(d.name)}}>
       ${r.map(l=>f`<iswc-tab slot="nav" panel=${l.id}><iswc-icon icon=${l.icono}></iswc-icon><span>${l.titulo}</span></iswc-tab>`)}
       ${r.map(l=>{let d=document.createElement("iswc-tab-panel");return d.setAttribute("name",l.id),c.set(l.id,d),d})}
-    </iswc-tab-group>`;return u(s),b}function A(e,t){let i=e?.querySelector(`[data-campo="${t}"]`);return i?i.localName==="iswc-masked-input"&&typeof i.raw=="string"?i.raw.trim():String(i.value??"").trim():""}var Ae=e=>e instanceof Error?e.message:"Algo sali\xF3 mal";var _=class extends S{static tag="peon-ajustes";static css=I;static deps=["iswc-tab-group","iswc-input","iswc-button","iswc-callout","iswc-person","iswc-tag"];inicial(){return{pestana:""}}#e(){let t=p.usuario;return f`
+    </iswc-tab-group>`;return u(s),setTimeout(()=>{for(let[l,d]of c)if(!d.hasAttribute("hidden")){u(l);break}},0),b}function A(e,t){let i=e?.querySelector(`[data-campo="${t}"]`);return i?i.localName==="iswc-masked-input"&&typeof i.raw=="string"?i.raw.trim():String(i.value??"").trim():""}var Ae=e=>e instanceof Error?e.message:"Algo sali\xF3 mal";var _=class extends S{static tag="peon-ajustes";static css=I;static deps=["iswc-tab-group","iswc-input","iswc-button","iswc-callout","iswc-person","iswc-tag"];inicial(){return{pestana:""}}#e(){let t=p.usuario;return f`
       <div class="caja">
         <iswc-person nombre=${t.nombre} detalle=${t.rolNombre}></iswc-person>
         <dl class="datos">

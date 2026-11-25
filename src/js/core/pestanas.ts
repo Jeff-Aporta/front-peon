@@ -36,6 +36,15 @@ export function grupoPestanas(idVista: string, activa: string, fabricar: Fabrica
       })}
     </iswc-tab-group>`;
   llenar(actual);
-  // con url-key el kit puede activar otra pestaña al conectar: se llena cuando emita iswc-tab-show
+  // Con url-key el kit puede activar otra pestaña al conectar (según la URL). Cuando pase, se llena ese panel:
+  // si no, la pestaña activa se queda VACÍA. Se revisa en el siguiente turno, cuando el fragmento ya está en la página.
+  setTimeout(() => {
+    for (const [id, panel] of paneles) {
+      if (!panel.hasAttribute('hidden')) {
+        llenar(id);
+        break;
+      }
+    }
+  }, 0);
   return frag;
 }
