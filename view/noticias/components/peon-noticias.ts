@@ -1,14 +1,14 @@
 // @contexto HANDOFF.md §2b puntos 3 y 4
 /**
  * <peon-noticias> — noticias diarias y páginas de la campaña. Secciones en un CARRUSEL (no pestañas):
- *   Noticias      tarjetas (con `publicar_noticias` también los borradores) · «Nueva noticia» (abre el asistente)
+ *   Noticias      tarjetas (con `publicar_noticias` también los borradores)
  *   El candidato  biografía + trayectoria (páginas editables: `<peon-noticia categoria=…>`)
  *   Cómo votar    tutorial paso a paso + acceso a la consulta del puesto
  *   Publicidad    piezas descargables dibujadas en el navegador (core/publicidad.ts) y el logo
  *   Para redes    creador de piezas para redes a partir de una noticia (SVG determinista → PNG, core/piezas-redes.ts)
  *   Privacidad    política de tratamiento de datos + aviso «no es app oficial del Gobierno»
- * Noticias tiene portada de periódico (core/noticias.ts); para editores, crear noticias es SOLO por el asistente
- * (botón «Nueva noticia»): no hay formulario aparte y la UI no menciona IA.
+ * Noticias tiene portada de periódico (core/noticias.ts); crear noticias es SOLO por el chat del asistente
+ * (botón flotante): la UI no tiene formularios ni etiquetas de IA.
  * Todo se refresca solo con `peon:datos` (evento «cambio» de la API).
  */
 import { define } from '@jeff-aporta/iswc-base/core/iswc-element.min.mjs';
@@ -22,7 +22,7 @@ import { CAMPANA } from '../../../src/js/core/config.js';
 import { portadaNoticias } from '../../../src/js/core/noticias.js';
 import { creadorPiezas } from '../../../src/js/core/piezas-redes.js';
 import { FORMATOS, archivoPieza, dibujarPieza } from '../../../src/js/core/publicidad.js';
-import { abrirChat, ir, textoError } from '../../../src/js/core/ui.js';
+import { ir, textoError } from '../../../src/js/core/ui.js';
 
 /** Tarjeta de una noticia (también la usa Inicio a través de su propio marcado). */
 class PeonNoticias extends Componente<VistaProps> {
@@ -60,7 +60,7 @@ class PeonNoticias extends Componente<VistaProps> {
       this.#filas = filas;
       l.replaceChildren(filas.length
         ? portadaNoticias(filas)
-        : html`<iswc-empty-state icono="mdi:newspaper-variant-outline" titulo="Aún no hay noticias" texto=${puede('publicar_noticias') ? 'Pídele la primera al asistente.' : 'Las noticias de la campaña aparecerán aquí.'}></iswc-empty-state>`);
+        : html`<iswc-empty-state icono="mdi:newspaper-variant-outline" titulo="Aún no hay noticias" texto=${puede('publicar_noticias') ? 'Aún no hay noticias publicadas.' : 'Las noticias de la campaña aparecerán aquí.'}></iswc-empty-state>`);
     } catch (e) {
       l.replaceChildren(html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`);
     }
@@ -72,12 +72,7 @@ class PeonNoticias extends Componente<VistaProps> {
     this.#lista = document.createElement('div');
     this.#lista.className = 'portada-lista';
     this.#lista.append(html`<iswc-empty-state estado="cargando"></iswc-empty-state>`);
-    const editor = puede('publicar_noticias');
-    const nueva = editor && puede('chat_con_vps')
-      ? html`<div class="nueva-asistente"><iswc-icon icon="mdi:message-text-outline"></iswc-icon><div><strong>¿Una noticia nueva?</strong><small>Cuéntasela al asistente: la redacta como borrador para que la revises y la publiques. También puedes pasarle el enlace de otro medio.</small></div>
-          <iswc-button size="small" color="brand" data-nueva-noticia onclick=${() => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: 'Noticias' }, 'Crea una noticia nueva sobre: ')}><iswc-icon slot="start" icon="mdi:plus"></iswc-icon>Nueva noticia</iswc-button></div>`
-      : null;
-    caja.append(html`${nueva}${this.#lista}`);
+    caja.append(this.#lista);
     void this.#cargarLista();
     return caja;
   }

@@ -185,21 +185,7 @@ iswc-button.morado {
 }
 
 
-/* Nueva noticia (editores): solo por el asistente. */
-.nueva-asistente {
-  display: flex;
-  flex-wrap: wrap;
-  gap: t.esp(2) t.esp(3);
-  align-items: center;
-  margin-bottom: t.esp(5);
-  padding: t.esp(3) t.esp(4);
-  border: 1px solid var(--peon-morado-borde);
-  border-radius: 1em;
-  background: var(--peon-morado-suave);
 
-  > iswc-icon { font-size: 1.5em; color: var(--peon-morado-texto); }
-  > div { display: grid; flex: 1 1 14em; small { opacity: 0.75; } }
-}
 
 /* Sin pestañas: la vista desplaza ella misma (scroll por sección). */
 .cuerpo-seccion { padding-bottom: t.esp(8); }
