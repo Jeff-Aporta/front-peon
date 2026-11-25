@@ -427,19 +427,23 @@ function engancharTipo(tipo: string): void {
 }
 
 function conectar(): void {
-  if (
-    fuente && tokenFuente === sesion.token && fuente.url.startsWith(baseApi())
-  ) return;
-  fuente?.close();
-  fuente = null;
-  tokenFuente = sesion.token;
-  if (!sesion.token || !baseApi()) return;
-  fuente = new EventSource(
-    `${baseApi()}/eventos?token=${encodeURIComponent(sesion.token)}`,
-  );
-  // Si el servidor deja de responder, se vuelve a elegir (local → en línea); el evento `peon:servidor` reconecta.
-  fuente.addEventListener("error", () => void elegirServidor(true));
-  for (const tipo of oyentes.keys()) engancharTipo(tipo);
+  if (!sesion.token) return;
+  const token = sesion.token;
+  // Se espera a que el servidor este elegido: si no, la conexion se abriria contra la direccion relativa
+  // («./api» en la pagina publicada), que no es el API y se queda en un 404.
+  void (async () => {
+    const base = await elegirServidor();
+    if (!base || token !== sesion.token) return;
+    if (fuente && tokenFuente === token && fuente.url.startsWith(base)) return;
+    fuente?.close();
+    fuente = null;
+    tokenFuente = token;
+    const s = new EventSource(`${base}/eventos?token=${encodeURIComponent(token)}`);
+    fuente = s;
+    // Si el servidor deja de responder, se vuelve a elegir (local → en línea); el evento `peon:servidor` reconecta.
+    s.addEventListener("error", () => void elegirServidor(true));
+    for (const tipo of oyentes.keys()) engancharTipo(tipo);
+  })();
 }
 
 /** Escucha un tipo de evento en vivo (`registro`, `cambio`, `chat`…). Devuelve la función para soltarlo. */

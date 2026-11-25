@@ -10,5 +10,8 @@ import { descargarIconos } from 'https://raw.githubusercontent.com/Jeff-Aporta/i
 await descargarIconos({
   raiz: new URL('..', import.meta.url),
   roots: ['index.html', 'src', 'view'],
-  // extra: ['mdi:broom'],  // ids que el barrido no ve: armados en ejecución o pintados por los componentes del kit
+  // ids que el barrido no ve: armados en ejecución o pintados por los componentes del kit.
+  // mdi:inbox-outline y mdi:trash-can-outline (la tabla vacia y el boton de borrar), mdi:loading (el boton
+  // cargando) y mdi:alert (las llamadas): si faltan, el kit avisa por consola y no los pinta.
+  extra: ['mdi:inbox-outline', 'mdi:trash-can-outline', 'mdi:loading', 'mdi:alert'],
 });
