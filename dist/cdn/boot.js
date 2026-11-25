@@ -1,1 +1,1 @@
-"use strict";(()=>{var s=(t,e)=>()=>{try{return e||t((e={exports:{}}).exports,e),e.exports}catch(a){throw e=0,a}};var d=s(()=>{(function(){let t=document.documentElement;t.dataset.theme="light",t.classList.remove("theme-dark"),t.classList.add("theme-light"),t.dataset.palette="peon"})()});d();})();
+"use strict";(()=>{(function(){let t=document.documentElement;t.dataset.theme="light",t.classList.remove("theme-dark"),t.classList.add("theme-light"),t.dataset.palette="peon"})();})();

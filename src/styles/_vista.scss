@@ -292,6 +292,38 @@ iswc-tab { white-space: nowrap; }
   li::marker { color: var(--iswc-brand); font-weight: 700; }
 }
 
+/* Los dos caminos del bloque del puesto: catálogo oficial o resultado a mano (los dos se pueden usar). */
+.caminos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.esp(2);
+}
+
+.camino {
+  display: grid;
+  gap: t.esp(2);
+}
+
+.camino[hidden] { display: none; }
+
+/* Propuesta: el puesto del catálogo que calza con lo que trajo la persona («¿Quisiste decir X?»). */
+.propuesta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.esp(2);
+  align-items: center;
+  padding: t.esp(3);
+  border: 1px solid var(--iswc-border-soft);
+  border-left: 0.25em solid var(--iswc-brand);
+  border-radius: t.radio(sm);
+  background: var(--iswc-bg);
+
+  &[hidden] { display: none; }
+
+  > iswc-icon { flex: none; color: var(--iswc-brand); }
+  span { flex: 1; min-width: 12em; }
+}
+
 .campos-puesto {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 11em), 1fr));

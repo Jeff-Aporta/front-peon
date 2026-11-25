@@ -18,7 +18,7 @@ import { abrirFicha, marcado, tarjetaPuesto, textoError, valor } from '../../../
 class PeonRegistro extends Componente<VistaProps> {
   static tag = 'peon-registro';
   static css = css;
-  static deps = ['iswc-tab-group', 'iswc-masked-input', 'iswc-input', 'iswc-textarea', 'iswc-checkbox', 'iswc-button', 'iswc-callout', 'iswc-spinner', 'iswc-tag', 'iswc-icon'];
+  static deps = ['iswc-tab-group', 'iswc-masked-input', 'iswc-input', 'iswc-textarea', 'iswc-checkbox', 'iswc-button', 'iswc-callout', 'iswc-spinner', 'iswc-tag', 'iswc-icon', 'iswc-combobox', 'iswc-option'];
 
   #ultima = '';
   #resultado: ResultadoPuesto | null = null;
@@ -57,6 +57,8 @@ class PeonRegistro extends Componente<VistaProps> {
       municipio: valor(caja, 'municipio') || 'Armenia',
       consentimiento: marcado(caja, 'consentimiento'),
       puestoManual: manual.nodo.hidden ? null : manual.leer(),
+      // El código del puesto elegido en el catálogo oficial: si llega, la API lo toma del catálogo (queda verificado).
+      puestoCodigo: manual.leerCodigo(),
     };
     if (cedula.length < 5) return avisar('Escribe la cédula', 'warning');
     if (!datos.nombres || !datos.apellidos) return avisar('Nombres y apellidos son obligatorios', 'warning');
@@ -106,7 +108,7 @@ class PeonRegistro extends Componente<VistaProps> {
           <iswc-masked-input data-campo="cedula" label="Cédula" pattern="000000999999" placeholder="Solo números" inputmode="numeric" required oniswc-input=${alEscribir} oniswc-change=${() => void this.#consultar(caja, puesto)}></iswc-masked-input>
           ${puesto}
         </div>
-        <button type="button" class="enlace" data-mostrar-manual onclick=${() => { manual.nodo.hidden = !manual.nodo.hidden; }}><iswc-icon icon="mdi:pencil-outline"></iswc-icon> Escribir o corregir el puesto a mano</button>
+        <button type="button" class="enlace" data-mostrar-manual onclick=${() => { manual.nodo.hidden = !manual.nodo.hidden; }}><iswc-icon icon="mdi:pencil-outline"></iswc-icon> Buscar el puesto en el catálogo o escribirlo a mano</button>
         ${manual.nodo}
       </section>
       <section class="bloque">

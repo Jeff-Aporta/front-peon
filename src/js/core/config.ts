@@ -13,6 +13,19 @@
  */
 export const API_PUBLICA = '';
 
+/**
+ * Base pública de la app: la MISMA que `iswc.host` de deno.json (GitHub Pages). Las páginas estáticas de la
+ * captura asistida (el marcador y su ventana emergente) se publican con esta base; las pruebas vigilan que no se
+ * desincronicen.
+ */
+export const WEB_PUBLICA = 'https://jeff-aporta.github.io/front-peon/';
+
+/** Página del marcador (bookmarklet): se copia el código y se usa en la página de la Registraduría. */
+export const URL_MARCADOR = `${WEB_PUBLICA}assets/marcador.html`;
+
+/** Ventana emergente que recibe el texto de la página oficial y lo asigna a una persona. */
+export const URL_CAPTURA = `${WEB_PUBLICA}captura.html`;
+
 /** Versión del front (se muestra en Inicio junto a la de la API). */
 export const VERSION_FRONT = '0.2.0';
 

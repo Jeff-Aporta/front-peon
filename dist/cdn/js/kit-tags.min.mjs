@@ -1,1 +1,1 @@
-import{c as a,d as b,e as c,f as d,g as e,h as f,i as g,j as h,k as i}from"../_chunks/chunk-SNB6HHJB.mjs";i();export{d as APP_TAGS,a as KIT_TAGS,c as PREFIJO,b as SHELL_CRITICO,e as VIEW_TAGS,g as mapaRutas,f as rutaComponente,h as tagsArranque};
+import{a,b,c,d,e,f,g,h}from"../_chunks/chunk-KSKXJIEU.mjs";export{d as APP_TAGS,a as KIT_TAGS,c as PREFIJO,b as SHELL_CRITICO,e as VIEW_TAGS,g as mapaRutas,f as rutaComponente,h as tagsArranque};

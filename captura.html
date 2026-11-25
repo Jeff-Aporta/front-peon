@@ -1,0 +1,163 @@
+<!doctype html>
+<!--
+  Ventana de captura asistida · Peón en Marcha.
+  Recibe el texto visible de la página oficial (por postMessage, desde el marcador), lo manda a la API para que lo
+  lea, y guarda el puesto de la persona que se elija. Página estática: no entra en el build de la app.
+-->
+<html lang="es" data-theme="light" data-palette="peon">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Captura del puesto · Peón en Marcha</title>
+<link rel="icon" type="image/png" href="./assets/logo-96.png">
+<link rel="stylesheet" href="./dist/cdn/styles/app.css">
+<style>
+  body { margin: 0; padding: 1rem; font-family: system-ui, sans-serif; background: #faf9f7; color: #1b1b1b; }
+  h1 { font-size: 1.2rem; margin: 0 0 .4rem; color: #5B1FA6; }
+  label { display: block; font-size: .82rem; color: #555; margin: .6rem 0 .2rem; }
+  select, input { font: inherit; width: 100%; padding: .5rem; border: 1px solid #d8d2e6; border-radius: .4rem; background: #fff; }
+  .dato { display: grid; grid-template-columns: 8rem 1fr; gap: .2rem .6rem; background: #fff; padding: .8rem;
+          border-radius: .5rem; border: 1px solid #e6e1ef; margin: .8rem 0; font-size: .9rem; }
+  .dato b { color: #555; font-weight: 600; }
+  .msg { padding: .8rem; border-radius: .5rem; margin: .8rem 0; font-size: .9rem; }
+  .ok { background: #e8f5ec; border-left: 3px solid #0F7A38; }
+  .mal { background: #fdecec; border-left: 3px solid #b3261e; }
+  .espera { background: #fff; border-left: 3px solid #5B1FA6; }
+  button { font: inherit; padding: .55rem 1.1rem; border-radius: .5rem; border: 0; background: #5B1FA6; color: #fff; cursor: pointer; }
+  button[disabled] { opacity: .5; cursor: default; }
+  a { color: #5B1FA6; }
+  .pie { font-size: .78rem; color: #666; margin-top: 1rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Captura del puesto de votación</h1>
+  <div id="msg" class="msg espera">Esperando el resultado de la página oficial…</div>
+
+  <div id="form" hidden>
+    <div class="dato" id="datos"></div>
+    <label for="persona">¿De quién es este puesto?</label>
+    <select id="persona"></select>
+    <p style="margin-top:.9rem"><button id="guardar" type="button">Guardar el puesto</button></p>
+  </div>
+
+  <p class="pie">Esta ventana solo lee lo que ya tienes en pantalla en la página oficial. No consulta nada por su cuenta.
+     <a href="./">Ir a la app</a></p>
+</main>
+<script>
+  // --- La API: la misma base que usa la app (localStorage) ---
+  function base() {
+    const elegida = sessionStorage.getItem("peon:api-elegida") || localStorage.getItem("peon:api");
+    if (elegida) return elegida.replace(/\/$/, "");
+    const host = location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") return "http://localhost:8098/api";
+    return "./api";
+  }
+  function token() { return localStorage.getItem("peon:token") || ""; }
+  async function pedir(ruta, opciones) {
+    const o = Object.assign({ headers: { "content-type": "application/json" } }, opciones || {});
+    const t = token();
+    if (t) o.headers.authorization = "Bearer " + t;
+    const r = await fetch(base() + "/" + ruta, o);
+    const texto = await r.text();
+    let datos;
+    try { datos = JSON.parse(texto); } catch (e) { datos = { error: texto }; }
+    if (!r.ok) throw new Error((datos && datos.error) || ("Error " + r.status));
+    return datos;
+  }
+
+  const msg = document.getElementById("msg");
+  const form = document.getElementById("form");
+  const datos = document.getElementById("datos");
+  const sel = document.getElementById("persona");
+  const boton = document.getElementById("guardar");
+  let puesto = null;
+
+  function avisar(texto, clase) {
+    msg.textContent = texto;
+    msg.className = "msg " + clase;
+  }
+
+  async function cargarPersonas() {
+    try {
+      const lista = await pedir("personas?limite=200");
+      sel.innerHTML = "";
+      if (!lista.length) {
+        const o = document.createElement("option");
+        o.textContent = "No hay personas registradas";
+        o.value = "";
+        sel.appendChild(o);
+        boton.disabled = true;
+        return;
+      }
+      for (const p of lista) {
+        const o = document.createElement("option");
+        o.value = p.ref;
+        o.textContent = p.nombres + " " + p.apellidos + (p.puesto ? " (puesto: " + p.puesto + ")" : "");
+        sel.appendChild(o);
+      }
+    } catch (e) {
+      avisar("No se pudieron cargar las personas: " + e.message + ". ¿Abriste la app y entraste con tu cuenta?", "mal");
+    }
+  }
+
+  async function recibir(texto) {
+    try {
+      const r = await pedir("puesto/texto", { method: "POST", body: JSON.stringify({ texto: texto }) });
+      if (!r.encontrado) {
+        avisar("No se encontró un puesto de votación en ese texto. " + (r.aviso || ""), "mal");
+        return;
+      }
+      puesto = r.puesto;
+      datos.innerHTML = "";
+      const campos = [["Puesto", puesto.nombre], ["Dirección", puesto.direccion], ["Municipio", puesto.municipio],
+                      ["Departamento", puesto.departamento], ["Mesa", puesto.mesa]];
+      for (const c of campos) {
+        const b = document.createElement("b");
+        b.textContent = c[0];
+        const d = document.createElement("div");
+        d.textContent = c[1] || "—";
+        datos.appendChild(b);
+        datos.appendChild(d);
+      }
+      form.hidden = false;
+      avisar(r.oficial ? "Puesto encontrado. Coincide con el catálogo oficial: " + r.oficial.nombre + "." :
+            "Puesto encontrado.", "ok");
+      await cargarPersonas();
+    } catch (e) {
+      avisar("No se pudo leer el texto: " + e.message, "mal");
+    }
+  }
+
+  boton.addEventListener("click", async function () {
+    const ref = sel.value;
+    if (!ref || !puesto) return;
+    boton.disabled = true;
+    try {
+      const cuerpo = { puestoManual: { nombre: puesto.nombre, direccion: puesto.direccion || null,
+        municipio: puesto.municipio || null, departamento: puesto.departamento || null, mesa: puesto.mesa || null } };
+      await pedir("personas/" + encodeURIComponent(ref) + "/puesto", { method: "POST", body: JSON.stringify(cuerpo) });
+      avisar("Puesto guardado.", "ok");
+      boton.textContent = "Guardado";
+    } catch (e) {
+      avisar("No se pudo guardar: " + e.message, "mal");
+      boton.disabled = false;
+    }
+  });
+
+  // El marcador avisa que está listo; esta ventana pide el texto y lo recibe.
+  window.addEventListener("message", function (ev) {
+    const d = ev.data;
+    if (!d || d.tipo !== "peon:censo") return;
+    void recibir(String(d.texto || ""));
+  });
+  if (window.opener && window.opener !== window) {
+    avisar("Esperando el resultado de la página oficial…", "espera");
+    window.opener.postMessage({ tipo: "peon:censo:pedir" }, "*");
+  } else {
+    avisar("Abre el marcador «Peón: puesto» en la página de la Registraduría. Esta ventana espera el resultado.", "espera");
+  }
+</script>
+</body>
+</html>

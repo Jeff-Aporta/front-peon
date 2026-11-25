@@ -1,0 +1,85 @@
+<!doctype html>
+<!--
+  Página del marcador (bookmarklet) de la captura asistida · Peón en Marcha.
+  Página estática: se publica tal cual (no entra en el build de la app).
+-->
+<html lang="es" data-theme="light" data-palette="peon">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Captura asistida del puesto · Peón en Marcha</title>
+<link rel="icon" type="image/png" href="../assets/logo-96.png">
+<link rel="stylesheet" href="../dist/cdn/styles/app.css">
+<style>
+  body { margin: 0; padding: 1.2rem; font-family: system-ui, sans-serif; background: #faf9f7; color: #1b1b1b; }
+  main { max-width: 44rem; margin: 0 auto; }
+  h1 { font-size: 1.35rem; margin: 0 0 .3rem; color: #5B1FA6; }
+  ol { padding-left: 1.1rem; }
+  li { margin: .5rem 0; }
+  .cod { display: block; width: 100%; font-family: ui-monospace, monospace; font-size: .78rem; padding: .6rem;
+         border: 1px solid #d8d2e6; border-radius: .5rem; background: #fff; }
+  .nota { font-size: .85rem; color: #555; background: #fff; border-left: 3px solid #5B1FA6; padding: .7rem .9rem; border-radius: .3rem; }
+  button { font: inherit; padding: .55rem 1rem; border-radius: .5rem; border: 0; background: #5B1FA6; color: #fff; cursor: pointer; }
+  a { color: #5B1FA6; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Captura asistida del puesto de votación</h1>
+  <p>Trae el resultado de la página de la Registraduría a la app sin copiar y pegar.</p>
+
+  <ol>
+    <li>Abre la página oficial de consulta del lugar de votación en tu navegador.</li>
+    <li>Escribe tu número de cédula y pulsa <strong>Consultar</strong>. Si la página te pide algo (una verificación),
+        resuélvelo tú: esto no lo hace nadie por ti.</li>
+    <li>Cuando veas el resultado, pulsa el marcador <strong>«Peón: puesto»</strong> que acabas de crear.</li>
+    <li>Se abre una ventanita: eliges a qué persona es el puesto y se guarda.</li>
+  </ol>
+
+  <h2>1. Copia este código</h2>
+  <p class="nota">Es un «marcador»: un botón en tu barra de favoritos que hace el paso 3. Se lee <strong>lo que ya
+     tienes en pantalla</strong>; no consulta nada por su cuenta ni guarda datos en ningún sitio.</p>
+  <textarea class="cod" id="cod" readonly rows="4" aria-label="Código del marcador"></textarea>
+  <p><button id="copiar" type="button">Copiar el código</button></p>
+
+  <h2>2. Agrégalo a tus favoritos</h2>
+  <ol>
+    <li>En Chrome o Edge: <em>⋮</em> → «Favoritos» → «Más favoritos» → «Añadir página».</li>
+    <li>En Firefox: <em>☰</em> → «Marcadores» → «Organizar marcadores» → «Añadir marcador».</li>
+    <li>En el nombre ponle <strong>Peón: puesto</strong> y en la URL pega el código copiado.</li>
+  </ol>
+
+  <p><a href="../captura.html">Abrir la ventana de captura</a> (si ya tienes el marcador y solo quieres probarlo) ·
+     <a href="../">Volver a la app</a></p>
+</main>
+<script>
+  // El marcador: lee el texto visible de la página y se lo pasa a la app por una ventanita.
+  // No consulta nada a la Registraduría ni a la API por su cuenta.
+  const destino = "https://jeff-aporta.github.io/front-peon/captura.html";
+  const codigo = [
+    "javascript:(function(){var t=document.body?(document.body.innerText||document.body.textContent||''):'';",
+    "var w=window.open('" + destino + "','peon_captura','width=560,height=720');",
+    "if(!w){alert('Permite las ventanas emergentes para este sitio y vuelve a pulsar el marcador.');return;}",
+    "var n=0,t1=setInterval(function(){if(n++>40){clearInterval(t1);return;}",
+    "try{w.postMessage({tipo:'peon:censo:listo'},'*');}catch(e){}},300);",
+    "w.addEventListener('message',function(ev){if(!ev.data||ev.data.tipo!=='peon:censo:pedir')return;",
+    "clearInterval(t1);w.postMessage({tipo:'peon:censo',texto:t},'*');});})()",
+  ].join("");
+  document.getElementById("cod").value = codigo;
+  document.getElementById("copiar").addEventListener("click", function () {
+    const c = document.getElementById("cod");
+    c.select();
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(c.value).then(function () {
+        document.getElementById("copiar").textContent = "¡Copiado!";
+      }, function () {
+        document.getElementById("copiar").textContent = "Selecciona y copia con Ctrl+C";
+      });
+    } else {
+      document.execCommand("copy");
+    }
+  });
+</script>
+</body>
+</html>
