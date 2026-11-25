@@ -12,3 +12,19 @@ deno task serve        # http://127.0.0.1:4200/
 - Galería de componentes: `/view/demo/`.
 - Vista de ejemplo aislada: `/view/hola/`.
 - Agentes: [`AGENTS.md`](AGENTS.md). Specs: [`specs/`](specs/README.md).
+
+## Puestos de votación (captura asistida)
+
+Dos páginas estáticas (no entran en el build: se publican tal cual):
+
+| Página | Qué es |
+|---|---|
+| `/assets/marcador.html` | Donde se copia el código del marcador a los favoritos del navegador. |
+| `/captura.html` | La ventana emergente que recibe el resultado de la Registraduría y lo guarda. |
+
+La persona consulta en su propio navegador (ella resuelve lo que la página le pida), pulsa el marcador y la ventanita
+lee **lo que ya está en pantalla** y lo manda a la API (`POST /api/puesto/texto` → `POST /api/personas/{ref}/puesto`).
+El marcador **no consulta nada por su cuenta**.
+
+Detalle técnico (qué habla con qué y lo que costó aprender probando en la página oficial real):
+`api-peon/docs/PUESTOS.md` §5.1.
