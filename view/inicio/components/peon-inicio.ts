@@ -5,7 +5,7 @@
  *                 las FUNCIONES de RedCivika: noticias diarias, registro de amigos, publicidad descargable, puesto de
  *                 votación, políticas de privacidad, versión) + biografía, trayectoria, cómo votar, últimas noticias y
  *                 el aviso «no es una aplicación oficial del Gobierno».
- *   Mi resumen    cuántos registros hizo, cuántos están pendientes de verificar y avisos (+ acceso al chat).
+ *   Mi resumen    cuántos registros hizo, cuántos están pendientes de verificar y avisos.
  *   Mis registros los últimos que hizo, con acceso a la ficha.
  */
 import { define } from '@jeff-aporta/iswc-base/core/iswc-element.min.mjs';
@@ -14,12 +14,12 @@ import { Componente, html } from '../../../src/js/base/componente.js';
 import type { VistaProps } from '../../../src/js/consts/schemas/componentes.schemas.js';
 import type { NoticiaFila, PersonaFila } from '../../../src/js/consts/schemas/api.schemas.js';
 import { api, puede, sesion, usuarioActivo } from '../../../src/js/core/api.js';
-import { HERRAMIENTAS_CHAT, fecha } from '../../../src/js/core/catalogos.js';
+import { fecha } from '../../../src/js/core/catalogos.js';
 import { CAMPANA } from '../../../src/js/core/config.js';
 import { tarjetaNoticia } from '../../../src/js/core/noticias.js';
 import { paginaEditable } from '../../../src/js/core/pagina.js';
 import { texto } from '../../../src/js/core/textos.js';
-import { abrirChat, abrirFicha, estadoPuesto, ir, textoError } from '../../../src/js/core/ui.js';
+import { abrirFicha, estadoPuesto, ir, textoError } from '../../../src/js/core/ui.js';
 
 type Resumen = { misRegistros: number; misRegistrosHoy: number; misPendientes: number; visibles: number; pendientes: number; verificados: number; avisos: { tipo: string; texto: string; ir?: string }[] };
 
@@ -60,7 +60,6 @@ class PeonInicio extends Componente<VistaProps> {
     const caja = document.createElement('div');
     caja.className = 'campana';
     const redes = CAMPANA.redes.filter((r) => r.url);
-    const chat = puede('chat_con_vps');
     const accesos: { id: string; icono: string; titulo: string; texto: string; ir: () => void; si?: boolean }[] = [
       { id: 'noticias', icono: 'mdi:newspaper-variant-outline', titulo: 'Noticias diarias', texto: 'Lo último de la campaña', ir: () => ir('noticias', 'noticias') },
       { id: 'registrar', icono: 'mdi:account-plus-outline', titulo: 'Registra a tus amigos', texto: 'Suma gente a la marcha', ir: () => ir('registro', 'persona'), si: !!u?.escribe },
@@ -69,7 +68,6 @@ class PeonInicio extends Componente<VistaProps> {
       { id: 'biografia', icono: 'mdi:account-star-outline', titulo: 'Biografía', texto: `Quién es ${CAMPANA.candidato.split(' ')[0]}`, ir: () => ir('candidato') },
       { id: 'trayectoria', icono: 'mdi:timeline-text-outline', titulo: 'Trayectoria', texto: 'El camino recorrido', ir: () => ir('candidato') },
       { id: 'votar', icono: 'mdi:vote-outline', titulo: 'Cómo votar', texto: 'Paso a paso, sin errores', ir: () => ir('votar') },
-      { id: 'chat', icono: 'mdi:robot-outline', titulo: 'Pregúntale al VPS', texto: 'Informes, ideas y noticias', ir: () => abrirChat({ tipo: 'pantalla', id: null, titulo: null, fragmento: null, pantalla: 'Inicio' }), si: chat },
       { id: 'privacidad', icono: 'mdi:shield-lock-outline', titulo: 'Privacidad', texto: 'Cómo cuidamos tus datos', ir: () => ir('privacidad') },
     ];
     // Bloques alternos (imagen | texto) de la sección en degradado, al estilo de las páginas de producto.
@@ -194,7 +192,6 @@ class PeonInicio extends Componente<VistaProps> {
           <iswc-stat label="Mis pendientes" value=${String(r.misPendientes)} icon="mdi:timer-sand" color=${r.misPendientes ? 'warning' : 'success'} helper="puesto por verificar"></iswc-stat>
           ${u.alcance !== 'propio' ? html`<iswc-stat label=${u.alcance === 'todo' ? 'Registros en total' : 'Registros de mi escuadra'} value=${String(r.visibles)} icon="mdi:account-group-outline" helper=${`${r.verificados} verificados`}></iswc-stat>` : null}
         </div>
-        ${puede('chat_con_vps') ? this.#promoChat() : null}
         <ul class="avisos" aria-label="Avisos">
           ${r.avisos.length
             ? r.avisos.map((a) => html`<li class="aviso" data-tipo=${a.tipo}><iswc-icon icon=${a.tipo === 'warning' ? 'mdi:alert-circle-outline' : 'mdi:bell-outline'}></iswc-icon><span class="texto" title=${a.texto}>${a.texto}</span>${a.ir ? html`<button type="button" onclick=${() => { const [v, p] = a.ir!.split(':'); ir(v!, p); }}>Ver</button>` : null}</li>`)
@@ -204,25 +201,6 @@ class PeonInicio extends Componente<VistaProps> {
       `);
     }).catch((e) => caja.replaceChildren(html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`));
     return caja;
-  }
-
-  /** Acceso destacado al chat con el VPS (solo con el permiso): se promueve su uso con herramientas de un toque. */
-  #promoChat(): DocumentFragment {
-    const usar = (texto: string) => {
-      try {
-        sessionStorage.setItem('peon:chat-borrador', texto);
-      } catch { /* sin almacenamiento */ }
-      ir('chat');
-    };
-    return html`
-      <section class="promo-chat">
-        <div class="cabeza-promo">
-          <iswc-icon icon="mdi:robot-outline"></iswc-icon>
-          <div><strong>Pregúntale al VPS</strong><small>Resúmenes, informes, ideas y análisis de archivos en segundos.</small></div>
-          <iswc-button size="small" color="brand" onclick=${() => ir('chat')}>Abrir chat</iswc-button>
-        </div>
-        <div class="herramientas">${HERRAMIENTAS_CHAT.slice(0, 4).map((h) => html`<button type="button" class="herramienta" title=${h.ayuda} onclick=${() => usar(h.texto)}><iswc-icon icon=${h.icono}></iswc-icon>${h.titulo}</button>`)}</div>
-      </section>`;
   }
 
   #recientes(): Node {

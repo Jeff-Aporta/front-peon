@@ -185,20 +185,7 @@ iswc-button.morado {
 }
 
 
-/* Administrar con IA (editores). */
-.admin-ia {
-  display: grid;
-  gap: t.esp(3);
-  margin-bottom: t.esp(5);
-  padding: t.esp(4);
-  border: 1px solid var(--peon-morado-borde);
-  border-radius: 1em;
-  background: radial-gradient(120% 140% at 100% 0%, var(--peon-morado-suave), transparent 60%), var(--iswc-bg);
 
-  &:empty { display: none; }
-  .sin-ia { display: grid; gap: t.esp(3); }
-  .sin-ia summary { cursor: pointer; font-size: 0.88em; opacity: 0.8; }
-}
 
 /* Sin pestañas: la vista desplaza ella misma (scroll por sección). */
 .cuerpo-seccion { padding-bottom: t.esp(8); }

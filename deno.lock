@@ -17,9 +17,13 @@
     "npm:@browserbasehq/stagehand@4.1.0": "4.1.0",
     "npm:@types/node@^22.20.5": "22.20.5",
     "npm:esbuild@0.28.1": "0.28.1",
+    "npm:esbuild@~0.28.1": "0.28.1",
     "npm:jsdom@29.1.1": "29.1.1",
+    "npm:jsdom@^29.1.1": "29.1.1",
     "npm:sass@^1.105.0": "1.107.1",
-    "npm:zod@4.4.3": "4.4.3"
+    "npm:sass@^1.107.1": "1.107.1",
+    "npm:zod@4.4.3": "4.4.3",
+    "npm:zod@^4.4.3": "4.4.3"
   },
   "jsr": {
     "@std/assert@1.0.19": {
@@ -854,6 +858,14 @@
       "npm:jsdom@29.1.1",
       "npm:sass@^1.105.0",
       "npm:zod@4.4.3"
-    ]
+    ],
+    "packageJson": {
+      "dependencies": [
+        "npm:esbuild@~0.28.1",
+        "npm:jsdom@^29.1.1",
+        "npm:sass@^1.107.1",
+        "npm:zod@^4.4.3"
+      ]
+    }
   }
 }

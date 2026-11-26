@@ -23,7 +23,7 @@ import { irEnlace, textoError } from '../../core/ui.js';
 /** Ícono pequeño sobre el avatar según el tipo (como las insignias de FB: comentario, me gusta…). */
 const INSIGNIAS: Record<string, string> = {
   noticia: 'mdi:newspaper-variant',
-  vps: 'mdi:robot',
+  vps: 'mdi:message-text-outline',
   registro: 'mdi:account-plus',
   bienvenida: 'mdi:hand-wave',
 };
@@ -174,7 +174,7 @@ class PeonCampana extends Componente<PeonCampanaProps> {
     const insignia = INSIGNIAS[n.tipo] ?? 'mdi:bell';
     const quien = n.actor ?? 'Peón en Marcha';
     return html`<span class="avatar" data-tipo=${n.tipo}>
-      ${quien === 'VPS' ? html`<span class="avatar-vps"><iswc-icon icon="mdi:robot-outline"></iswc-icon></span>` : html`<iswc-avatar initials=${iniciales(quien)} label=${quien}></iswc-avatar>`}
+      ${quien === 'VPS' ? html`<span class="avatar-vps"><iswc-icon icon="mdi:message-text-outline"></iswc-icon></span>` : html`<iswc-avatar initials=${iniciales(quien)} label=${quien}></iswc-avatar>`}
       <span class="insignia-tipo"><iswc-icon icon=${insignia}></iswc-icon></span>
     </span>`;
   }
@@ -201,14 +201,14 @@ class PeonCampana extends Componente<PeonCampanaProps> {
             <button type="button" class="item" ?data-nueva=${!n.leida} data-tipo=${n.tipo} onclick=${() => this.#seguir(n)}>
               ${this.#avatar(n)}
               <span class="texto">
-                <span class="frase">${n.actor && n.actor !== 'VPS' ? html`<strong>${n.actor.split(' ').slice(0, 2).join(' ')}</strong> ` : n.actor === 'VPS' ? html`<strong>El VPS</strong> ` : null}${n.actor ? n.titulo.charAt(0).toLowerCase() + n.titulo.slice(1) : n.titulo}</span>
+                <span class="frase">${n.actor && n.actor !== 'VPS' ? html`<strong>${n.actor.split(' ').slice(0, 2).join(' ')}</strong> ` : n.actor === 'VPS' ? html`<strong>El asistente</strong> ` : null}${n.actor ? n.titulo.charAt(0).toLowerCase() + n.titulo.slice(1) : n.titulo}</span>
                 ${n.texto ? html`<small class="detalle">${n.texto}</small>` : null}
                 <small class="cuando" title=${new Date(n.fhcre).toLocaleString('es-CO')}>${haceCuanto(n.fhcre)}</small>
               </span>
               ${n.leida ? null : html`<span class="punto" aria-label="sin leer"></span>`}
             </button>
           </li>`)}</ul>`
-        : html`<iswc-empty-state icono="mdi:bell-check-outline" titulo=${this.#filtro === 'noLeidas' ? 'Estás al día' : 'Nada nuevo por ahora'} texto="Aquí llegan las noticias, las respuestas del VPS y los registros de tu escuadra."></iswc-empty-state>`}
+        : html`<iswc-empty-state icono="mdi:bell-check-outline" titulo=${this.#filtro === 'noLeidas' ? 'Estás al día' : 'Nada nuevo por ahora'} texto="Aquí llegan las noticias, las respuestas del asistente y los registros de tu escuadra."></iswc-empty-state>`}
     `);
   }
 

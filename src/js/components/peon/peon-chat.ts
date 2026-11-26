@@ -299,7 +299,7 @@ class PeonChat extends Componente<PeonChatProps> {
         ${x.adjuntos?.length ? html`<div class="adjuntos">${x.adjuntos.map((a) => this.#adjunto(a))}</div>` : null}
         ${x.autor === 'vps' && x.widget ? this.#widget(x.widget) : null}
         ${acciones}
-        <small class="pie-burbuja">${x.autor === 'vps' ? 'VPS' : 'Tú'} · ${fecha(x.creado)}</small>
+        <small class="pie-burbuja">${x.autor === 'vps' ? 'Asistente' : 'Tú'} · ${fecha(x.creado)}</small>
       </div>`;
   }
 
@@ -618,7 +618,7 @@ class PeonChat extends Componente<PeonChatProps> {
     void api<{ canal: boolean; hayMas: boolean; lineas: Linea[] }>('GET', `chat?hilo=${encodeURIComponent(this.#hilo.clave)}&limite=30`).then((r) => {
       this.#lineas = r.lineas;
       this.#hayMas = r.hayMas;
-      if (!r.canal) aviso.replaceChildren(html`<p class="aviso" data-tipo="warning"><iswc-icon icon="mdi:lan-disconnect"></iswc-icon><span class="texto">El canal con el VPS aún no está configurado; los mensajes quedan guardados.</span></p>`);
+      if (!r.canal) aviso.replaceChildren(html`<p class="aviso" data-tipo="warning"><iswc-icon icon="mdi:lan-disconnect"></iswc-icon><span class="texto">El asistente no está disponible en este momento; tus mensajes quedan guardados.</span></p>`);
       this.#pintarLineas();
       let borrador = this.#borradorPendiente;
       this.#borradorPendiente = '';

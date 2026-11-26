@@ -1,0 +1,31 @@
+{
+  "name": "front-peon",
+  "version": "1.0.0",
+  "description": "App de web components (vanilla, sin framework) sobre el kit [iswc-base](https://github.com/Jeff-Aporta/is-webcomponents), creada con `create-iswc-app`.",
+  "main": "sw.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {
+    "esbuild": "^0.28.1",
+    "jsdom": "^29.1.1",
+    "sass": "^1.107.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jeff-Aporta/front-peon.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Jeff-Aporta/front-peon/issues"
+  },
+  "homepage": "https://github.com/Jeff-Aporta/front-peon#readme"
+}

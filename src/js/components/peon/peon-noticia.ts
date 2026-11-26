@@ -127,7 +127,7 @@ class PeonNoticia extends Componente<PeonNoticiaProps> {
       <article class="noticia" data-categoria=${n.categoria}>
         <nav class="herramientas" aria-label="Herramientas de la noticia">
           ${n.estado === 'publicada' ? html`<button type="button" class="herr" title="Compartir" aria-label="Compartir" onclick=${() => void compartir(n)}><iswc-icon icon="mdi:share-variant-outline"></iswc-icon></button>` : null}
-          ${chat ? html`<button type="button" class="herr" data-pedir-vps title="Pedir cambios al asistente" aria-label="Pedir cambios al asistente" onclick=${() => abrirChat({ tipo: 'noticia', id: n.id, titulo: n.titulo, fragmento: null, pantalla: null }, '')}><iswc-icon icon="mdi:robot-outline"></iswc-icon></button>` : null}
+          ${chat ? html`<button type="button" class="herr" data-pedir-vps title="Pedir cambios al asistente" aria-label="Pedir cambios al asistente" onclick=${() => abrirChat({ tipo: 'noticia', id: n.id, titulo: n.titulo, fragmento: null, pantalla: null }, '')}><iswc-icon icon="mdi:message-text-outline"></iswc-icon></button>` : null}
           ${editor ? html`
             <button type="button" class="herr" data-editar title="Editar" aria-label="Editar" onclick=${() => { this.#editando = true; this.props = {}; }}><iswc-icon icon="mdi:pencil-outline"></iswc-icon></button>
             ${n.estado === 'borrador'
@@ -186,7 +186,7 @@ class PeonNoticia extends Componente<PeonNoticiaProps> {
         <iswc-textarea data-campo="cuerpo" label="Contenido (Markdown: acepta HTML y componentes iswc-*)" rows="14" value=${n.cuerpo_md} oniswc-input=${alEscribir}></iswc-textarea>
         <div class="previa"><small class="rotulo">Vista previa</small>${vista}</div>
       </div>
-      <p class="ayuda"><iswc-icon icon="mdi:information-outline"></iswc-icon>Avisos: <code>&gt; [!TIP] Título</code> · tablas con <code>|</code> · componentes como <code>&lt;iswc-tag&gt;</code> en su propia línea. También puedes pedírselo al VPS desde el chat.</p>
+      <p class="ayuda"><iswc-icon icon="mdi:information-outline"></iswc-icon>Avisos: <code>&gt; [!TIP] Título</code> · tablas con <code>|</code> · componentes como <code>&lt;iswc-tag&gt;</code> en su propia línea.</p>
       <footer class="acciones">
         <iswc-button size="small" color="brand" data-guardar onclick=${(e: Event) => {
           const raiz = caja;
@@ -209,7 +209,7 @@ class PeonNoticia extends Componente<PeonNoticiaProps> {
     void this.#cargar().then((n) => {
       this.#noticia = n;
       if (!n) {
-        caja.replaceChildren(html`<iswc-empty-state icono="mdi:newspaper-remove" titulo="Todavía no hay nada aquí" texto=${puede('publicar_noticias') ? 'Créala desde la vista Noticias o pídesela al VPS en el chat.' : 'El equipo de campaña la publicará pronto.'}></iswc-empty-state>`);
+        caja.replaceChildren(html`<iswc-empty-state icono="mdi:newspaper-remove" titulo="Todavía no hay nada aquí" texto=${puede('publicar_noticias') ? 'Aún no tiene contenido.' : 'El equipo de campaña la publicará pronto.'}></iswc-empty-state>`);
         return;
       }
       caja.replaceChildren(this.#lector(n, root));
