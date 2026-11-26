@@ -193,10 +193,6 @@ class PeonRegistro extends Componente<VistaProps> {
     // Se consulta al **terminar** de escribir la cédula (no mientras se teclea): la página oficial deja pasar ~1
     // consulta por minuto, así que consultar a cada tecla gastaría la cuota de la primera cifra.
     const alTerminar = () => void this.#consultar(caja, puesto);
-    const campoCedula = caja.querySelector<HTMLElement>(
-      '[data-campo="cedula"]',
-    );
-    campoCedula?.addEventListener("focusout", alTerminar);
     caja.append(html`
       <section class="bloque">
         <h2>1 · Cédula y puesto de votación</h2>
@@ -242,6 +238,14 @@ class PeonRegistro extends Componente<VistaProps> {
         <span data-ultimo></span>
       </div>
     `);
+    // El listener va DESPUÉS de armar el formulario: antes, el campo todavía no estaba en el DOM y la consulta
+    // automática nunca se disparaba.
+    const campoCedula = caja.querySelector<HTMLElement>(
+      '[data-campo="cedula"]',
+    );
+    // «focusout» (al salir del campo) y «iswc-change» (cuando la persona confirma): los dos caminos.
+    campoCedula?.addEventListener("focusout", alTerminar);
+    campoCedula?.addEventListener("iswc-change", alTerminar);
     return caja;
   }
 
