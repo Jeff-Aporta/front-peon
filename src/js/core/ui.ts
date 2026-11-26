@@ -64,8 +64,18 @@ export function tarjetaPuesto(r: ResultadoPuesto | null, cargando = false): Docu
     </div>`;
 }
 
-/** Un cajón lateral derecho único por clase (chat, noticia), montado en el documento y reutilizado. */
-function cajon(clase: string, etiqueta: string, tag: string): { cajon: HTMLElement & { open?: boolean }; hijo: HTMLElement } {
+/**
+ * Un cajón lateral derecho único por clase (chat, noticia), montado en el documento y reutilizado.
+ *
+ * Es el `<iswc-drawer>` del kit (velo oscuro, foco atrapado, tamaño por atributo, tirador para el ancho y memoria
+ * del ancho en storage-key): el kit ya trae las mejoras que antes vivian en el cajon local.
+ */
+function cajon(
+  clase: string,
+  etiqueta: string,
+  tag: string,
+  opciones: { tamano?: string; redimensionable?: boolean; clave?: string } = {},
+): { cajon: HTMLElement & { open?: boolean }; hijo: HTMLElement } {
   let c = document.querySelector(`iswc-drawer.${clase}`) as (HTMLElement & { open?: boolean }) | null;
   if (!c) {
     c = document.createElement('iswc-drawer') as HTMLElement & { open?: boolean };
@@ -73,6 +83,11 @@ function cajon(clase: string, etiqueta: string, tag: string): { cajon: HTMLEleme
     c.setAttribute('placement', 'end');
     c.setAttribute('label', etiqueta);
     c.setAttribute('light-dismiss', '');
+    if (opciones.tamano) c.setAttribute('size', opciones.tamano);
+    if (opciones.redimensionable) {
+      c.setAttribute('resize', '');
+      c.setAttribute('storage-key', opciones.clave ?? `peon:ancho-${clase}`);
+    }
     c.append(document.createElement(tag));
     document.body.append(c);
   }
@@ -84,7 +99,7 @@ function cajon(clase: string, etiqueta: string, tag: string): { cajon: HTMLEleme
  * que se quiere editar, o la pantalla desde donde se pidió. Requiere el permiso `chat_con_vps` (lo filtra quien llama).
  */
 export function abrirChat(contexto: ContextoChat | null = null, borrador = ''): void {
-  const { cajon: c, hijo } = cajon('peon-cajon-chat', 'Asistente', 'peon-chat');
+  const { cajon: c, hijo } = cajon('peon-drawer-chat', 'Asistente', 'peon-chat', { tamano: '80vw', redimensionable: true, clave: 'peon:cajon-chat' });
   // Hilo fijo del contexto (al editar una noticia se abre SOLO su chat, sin la lista de todos).
   Object.assign(hijo, { props: { contexto, compacto: true, hilo: '', hiloTitulo: null } });
   if (borrador) (hijo as HTMLElement & { borrador?(t: string): void }).borrador?.(borrador);
@@ -93,7 +108,7 @@ export function abrirChat(contexto: ContextoChat | null = null, borrador = ''): 
 
 /** Abre una noticia o página de la campaña en el cajón de lectura. */
 export function abrirNoticia(id: number): void {
-  const { cajon: c, hijo } = cajon('peon-cajon-noticia', 'Noticia', 'peon-noticia');
+  const { cajon: c, hijo } = cajon('peon-drawer-noticia', 'Noticia', 'peon-noticia');
   Object.assign(hijo, { props: { id, categoria: '', sinTitulo: false } });
   c.setAttribute('open', '');
 }

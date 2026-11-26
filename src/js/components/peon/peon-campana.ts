@@ -220,7 +220,7 @@ class PeonCampana extends Componente<PeonCampanaProps> {
     const disparador = boton.firstElementChild;
     const lista = html`<div class="lista" data-lista role="dialog" aria-label="Notificaciones"></div>`;
     // Móvil: hoja que sube desde abajo (como FB en el teléfono). Panel: se desliza desde la izquierda junto al menú
-    // (como Instagram en escritorio). Ambos son el `iswc-drawer` del kit.
+    // (como Instagram en escritorio). Ambos son el `<iswc-drawer>` del kit.
     const pop = document.createElement('iswc-drawer') as HTMLElement & { open?: boolean };
     pop.className = props.barra ? 'hoja' : 'panel-avisos';
     pop.setAttribute('placement', props.barra ? 'bottom' : 'start');

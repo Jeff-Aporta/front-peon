@@ -33,6 +33,14 @@ export const URL_MARCADOR = `${WEB_PUBLICA}assets/marcador.html`;
 /** Ventana emergente que recibe el texto de la página oficial y lo asigna a una persona. */
 export const URL_CAPTURA = `${WEB_PUBLICA}captura.html`;
 
+/**
+ * Página oficial de consulta del lugar de votación.
+ *
+ * La del handoff (`https://wsp.registraduria.gov.co/censo/consultar/`) **ya no existe** (404, comprobado el
+ * 25-nov-2026). La vigente, enlazada desde la Registraduría, es `https://consultacenso.registraduria.gov.co/`.
+ */
+export const URL_REGISTRADURIA = 'https://consultacenso.registraduria.gov.co/';
+
 /** Versión del front (se muestra en Inicio junto a la de la API). */
 export const VERSION_FRONT = '0.2.0';
 

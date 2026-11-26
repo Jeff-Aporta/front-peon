@@ -136,7 +136,7 @@ class PeonFichaPersona extends Componente<PeonFichaPersonaProps> {
     const lugar = p.puestoDetalle;
     // Consulta asistida: sin puesto verificado (o para corregirlo) se trae de la Registraduría a mano.
     // Si la persona ya tiene un puesto del catálogo, se memoriza su código (vuelve a viajan como `puestoCodigo`).
-    const manual = bloquePuestoManual(() => p.cedula ?? '', { nombre: lugar?.nombre ?? '', direccion: lugar?.direccion ?? '', mesa: p.mesa ?? '', codigo: p.puesto_codigo ?? '' });
+    const manual = bloquePuestoManual({ nombre: lugar?.nombre ?? '', direccion: lugar?.direccion ?? '', mesa: p.mesa ?? '', codigo: p.puesto_codigo ?? '' });
     manual.nodo.hidden = p.puesto_estado === 'verificado';
     const puedeEscribir = sesion.usuario?.escribe === true;
     const guardarManual = async (b: HTMLElement) => {

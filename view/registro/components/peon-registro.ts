@@ -12,10 +12,8 @@ import type { VistaProps } from "../../../src/js/consts/schemas/componentes.sche
 import type { ResultadoPuesto } from "../../../src/js/consts/schemas/api.schemas.js";
 import { api } from "../../../src/js/core/api.js";
 import { grupoPestanas } from "../../../src/js/core/pestanas.js";
-import {
-  bloquePuestoManual,
-  URL_REGISTRADURIA,
-} from "../../../src/js/core/puesto-manual.js";
+import { bloquePuestoManual } from "../../../src/js/core/puesto-manual.js";
+import { URL_REGISTRADURIA } from "../../../src/js/core/config.js";
 import {
   abrirFicha,
   marcado,
@@ -24,6 +22,8 @@ import {
   valor,
 } from "../../../src/js/core/ui.js";
 import { coincideConOficial } from "../../../src/js/core/puestos.js";
+import { escucharEnVivo } from "../../../src/js/core/ws.js";
+import { PuestoEncontradoSchema } from "../../../src/js/consts/schemas/api.schemas.js";
 
 class PeonRegistro extends Componente<VistaProps> {
   static tag = "peon-registro";
@@ -32,23 +32,39 @@ class PeonRegistro extends Componente<VistaProps> {
     "iswc-tab-group",
     "iswc-masked-input",
     "iswc-input",
-    "iswc-textarea",
     "iswc-checkbox",
     "iswc-button",
     "iswc-callout",
     "iswc-spinner",
     "iswc-tag",
     "iswc-icon",
-    "iswc-combobox",
-    "iswc-option",
   ];
 
   #ultima = "";
   #resultado: ResultadoPuesto | null = null;
   #alResultado: ((r: ResultadoPuesto | null) => void) | null = null;
+  /** La cedula que se esta esperando: si llega el aviso de otra, se ignora. */
+  #esperando = "";
+  /** El destino (la tarjeta) donde se pinta el resultado. */
+  #destino: HTMLElement | null = null;
+  /** Suelta la escucha en vivo (al desconectar el componente). */
+  #soltarEnVivo: (() => void) | null = null;
 
   protected override inicial(): VistaProps {
     return { pestana: "" };
+  }
+
+  /** Al conectar: se escucha el aviso en vivo del puesto (el socket). */
+  override onConnected(): void {
+    super.onConnected();
+    this.#soltarEnVivo = escucharEnVivo("puesto", this.#alPuestoEnVivo);
+  }
+
+  /** Al desconectar: se suelta la escucha (no dejar oyentes enganchados). */
+  override onDisconnected(): void {
+    this.#soltarEnVivo?.();
+    this.#soltarEnVivo = null;
+    super.onDisconnected();
   }
 
   /**
@@ -63,21 +79,55 @@ class PeonRegistro extends Componente<VistaProps> {
     const cedula = valor(caja, "cedula").replace(/\D/g, "");
     if (cedula.length < 6 || (cedula === this.#ultima && !forzar)) return;
     this.#ultima = cedula;
+    this.#esperando = cedula;
+    this.#destino = destino;
     destino.replaceChildren(tarjetaPuesto(null, true));
     try {
-      this.#resultado = await api<ResultadoPuesto>("POST", "puesto/consulta", {
+      const r = await api<ResultadoPuesto>("POST", "puesto/consulta", {
         cedula,
         forzar,
       });
-      if (cedula === this.#ultima) {
-        destino.replaceChildren(tarjetaPuesto(this.#resultado));
-        this.#alResultado?.(this.#resultado);
-      }
+      this.#aplica(cedula, destino, r);
     } catch (e) {
       destino.replaceChildren(
         html`<iswc-callout color="danger">${textoError(e)}</iswc-callout>`,
       );
     }
+  }
+
+  /**
+   * Tiempo real: cuando el servidor termina de buscar el puesto, lo empuja por el socket y la pantalla se
+   * actualiza sola. Esto cubre el caso en que la consulta tarda (la pagina oficial va a su ritmo) o en que el
+   * puesto llega desde el lote automatico: la persona no tiene que volver a preguntar.
+   */
+  #alPuestoEnVivo = (datos: Record<string, unknown>): void => {
+    const aviso = PuestoEncontradoSchema.safeParse(datos);
+    if (!aviso.success) return;
+    const p = aviso.data;
+    // Solo se aplica el aviso de la cedula que se esta esperando en esta pantalla.
+    if (!p.cedula || p.cedula !== this.#esperando) return;
+    const destino = this.#destino;
+    if (!destino) return;
+    const r: ResultadoPuesto = {
+      estado: p.estado,
+      puesto: p.puesto ? { ...p.puesto, lat: p.puesto.lat, lon: p.puesto.lon } : null,
+      mesa: p.mesa,
+      desdeCache: false,
+      aviso: p.aviso,
+      captcha: null,
+    };
+    this.#aplica(p.cedula, destino, r);
+  };
+
+  /**
+   * Pinta el resultado del puesto y avisa al bloque manual. Lo usan las dos vias: la respuesta de la consulta y el
+   * aviso en vivo del socket (que es el mismo dato, pero llega sin que la app pregunte).
+   */
+  #aplica(cedula: string, destino: HTMLElement, r: ResultadoPuesto): void {
+    if (cedula !== this.#ultima) return;
+    destino.replaceChildren(tarjetaPuesto(r));
+    this.#resultado = r;
+    this.#alResultado?.(r);
   }
 
   async #guardar(
@@ -165,7 +215,9 @@ class PeonRegistro extends Componente<VistaProps> {
     caja.addEventListener("submit", (e) => e.preventDefault());
     const puesto = document.createElement("div");
     puesto.append(tarjetaPuesto(null));
-    const manual = bloquePuestoManual(() => valor(caja, "cedula"));
+    // El bloque del puesto: solo los campos y el aviso de discrepancia. La captura asistida (pegar, leer una
+    // imagen, dictar) vive en el ASISTENTE (el botón flotante del chat), no en esta pantalla.
+    const manual = bloquePuestoManual({}, { catalogo: false });
     manual.nodo.hidden = true;
     // La búsqueda automática: si la fuente resuelve el puesto, **el dato oficial reemplaza** lo que hubiera escrito
     // la persona. Si no lo resuelve, se abre la consulta asistida para escribirlo a mano.
@@ -200,10 +252,10 @@ class PeonRegistro extends Componente<VistaProps> {
           <iswc-masked-input data-campo="cedula" label="Cédula" pattern="000000999999" placeholder="Solo números" inputmode="numeric" required oniswc-enter=${alTerminar}></iswc-masked-input>
           ${puesto}
         </div>
-        <p class="nota">Al terminar de escribir la cédula, el puesto se busca solo en la página de la Registraduría. Si no aparece, escríbelo a mano o búscalo en el catálogo oficial.</p>
+        <p class="nota">Al terminar de escribir la cédula, el puesto se busca solo en la página de la Registraduría. Si no aparece, escríbelo a mano aquí o pídele al asistente (el botón de la esquina) que lo traiga.</p>
         <button type="button" class="enlace" data-mostrar-manual onclick=${() => {
           manual.nodo.hidden = !manual.nodo.hidden;
-        }}><iswc-icon icon="mdi:pencil-outline"></iswc-icon> Buscar el puesto en el catálogo o escribirlo a mano</button>
+        }}><iswc-icon icon="mdi:pencil-outline"></iswc-icon> Escribir el puesto a mano</button>
         ${manual.nodo}
       </section>
       <section class="bloque">

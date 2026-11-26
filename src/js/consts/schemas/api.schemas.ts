@@ -63,6 +63,20 @@ export const PuestoMunicipioSchema = z.object({
 });
 export type PuestoMunicipio = z.infer<typeof PuestoMunicipioSchema>;
 export type ResultadoPuesto = { estado: 'verificado' | 'pendiente' | 'error'; puesto: Puesto | null; mesa: string | null; desdeCache: boolean; aviso: string | null; captcha: string | null; yaRegistrada?: boolean };
+
+/**
+ * El aviso «puesto» que llega por el WebSocket: el servidor terminó de buscar el puesto de una cédula y lo
+ * empuja (el front no tiene que estar preguntando).
+ */
+export const PuestoEncontradoSchema = z.object({
+  cedula: z.string().optional(),
+  ref: z.string().optional(),
+  estado: z.enum(['verificado', 'pendiente', 'error']).catch('pendiente'),
+  puesto: PuestoCatalogoSchema.nullable().catch(null),
+  mesa: z.string().nullable().catch(null),
+  aviso: z.string().nullable().catch(null),
+});
+export type PuestoEncontrado = z.infer<typeof PuestoEncontradoSchema>;
 export type PersonaFila = { ref: string; cedula: string | null; cedula_visible: string; completo: boolean; nombres: string; apellidos: string; celular: string | null; email: string | null; direccion: string | null; municipio: string | null; barrio: string | null; puesto: string | null; puesto_codigo: string | null; mesa: string | null; puesto_estado: 'verificado' | 'pendiente' | 'error'; consentimiento: boolean; registrado_por_nombre: string; creado: string; actualizado: string | null; puestoDetalle?: Puesto | null };
 export type Miembro = { ref: string; cedula: string | null; cedula_visible: string; nombre: string; whatsapp: string | null; rol: string; activo: boolean; clave_temporal: boolean; creado: string; ultimo_ingreso: string | null; liderNombre: string | null; registros: number };
 export type Actividad = { id: number; accion: string; texto: string; creado: string; ip: string | null; agente: string | null };

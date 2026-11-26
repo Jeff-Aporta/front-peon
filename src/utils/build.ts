@@ -7,7 +7,7 @@
  */
 import { join } from 'node:path';
 import { stop } from 'esbuild';
-import { construirApp, vigilarApp } from 'https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@92208c8e9e9bca9e0fa6fa944b5ee2ee98f08a0c/dist/cdn/build/construir-app.ts';
+import { construirApp, vigilarApp } from 'https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@09c03466c68fe6b57255eee086aca5759cfc73ac/dist/cdn/build/construir-app.ts';
 import { KIT_TAGS, mapaRutas, PREFIJO, SHELL_CRITICO, tagsArranque } from '../js/kit-tags.ts';
 
 const fuente = (rel: string) => (rel.startsWith('js/') ? `src/${rel}` : rel).replace(/\.js$/, '.ts');

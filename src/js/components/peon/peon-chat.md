@@ -8,6 +8,9 @@ description: Chat con el VPS reutilizable, al estilo de WhatsApp: clip, campo co
 Chat con el VPS reutilizable, al estilo de WhatsApp: clip, campo con cámara, micrófono/enviar, soltar archivos; cita de noticia/fragmento y notas de voz transcritas.
 
 - **Cuándo usarlo:** Donde haga falta hablar con el VPS; desde otras pantallas, con `abrirChat(contexto)` (cajón).
+- **El puesto de la Registraduría:** la herramienta «Puesto» (en la fila de herramientas) deja pegar el resultado
+  oficial, leerlo de una imagen (OCR en el navegador) o dictarlo; lo que se lee se pone en el campo para que el
+  asistente lo procese. Es la única vía de captura asistida de la app (la pantalla de registro ya no la tiene).
 - **Cuándo no:** Sin el permiso `chat_con_vps` no se muestra.
 
 ## Anatomía
@@ -19,6 +22,7 @@ Chat con el VPS reutilizable, al estilo de WhatsApp: clip, campo con cámara, mi
       .herramientas        ← instrucciones de un toque (estilo NotebookLM)
       .lineas (role=log)   ← burbujas en Markdown (md-lite + md-hydrate del kit), audios, adjuntos
       .escribir
+        .puesto-panel      ← captura del puesto de la Registraduría (pegar, foto o dictado)
         .cita              ← fragmento citado (props.contexto)
         .estado-voz        ← reloj + transcripción en vivo
         .chips             ← adjuntos pendientes

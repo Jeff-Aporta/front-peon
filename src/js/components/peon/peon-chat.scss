@@ -446,3 +446,39 @@ audio { max-width: 100%; height: 2.25em; }
 .donde { display: flex; gap: t.esp(2); align-items: flex-start; padding: t.esp(2) t.esp(3); border-radius: 0.8em; background: var(--peon-morado-suave); }
 .donde > iswc-icon { flex: none; margin-top: 0.15em; color: var(--peon-morado); font-size: 1.3em; }
 .donde div { display: grid; gap: 0.1em; } .donde small { opacity: 0.8; }
+
+/* El panel de captura del puesto de la Registraduría (pegar, foto o dictado). */
+.puesto-panel {
+  display: grid;
+  gap: t.esp(2);
+  padding: t.esp(3);
+  border: 1px solid var(--iswc-border-soft);
+  border-inline-start: 0.25em solid var(--iswc-brand);
+  border-radius: t.radio(sm);
+  background: var(--iswc-bg-soft);
+
+  &[hidden] { display: none; }
+}
+
+.puesto-cabeza {
+  display: flex;
+  align-items: center;
+  gap: t.esp(2);
+
+  iswc-icon { color: var(--iswc-brand); }
+  strong { flex: 1; min-width: 0; font-size: 0.95em; }
+}
+
+.puesto-panel .acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.esp(2);
+  align-items: center;
+}
+
+.puesto-panel .nota { margin: 0; font-size: 0.85em; opacity: 0.8; }
+
+[data-dictar-puesto][data-oyendo]::part(base) {
+  border-color: var(--iswc-color-contrast);
+  background: var(--iswc-contrast-soft);
+}

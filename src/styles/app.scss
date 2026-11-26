@@ -38,22 +38,22 @@ html:not([data-app-ready]) body {
 
 /* Cajones de la derecha (chat con el VPS y lectura de noticias): viven en light DOM, montados por core/ui.ts.
    Ancho cómodo en escritorio, pantalla completa en celular; el chat llena el alto del cajón. */
-iswc-drawer.peon-cajon-chat,
-iswc-drawer.peon-cajon-noticia {
+iswc-drawer.peon-drawer-chat,
+iswc-drawer.peon-drawer-noticia {
   --iswc-drawer-size: min(34em, 100vw);
 }
 
-iswc-drawer.peon-cajon-noticia { --iswc-drawer-size: min(46em, 100vw); }
+iswc-drawer.peon-drawer-noticia { --iswc-drawer-size: min(46em, 100vw); }
 
 /* El chat llena el cuerpo del cajón (alto definido por el propio cajón, nunca por la ventana). */
-iswc-drawer.peon-cajon-chat::part(body) {
+iswc-drawer.peon-drawer-chat::part(body) {
   display: flex;
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
 }
 
-iswc-drawer.peon-cajon-chat peon-chat {
+iswc-drawer.peon-drawer-chat peon-chat {
   flex: 1;
   height: auto;
   min-height: 0;

@@ -25,6 +25,8 @@ import type { ContextoChat, Noticia } from '../../consts/schemas/api.schemas.js'
 import { api, baseApi, escuchar, puede, sesion } from '../../core/api.js';
 import { HERRAMIENTAS_CHAT, fecha } from '../../core/catalogos.js';
 import { pintarMd, tituloDe } from '../../core/md.js';
+import { URL_REGISTRADURIA } from '../../core/config.js';
+import { leerPuesto, textoDeImagen } from '../../core/puesto-texto.js';
 import { abrirNoticia, textoError } from '../../core/ui.js';
 import { Dictado, escucharVoz } from '../../core/voz.js';
 
@@ -98,6 +100,14 @@ class PeonChat extends Componente<PeonChatProps> {
   #inicioGrabacion = 0;
   #reloj: ReturnType<typeof setInterval> | undefined;
   #borradorPendiente = '';
+  /** El panel de captura del puesto de la Registraduría (pegar, foto o dictado). */
+  #puestoPanel: HTMLElement | null = null;
+  /** El recuadro donde se pega (o se dicta) el resultado de la Registraduría. */
+  #areaPuesto: (HTMLElement & { value?: string }) | null = null;
+  /** El selector de la imagen (OCR en el navegador). */
+  #archivoPuesto: HTMLInputElement | null = null;
+  /** El dictado del panel de puesto (se corta al parar). */
+  #oyendoPuesto: { parar(): Promise<string> } | null = null;
 
   #hayMas = false;
   #busqueda = '';
@@ -266,6 +276,107 @@ class PeonChat extends Componente<PeonChatProps> {
     this.#campo.value = texto;
     this.#campo.focus();
     this.#actualizarAccion();
+  }
+
+  /* ── El puesto de la Registraduría: aquí vive la captura asistida ───────────── */
+
+  /** Abre (o cierra) el panel donde se pega, se dicta o se lee por foto el resultado oficial. */
+  #togglePuesto(): void {
+    const panel = this.#puestoPanel;
+    if (!panel) return;
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) this.#areaPuesto?.focus();
+  }
+
+  /** Pega en el recuadro lo que hay en el portapapeles. */
+  async #pegarPuesto(): Promise<void> {
+    try {
+      const t = await navigator.clipboard.readText();
+      if (!t.trim()) return avisar("El portapapeles está vacío", "warning");
+      if (this.#areaPuesto) this.#areaPuesto.value = t;
+    } catch {
+      avisar(
+        "El navegador no dejó leer el portapapeles: pega con Ctrl+V en el recuadro.",
+        "warning",
+      );
+    }
+  }
+
+  /** Lee la imagen (OCR en el navegador; la foto nunca sale del equipo) y la pone en el recuadro. */
+  async #leerImagenPuesto(boton: HTMLElement): Promise<void> {
+    const entrada = this.#archivoPuesto;
+    const f = entrada?.files?.[0];
+    if (entrada) entrada.value = "";
+    if (!f) return;
+    boton.setAttribute("loading", "");
+    try {
+      avisar(
+        "Leyendo la imagen… (la primera vez tarda unos segundos)",
+        "brand",
+      );
+      if (this.#areaPuesto) this.#areaPuesto.value = await textoDeImagen(f);
+    } catch (e) {
+      avisar(
+        e instanceof Error ? e.message : "No se pudo leer la imagen",
+        "danger",
+      );
+    } finally {
+      boton.removeAttribute("loading");
+    }
+  }
+
+  /** Dicta el resultado (Web Speech API, es-CO): lo que se dice va al recuadro. */
+  #dictarPuesto(boton: HTMLElement): void {
+    if (this.#oyendoPuesto) {
+      void this.#oyendoPuesto.parar();
+      return;
+    }
+    if (!Dictado) {
+      return avisar(
+        "Este navegador no permite dictado. Prueba con Chrome o Edge.",
+        "warning",
+      );
+    }
+    const oyendo = escucharVoz((t) => {
+      if (this.#areaPuesto) this.#areaPuesto.value = t;
+    });
+    if (!oyendo) return avisar("No se pudo iniciar el dictado", "warning");
+    this.#oyendoPuesto = oyendo;
+    boton.setAttribute("data-oyendo", "");
+    avisar(
+      "Te escucho: di «puesto…, dirección…, municipio…, mesa…». Toca de nuevo para terminar.",
+      "brand",
+    );
+    void oyendo.fin.then(() => {
+      this.#oyendoPuesto = null;
+      boton.removeAttribute("data-oyendo");
+    });
+  }
+
+  /** Toma lo del recuadro, lo lee y lo deja listo en el campo para que el asistente lo procese. */
+  #usarPuesto(): void {
+    const texto = String(this.#areaPuesto?.value ?? "").trim();
+    if (!texto) {
+      return avisar("Pega (o dicta) el resultado de la Registraduría", "warning");
+    }
+    const { resumen } = leerPuesto(texto);
+    if (!resumen) {
+      avisar(
+        "No encontré datos del puesto en ese texto: se lo mando al asistente tal cual.",
+        "warning",
+      );
+      this.borrador(
+        "Este es el resultado de la Registraduría que copié:\n" + texto,
+      );
+    } else {
+      this.borrador(
+        "Este es el resultado de la Registraduría (puesto, dirección, municipio y mesa):\n" +
+          resumen +
+          "\n\n¿Me confirmas el puesto y la mesa, y me dices cómo lo registro?",
+      );
+    }
+    if (this.#puestoPanel) this.#puestoPanel.hidden = true;
+    if (this.#areaPuesto) this.#areaPuesto.value = "";
   }
 
   #pintarCita(): void {
@@ -590,12 +701,50 @@ class PeonChat extends Componente<PeonChatProps> {
     grabadora.className = 'grabadora';
     this.#grabadora = PUEDE_GRABAR ? grabadora : null;
     const aviso = document.createElement('div');
+    // El panel de captura del puesto de la Registraduría (pegar, foto o dictado). La captura asistida
+    // vive aquí, en el asistente: la pantalla de registro ya no la tiene.
+    const areaPuesto = document.createElement('iswc-textarea') as HTMLElement & { value?: string };
+    areaPuesto.setAttribute('data-puesto-texto', '');
+    areaPuesto.setAttribute('rows', '3');
+    areaPuesto.setAttribute('aria-label', 'Resultado de la Registraduría');
+    areaPuesto.setAttribute('placeholder', 'Pega aquí lo que muestra la Registraduría…');
+    this.#areaPuesto = areaPuesto;
+    const archivoPuesto = document.createElement('input');
+    archivoPuesto.type = 'file';
+    archivoPuesto.accept = 'image/*';
+    archivoPuesto.hidden = true;
+    this.#archivoPuesto = archivoPuesto;
+    const panelPuesto = document.createElement('div');
+    panelPuesto.className = 'puesto-panel';
+    panelPuesto.setAttribute('data-puesto-panel', '');
+    panelPuesto.hidden = true;
+    this.#puestoPanel = panelPuesto;
+    panelPuesto.append(html`
+      <div class="puesto-cabeza">
+        <iswc-icon icon="mdi:card-search-outline"></iswc-icon>
+        <strong>Puesto de la Registraduría</strong>
+        <button type="button" class="ic" title="Cerrar" aria-label="Cerrar" onclick=${() => { panelPuesto.hidden = true; }}><iswc-icon icon="mdi:close"></iswc-icon></button>
+      </div>
+      <p class="nota">Abre la página de la Registraduría, copia el resultado y pégalo aquí: el asistente lo lee y lo procesa.</p>
+      <div class="acciones">
+        <iswc-button size="small" variant="outlined" data-pegar-puesto onclick=${() => void this.#pegarPuesto()}><iswc-icon slot="start" icon="mdi:clipboard-text-outline"></iswc-icon>Pegar del portapapeles</iswc-button>
+        <iswc-button size="small" variant="outlined" data-leer-puesto onclick=${(e: Event) => void this.#leerImagenPuesto(e.currentTarget as HTMLElement)}><iswc-icon slot="start" icon="mdi:image-search-outline"></iswc-icon>Leer de una imagen</iswc-button>
+        <iswc-button size="small" variant="outlined" data-dictar-puesto ?disabled=${!Dictado} title=${Dictado ? "Narra el puesto, la dirección, el municipio y la mesa" : "Este navegador no permite dictado"} onclick=${(e: Event) => this.#dictarPuesto(e.currentTarget as HTMLElement)}><iswc-icon slot="start" icon="mdi:microphone-outline"></iswc-icon>Dictar</iswc-button>
+        <a class="enlace" href=${URL_REGISTRADURIA} target="_blank" rel="noopener noreferrer">Abrir la Registraduría</a>
+      </div>
+      ${areaPuesto}
+      <div class="acciones">
+        <iswc-button size="small" color="brand" data-usar-puesto onclick=${() => this.#usarPuesto()}><iswc-icon slot="start" icon="mdi:check"></iswc-icon>Mandarlo al asistente</iswc-button>
+      </div>
+      ${archivoPuesto}
+    `);
     caja.append(html`
       ${this.#cabeza(props)}
-      <div class="herramientas" role="toolbar" aria-label="Herramientas">${this.#herramientas().map((h) => html`<button type="button" class="herramienta" title=${h.ayuda} onclick=${() => this.borrador(h.texto)}><iswc-icon icon=${h.icono}></iswc-icon>${h.titulo}</button>`)}</div>
+      <div class="herramientas" role="toolbar" aria-label="Herramientas">${this.#herramientas().map((h) => html`<button type="button" class="herramienta" title=${h.ayuda} onclick=${() => this.borrador(h.texto)}><iswc-icon icon=${h.icono}></iswc-icon>${h.titulo}</button>`)}<button type="button" class="herramienta" title="Traer el puesto de la Registraduría (pegar, foto o dictado)" data-puesto onclick=${() => this.#togglePuesto()}><iswc-icon icon="mdi:card-search-outline"></iswc-icon>Puesto</button></div>
       ${aviso}
       ${this.#lista}
       <div class="escribir">
+        ${panelPuesto}
         ${this.#cita}
         ${this.#estadoVoz}
         ${this.#chips}
