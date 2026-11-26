@@ -185,6 +185,8 @@ class PeonFichaPersona extends Componente<PeonFichaPersonaProps> {
               };
               this.props = {};
               avisar('Puesto actualizado con el dato de la Registraduría.', 'success');
+              // Si hay algo escrito a mano que NO es el puesto oficial, se avisa y se ofrece «Reemplazar».
+              manual.compararConOficial(n.puesto, n.mesa);
             } else {
               avisar(n.aviso ?? 'La página oficial no devolvió un puesto; se dejó lo que había.', 'warning');
             }

@@ -53,7 +53,7 @@ export function abrirFicha(ref: string): void {
 
 /** Tarjeta con el resultado de la consulta del puesto. */
 export function tarjetaPuesto(r: ResultadoPuesto | null, cargando = false): DocumentFragment {
-  if (cargando) return html`<div class="puesto cargando"><iswc-spinner></iswc-spinner><span>Consultando el puesto de votación…</span></div>`;
+  if (cargando) return html`<div class="puesto cargando"><iswc-spinner></iswc-spinner><span>Buscando automáticamente el puesto de votación en la Registraduría…</span></div>`;
   if (!r) return html`<div class="puesto vacio"><iswc-icon icon="mdi:map-marker-outline"></iswc-icon><span>Escribe la cédula: el puesto se busca solo.</span></div>`;
   return html`
     <div class="puesto" data-estado=${r.estado}>

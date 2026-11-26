@@ -11,28 +11,40 @@
  *
  * `emparejarPuesto()` es PURA (no toca la red): se prueba con catálogos de mentira (tests/puestos/puestos.test.ts).
  */
-import { z } from '../base/zod.js';
-import { api } from './api.js';
-import { PuestoCatalogoSchema, PuestoMunicipioSchema } from '../consts/schemas/api.schemas.js';
-import type { PuestoCatalogo, PuestoMunicipio } from '../consts/schemas/api.schemas.js';
+import { z } from "../base/zod.js";
+import { api } from "./api.js";
+import {
+  PuestoCatalogoSchema,
+  PuestoMunicipioSchema,
+} from "../consts/schemas/api.schemas.js";
+import type {
+  PuestoCatalogo,
+  PuestoMunicipio,
+} from "../consts/schemas/api.schemas.js";
 
 /** Quita tildes, mayúsculas y signos: para comparar nombres de puesto («Café» = «cafe»). */
 export function normalizar(texto: string): string {
-  return (texto ?? '')
+  return (texto ?? "")
     .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
     .trim();
 }
 
 /** Etiqueta de un puesto para las listas y el autocompletado: «Nombre · Dirección · Municipio». */
 export function etiquetaPuesto(p: PuestoCatalogo): string {
-  return [p.nombre, p.direccion, p.municipio].map((x) => (x ?? '').trim()).filter(Boolean).join(' · ');
+  return [p.nombre, p.direccion, p.municipio].map((x) => (x ?? "").trim())
+    .filter(Boolean).join(" · ");
 }
 
 /** Descompone la respuesta de la API en filas válidas (las que no parsea se descartan). */
-function filas<T>(datos: unknown, esquema: { safeParse: (v: unknown) => { success: true; data: T } | { success: false } }): T[] {
+function filas<T>(
+  datos: unknown,
+  esquema: {
+    safeParse: (v: unknown) => { success: true; data: T } | { success: false };
+  },
+): T[] {
   const lista = z.array(z.unknown()).safeParse(datos);
   if (!lista.success) return [];
   const out: T[] = [];
@@ -45,19 +57,23 @@ function filas<T>(datos: unknown, esquema: { safeParse: (v: unknown) => { succes
 
 /** Los municipios del catálogo (con cuántos puestos tiene cada uno). */
 export async function buscarMunicipios(): Promise<PuestoMunicipio[]> {
-  const datos = await api<unknown>('GET', 'puestos/municipios');
+  const datos = await api<unknown>("GET", "puestos/municipios");
   return filas(datos, PuestoMunicipioSchema);
 }
 
 /** Busca puestos en el catálogo oficial (por nombre, dirección o municipio). */
-export async function buscarPuestos(texto: string, municipio = '', limite = 20): Promise<PuestoCatalogo[]> {
+export async function buscarPuestos(
+  texto: string,
+  municipio = "",
+  limite = 20,
+): Promise<PuestoCatalogo[]> {
   const params = new URLSearchParams();
-  const q = (texto ?? '').trim();
-  if (q) params.set('q', q);
-  const m = (municipio ?? '').trim();
-  if (m) params.set('municipio', m);
-  params.set('limite', String(Math.max(1, Math.min(200, limite))));
-  const datos = await api<unknown>('GET', `puestos?${params}`);
+  const q = (texto ?? "").trim();
+  if (q) params.set("q", q);
+  const m = (municipio ?? "").trim();
+  if (m) params.set("municipio", m);
+  params.set("limite", String(Math.max(1, Math.min(200, limite))));
+  const datos = await api<unknown>("GET", `puestos?${params}`);
   return filas(datos, PuestoCatalogoSchema);
 }
 
@@ -78,9 +94,11 @@ export function puntajePuesto(a: string, b: string): number {
   const y = normalizar(b);
   if (!x || !y) return 0;
   if (x === y) return 1;
-  if (x.includes(y) || y.includes(x)) return 0.85 * (Math.min(x.length, y.length) / Math.max(x.length, y.length));
-  const tx = new Set(x.split(' ').filter(Boolean));
-  const ty = new Set(y.split(' ').filter(Boolean));
+  if (x.includes(y) || y.includes(x)) {
+    return 0.85 * (Math.min(x.length, y.length) / Math.max(x.length, y.length));
+  }
+  const tx = new Set(x.split(" ").filter(Boolean));
+  const ty = new Set(y.split(" ").filter(Boolean));
   if (!tx.size || !ty.size) return 0;
   let comunes = 0;
   for (const t of tx) if (ty.has(t)) comunes++;
@@ -92,15 +110,18 @@ export function puntajePuesto(a: string, b: string): number {
  * «Claro» = un solo puesto que se parece mucho (≥ UMBRAL_EMPAREJE) en el mismo municipio y que gana por goleada al
  * segundo. Si hay dos candidatos igual de buenos, no hay candidato claro: se deja los campos como están y se avisa.
  */
-export function emparejarPuesto(datos: DatosPuesto, catalogo: PuestoCatalogo[]): PuestoCatalogo | null {
-  const nombre = (datos.nombre ?? '').trim();
+export function emparejarPuesto(
+  datos: DatosPuesto,
+  catalogo: PuestoCatalogo[],
+): PuestoCatalogo | null {
+  const nombre = (datos.nombre ?? "").trim();
   if (!nombre || !catalogo?.length) return null;
-  const mun = normalizar(datos.municipio ?? '');
+  const mun = normalizar(datos.municipio ?? "");
   const candidatos = mun
     ? catalogo.filter((c) => {
-        const cm = normalizar(c.municipio ?? '');
-        return !!cm && (cm === mun || cm.includes(mun) || mun.includes(cm));
-      })
+      const cm = normalizar(c.municipio ?? "");
+      return !!cm && (cm === mun || cm.includes(mun) || mun.includes(cm));
+    })
     : catalogo;
   if (!candidatos.length) return null;
   let mejor: PuestoCatalogo | null = null;
@@ -117,4 +138,33 @@ export function emparejarPuesto(datos: DatosPuesto, catalogo: PuestoCatalogo[]):
   if (!mejor || mejorPuntaje < UMBRAL_EMPAREJE) return null;
   if (empate) return null;
   return mejor;
+}
+/** El puesto oficial contra el que se compara lo que escribió la persona (el que dice la página de la Registraduría). */
+export type PuestoOficial = {
+  codigo: string;
+  nombre: string;
+  municipio: string;
+  departamento?: string | null;
+  direccion?: string | null;
+};
+
+/**
+ * ¿Lo que escribió la persona es el mismo puesto que dice la fuente oficial?
+ *
+ * Se comparan el nombre (con el mismo puntaje de parecido del catálogo) y el municipio: con que los dos calcen, es
+ * el mismo puesto. Si el municipio escrito está vacío, se acepta el parecido del nombre (la persona puede no haberlo
+ * escrito).
+ */
+export function coincideConOficial(
+  manual: { nombre?: string; municipio?: string },
+  oficial: PuestoOficial | null,
+): boolean {
+  if (!oficial) return false;
+  const nombre = (manual.nombre ?? "").trim();
+  if (!nombre) return false;
+  if (puntajePuesto(oficial.nombre, nombre) < UMBRAL_EMPAREJE) return false;
+  const mun = normalizar(manual.municipio ?? "");
+  if (!mun) return true;
+  const om = normalizar(oficial.municipio ?? "");
+  return !om || om === mun || om.includes(mun) || mun.includes(om);
 }
