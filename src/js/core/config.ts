@@ -10,8 +10,28 @@
  * La en línea es `localStorage['peon:api']` (pruebas) o API_PUBLICA. API_PUBLICA sigue VACÍA hasta que la API tenga
  * dominio con TLS válido (GitHub Pages es https y no puede llamar a http ni a un certificado autofirmado): al
  * publicarla, poner aquí la URL completa terminada en `/api` y nada más cambia.
+ *
+ * Ojo con la **ventana de captura asistida** (`captura.html`): es una página suelta y no puede importar este
+ * módulo, así que lee la base que la app deja publicada en `localStorage['peon:api-base']` (la escribe
+ * `core/api.ts` cuando elige servidor). Por eso la API tiene que estar en una dirección **pública con TLS
+ * válido**: desde una página https (GitHub Pages) el navegador **no deja llamar a una dirección privada** (Chrome
+ * lo bloquea: «Private Network Access»), y con `API_PUBLICA` vacía la ventana solo tendría la vía relativa
+ * (`./api`), que en GitHub Pages no existe.
  */
 export const API_PUBLICA = '';
+
+/**
+ * Base pública de la app: la MISMA que `iswc.host` de deno.json (GitHub Pages). Las páginas estáticas de la
+ * captura asistida (el marcador y su ventana emergente) se publican con esta base; las pruebas vigilan que no se
+ * desincronicen.
+ */
+export const WEB_PUBLICA = 'https://jeff-aporta.github.io/front-peon/';
+
+/** Página del marcador (bookmarklet): se copia el código y se usa en la página de la Registraduría. */
+export const URL_MARCADOR = `${WEB_PUBLICA}assets/marcador.html`;
+
+/** Ventana emergente que recibe el texto de la página oficial y lo asigna a una persona. */
+export const URL_CAPTURA = `${WEB_PUBLICA}captura.html`;
 
 /** Versión del front (se muestra en Inicio junto a la de la API). */
 export const VERSION_FRONT = '0.2.0';

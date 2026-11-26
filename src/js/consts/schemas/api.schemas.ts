@@ -24,6 +24,44 @@ export type Pestana = { id: string; titulo: string; icono: string; publica?: boo
 export type Vista = { id: string; titulo: string; icono: string; tag: string; pestanas: Pestana[]; visible: (u: Usuario | null) => boolean; ir?: { vista: string; pestana: string }; seccion?: string };
 
 export type Puesto = { codigo: string; nombre: string; municipio: string; departamento: string | null; direccion: string | null; lat: number | null; lon: number | null; fuente: string };
+
+/**
+ * El puesto ESCRITO A MANO (lo que la persona trae de la Registraduría): «POST personas» y «POST personas/{ref}/puesto».
+ * Lo escribe el bloque de consulta asistida (core/puesto-manual.ts).
+ */
+export const PuestoManualSchema = z.object({
+  nombre: z.string(),
+  direccion: z.string(),
+  municipio: z.string(),
+  departamento: z.string(),
+  mesa: z.string(),
+});
+export type PuestoManual = z.infer<typeof PuestoManualSchema>;
+
+/**
+ * Puesto del CATÁLOGO OFICIAL («GET /api/puestos»). El `codigo` es lo que se manda como `puestoCodigo`: si llega,
+ * la API toma el puesto del catálogo y queda verificado.
+ * Las filas del servidor se parsean una por una (las que no sirvan se descartan): el catálogo manda, el front no inventa.
+ */
+export const PuestoCatalogoSchema = z.object({
+  codigo: z.union([z.string(), z.number()]).transform((v) => String(v)),
+  nombre: z.string(),
+  municipio: z.string().catch(''),
+  departamento: z.string().nullable().catch(null),
+  direccion: z.string().nullable().catch(null),
+  lat: z.number().nullable().catch(null),
+  lon: z.number().nullable().catch(null),
+  fuente: z.string().catch(''),
+});
+export type PuestoCatalogo = z.infer<typeof PuestoCatalogoSchema>;
+
+/** Municipio con puestos en el catálogo oficial («GET /api/puestos/municipios»). */
+export const PuestoMunicipioSchema = z.object({
+  municipio: z.string(),
+  departamento: z.string().nullable().catch(null),
+  total: z.number().catch(0),
+});
+export type PuestoMunicipio = z.infer<typeof PuestoMunicipioSchema>;
 export type ResultadoPuesto = { estado: 'verificado' | 'pendiente' | 'error'; puesto: Puesto | null; mesa: string | null; desdeCache: boolean; aviso: string | null; captcha: string | null; yaRegistrada?: boolean };
 export type PersonaFila = { ref: string; cedula: string | null; cedula_visible: string; completo: boolean; nombres: string; apellidos: string; celular: string | null; email: string | null; direccion: string | null; municipio: string | null; barrio: string | null; puesto: string | null; puesto_codigo: string | null; mesa: string | null; puesto_estado: 'verificado' | 'pendiente' | 'error'; consentimiento: boolean; registrado_por_nombre: string; creado: string; actualizado: string | null; puestoDetalle?: Puesto | null };
 export type Miembro = { ref: string; cedula: string | null; cedula_visible: string; nombre: string; whatsapp: string | null; rol: string; activo: boolean; clave_temporal: boolean; creado: string; ultimo_ingreso: string | null; liderNombre: string | null; registros: number };

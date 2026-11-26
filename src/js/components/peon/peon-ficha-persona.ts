@@ -31,7 +31,7 @@ const oculto = (v: string | null) => (v ? v : html`<span class="oculto">oculto</
 class PeonFichaPersona extends Componente<PeonFichaPersonaProps> {
   static tag = 'peon-ficha-persona';
   static css = css;
-  static deps = ['iswc-drawer', 'iswc-tab-group', 'iswc-input', 'iswc-textarea', 'iswc-button', 'iswc-callout', 'iswc-confirm-delete', 'iswc-empty-state', 'iswc-tag', 'iswc-spinner'];
+  static deps = ['iswc-drawer', 'iswc-tab-group', 'iswc-input', 'iswc-textarea', 'iswc-button', 'iswc-callout', 'iswc-confirm-delete', 'iswc-empty-state', 'iswc-tag', 'iswc-spinner', 'iswc-combobox', 'iswc-option'];
 
   #persona: PersonaFila | null = null;
   #cargando = '';
@@ -135,15 +135,18 @@ class PeonFichaPersona extends Componente<PeonFichaPersonaProps> {
     tarjeta.append(tarjetaPuesto(r));
     const lugar = p.puestoDetalle;
     // Consulta asistida: sin puesto verificado (o para corregirlo) se trae de la Registraduría a mano.
-    const manual = bloquePuestoManual(() => p.cedula ?? '', { nombre: lugar?.nombre ?? '', direccion: lugar?.direccion ?? '', mesa: p.mesa ?? '' });
+    // Si la persona ya tiene un puesto del catálogo, se memoriza su código (vuelve a viajan como `puestoCodigo`).
+    const manual = bloquePuestoManual(() => p.cedula ?? '', { nombre: lugar?.nombre ?? '', direccion: lugar?.direccion ?? '', mesa: p.mesa ?? '', codigo: p.puesto_codigo ?? '' });
     manual.nodo.hidden = p.puesto_estado === 'verificado';
     const puedeEscribir = sesion.usuario?.escribe === true;
     const guardarManual = async (b: HTMLElement) => {
       const d = manual.leer();
-      if (!d) return avisar('Escribe al menos el puesto y el municipio', 'warning');
+      const codigo = manual.leerCodigo();
+      if (!d && !codigo) return avisar('Escribe al menos el puesto y el municipio', 'warning');
       b.setAttribute('loading', '');
       try {
-        const n = await api<ResultadoPuesto>('POST', `personas/${p.ref}/puesto`, d);
+        // El API acepta las dos formas: si llega `puestoCodigo`, el puesto se toma del catálogo (queda verificado).
+        const n = await api<ResultadoPuesto>('POST', `personas/${p.ref}/puesto`, { puestoManual: d, puestoCodigo: codigo });
         tarjeta.replaceChildren(tarjetaPuesto(n));
         manual.nodo.hidden = true;
         avisar('Puesto guardado y verificado.', 'success');
@@ -156,24 +159,42 @@ class PeonFichaPersona extends Componente<PeonFichaPersonaProps> {
     if (puedeEscribir && p.cedula) manual.nodo.append(html`<div class="acciones"><iswc-button size="small" color="brand" data-guardar-puesto onclick=${(e: Event) => void guardarManual(e.currentTarget as HTMLElement)}><iswc-icon slot="start" icon="mdi:content-save-outline"></iswc-icon>Guardar puesto</iswc-button></div>`);
     caja.append(html`
       ${tarjeta}
-      ${puedeEscribir && p.cedula ? html`<button type="button" class="enlace" onclick=${() => { manual.nodo.hidden = !manual.nodo.hidden; }}><iswc-icon icon="mdi:pencil-outline"></iswc-icon> Escribir o corregir el puesto a mano</button>${manual.nodo}` : null}
+      ${puedeEscribir && p.cedula ? html`<button type="button" class="enlace" onclick=${() => { manual.nodo.hidden = !manual.nodo.hidden; }}><iswc-icon icon="mdi:pencil-outline"></iswc-icon> Buscar el puesto en el catálogo o escribirlo a mano</button>${manual.nodo}` : null}
       ${lugar && lugar.lat != null
         ? html`<dl class="datos"><dt>Ubicación</dt><dd>${lugar.lat.toFixed(5)}, ${lugar.lon?.toFixed(5)} · ${lugar.municipio}</dd><dt>Fuente</dt><dd>${lugar.fuente === 'ejemplo' ? 'Dato de ejemplo (pendiente la lista oficial)' : lugar.fuente}</dd></dl>
           <a class="mapa" href=${`https://www.openstreetmap.org/?mlat=${lugar.lat}&mlon=${lugar.lon}#map=17/${lugar.lat}/${lugar.lon}`} target="_blank" rel="noopener noreferrer"><iswc-icon icon="mdi:map-outline"></iswc-icon> Ver en el mapa</a>`
         : null}
-      <div class="acciones"><iswc-button variant="outlined" onclick=${async (e: Event) => {
-        const b = e.currentTarget as HTMLElement;
-        b.setAttribute('loading', '');
-        try {
-          const n = await api<ResultadoPuesto>('POST', `personas/${p.ref}/verificar`);
-          tarjeta.replaceChildren(tarjetaPuesto(n));
-          avisar(n.estado === 'verificado' ? 'Puesto verificado.' : n.aviso ?? 'Sin cambios.', n.estado === 'verificado' ? 'success' : 'warning');
-        } catch (err) {
-          avisar(textoError(err), 'danger');
-        } finally {
-          b.removeAttribute('loading');
-        }
-      }}><iswc-icon slot="start" icon="mdi:refresh"></iswc-icon>Verificar de nuevo</iswc-button></div>
+      <div class="acciones">
+        <iswc-button variant="outlined" data-actualizar onclick=${async (e: Event) => {
+          const b = e.currentTarget as HTMLElement;
+          b.setAttribute('loading', '');
+          try {
+            // Actualiza **este** registro y solo este: va a la página oficial ahora mismo (sin caché) y guarda
+            // lo que la página diga. Si la página no dice nada, no se inventa nada y no se borra lo que había.
+            const n = await api<ResultadoPuesto>('POST', `personas/${p.ref}/puesto/actualizar`);
+            tarjeta.replaceChildren(tarjetaPuesto(n));
+            if (n.estado === 'verificado') {
+              // Se actualiza **en el sitio** (sin recargar la ficha entera, para no perder la pestaña).
+              this.#persona = {
+                ...p,
+                puesto: n.puesto?.nombre ?? p.puesto,
+                puesto_codigo: n.puesto?.codigo ?? p.puesto_codigo,
+                mesa: n.mesa,
+                puesto_estado: 'verificado',
+                puestoDetalle: n.puesto ?? p.puestoDetalle,
+              };
+              this.props = {};
+              avisar('Puesto actualizado con el dato de la Registraduría.', 'success');
+            } else {
+              avisar(n.aviso ?? 'La página oficial no devolvió un puesto; se dejó lo que había.', 'warning');
+            }
+          } catch (err) {
+            avisar(textoError(err), 'danger');
+          } finally {
+            b.removeAttribute('loading');
+          }
+        }}><iswc-icon slot="start" icon="mdi:refresh"></iswc-icon>Actualizar desde la Registraduría</iswc-button>
+      </div>
     `);
     return caja;
   }

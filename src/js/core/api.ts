@@ -13,11 +13,11 @@
  *   Token en `localStorage['peon:token']` y cabecera `Authorization: Bearer <token>` en cada llamada.
  *   La app escucha el evento de ventana `peon:sesion` para repintarse cuando cambia la sesión.
  */
-import { UsuarioSchema } from '../consts/schemas/api.schemas.js';
-import { API_PUBLICA } from './config.js';
-import type { Usuario } from '../consts/schemas/api.schemas.js';
+import { UsuarioSchema } from "../consts/schemas/api.schemas.js";
+import { API_PUBLICA } from "./config.js";
+import type { Usuario } from "../consts/schemas/api.schemas.js";
 
-const CLAVE_TOKEN = 'peon:token';
+const CLAVE_TOKEN = "peon:token";
 
 function leer(k: string): string | null {
   try {
@@ -34,9 +34,12 @@ function escribir(k: string, v: string | null): void {
   } catch { /* almacenamiento bloqueado */ }
 }
 
-const CLAVE_ELEGIDA = 'peon:api-elegida';
+const CLAVE_ELEGIDA = "peon:api-elegida";
+/** Base del API en uso, a la vista de las páginas sueltas del mismo origen (la ventana de captura asistida). */
+export const CLAVE_BASE = "peon:api-base";
 const LIMITE_PRUEBA_MS = 1500;
-export const SIN_SERVIDOR = 'No pudimos conectar con el servidor local ni con el en línea. Inténtalo de nuevo en un momento.';
+export const SIN_SERVIDOR =
+  "No pudimos conectar con el servidor local ni con el en línea. Inténtalo de nuevo en un momento.";
 
 function leerSesion(k: string): string | null {
   try {
@@ -53,29 +56,93 @@ function escribirSesion(k: string, v: string | null): void {
   } catch { /* almacenamiento bloqueado */ }
 }
 
-const sinBarra = (u: string): string => u.replace(/\/$/, '');
-const esLocalhost = (): boolean => ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+const sinBarra = (u: string): string => u.replace(/\/$/, "");
+const esLocalhost = (): boolean =>
+  ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
 
 /** La API local de desarrollo. */
 export function apiLocal(): string {
-  return `http://${location.hostname === '[::1]' ? 'localhost' : location.hostname}:8098/api`;
+  return `http://${
+    location.hostname === "[::1]" ? "localhost" : location.hostname
+  }:8098/api`;
 }
 
 /** La API en línea: la forzada para pruebas o la publicada. Vacía si aún no hay ninguna. */
 function apiEnLinea(): string {
-  return sinBarra(leer('peon:api') || API_PUBLICA || '');
+  return sinBarra(leer("peon:api") || API_PUBLICA || "");
+}
+
+/**
+ * La dirección pública de la API que publica el VPS en `api-public.json` (en la raíz del front). Así, cuando el
+ * túnel del VPS cambia de nombre (el túnel rápido de Cloudflare da un nombre distinto en cada arranque), la app
+ * lo encuentra sola, sin que haya que recompilar ni tocar nada a mano.
+ *
+ * El archivo lo escribe el VPS al arrancar el túnel (ver `api-peon/deploy/tunel-api.sh`). Si no está o no se puede
+ * leer, se sigue con las candidatas de siempre: no es un requisito, es una comodidad.
+ */
+const CLAVE_PUBLICADA = "peon:api-publicada";
+let publicada: string | null = null;
+
+async function apiPublicada(): Promise<string | null> {
+  if (publicada !== null) return publicada || null;
+  // Se recuerda un rato: si el VPS cambia la direccion, no se nota hasta que la anterior deja de responder.
+  const guardada = leer(CLAVE_PUBLICADA);
+  if (guardada) {
+    const t = Number(leer("peon:api-publicada-en") ?? 0);
+    if (Date.now() - t < 30 * 60_000) {
+      publicada = guardada;
+      return guardada;
+    }
+  }
+  try {
+    // La cache del CDN de GitHub Pages se salta con una marca de tiempo.
+    const r = await fetch("api-public.json?t=" + Date.now(), {
+      cache: "no-store",
+    });
+    if (!r.ok) throw new Error("no hay archivo");
+    const d = (await r.json()) as { api?: string };
+    const url = typeof d.api === "string" ? sinBarra(d.api) : "";
+    if (!url) throw new Error("vacio");
+    publicada = url;
+    escribir(CLAVE_PUBLICADA, url);
+    escribir("peon:api-publicada-en", String(Date.now()));
+  } catch {
+    publicada = "";
+  }
+  return publicada || null;
 }
 
 /** Servidores a probar, en orden: en localhost primero el local; en cualquier otro host primero el en línea. */
 export function candidatas(): string[] {
-  const relativa = sinBarra(new URL('api', location.href.replace(/[^/]*$/, '')).href);
-  const lista = esLocalhost() ? [apiLocal(), apiEnLinea()] : [apiEnLinea(), relativa];
+  const relativa = sinBarra(
+    new URL("api", location.href.replace(/[^/]*$/, "")).href,
+  );
+  const lista = esLocalhost()
+    ? [apiLocal(), apiEnLinea()]
+    : [apiEnLinea(), relativa];
   return [...new Set(lista.filter(Boolean))];
+}
+
+/** Candidatas de la API, incluyendo la dirección que publica el VPS (si está). */
+async function candidatasConPublicada(): Promise<string[]> {
+  const lista = candidatas();
+  const p = await apiPublicada();
+  return p ? [p, ...lista.filter((c) => c !== p)] : lista;
 }
 
 let elegida: string | null = leerSesion(CLAVE_ELEGIDA);
 if (elegida && !candidatas().includes(elegida)) elegida = null;
 let eligiendo: Promise<string | null> | null = null;
+
+/**
+ * Publica la base del API en uso para las páginas sueltas del mismo origen (la ventana de captura asistida).
+ * `localStorage` sí se comparte entre ventanas del mismo origen; `sessionStorage` no, si la ventana se abrió desde
+ * otra página.
+ */
+function publicarBase(): void {
+  if (elegida) escribir(CLAVE_BASE, elegida);
+}
+publicarBase();
 
 async function responde(base: string): Promise<boolean> {
   const ctl = new AbortController();
@@ -83,7 +150,11 @@ async function responde(base: string): Promise<boolean> {
   try {
     // OPTIONS: el router de DER lo responde con el preflight de CORS sin ejecutar nada (ni base ni lógica): es la
     // petición más barata para saber si el servidor está vivo. Cualquier 2xx cuenta.
-    const r = await fetch(`${base}/info`, { method: 'OPTIONS', signal: ctl.signal, cache: 'no-store' });
+    const r = await fetch(`${base}/info`, {
+      method: "OPTIONS",
+      signal: ctl.signal,
+      cache: "no-store",
+    });
     return r.status >= 200 && r.status < 300;
   } catch {
     return false;
@@ -102,12 +173,22 @@ export function elegirServidor(otraVez = false): Promise<string | null> {
     const antes = elegida;
     // Todas las candidatas se prueban A LA VEZ (el cambio tarda como mucho el límite, no la suma); gana la primera
     // en el orden de preferencia que respondió.
-    const lista = candidatas();
+    const lista = await candidatasConPublicada();
     const vivas = await Promise.all(lista.map((c) => responde(c)));
     const nueva = lista.find((_, i) => vivas[i]) ?? null;
     elegida = nueva;
     escribirSesion(CLAVE_ELEGIDA, nueva);
-    if (nueva !== antes) window.dispatchEvent(new CustomEvent('peon:servidor', { detail: servidor() }));
+    // La ventanita de la captura asistida (captura.html) es una página suelta que no puede importar este módulo:
+    // se queda con la API que la app está usando, que es la que contestará. Se guarda en localStorage porque
+    // localStorage sí se comparte entre pestañas y ventanas del mismo origen (sessionStorage no, si la ventana se
+    // abrió desde otra página).
+    if (nueva) escribir(CLAVE_BASE, nueva);
+    publicarBase();
+    if (nueva !== antes) {
+      window.dispatchEvent(
+        new CustomEvent("peon:servidor", { detail: servidor() }),
+      );
+    }
     return nueva;
   })().finally(() => {
     eligiendo = null;
@@ -117,14 +198,22 @@ export function elegirServidor(otraVez = false): Promise<string | null> {
 
 /** Base del API en uso (síncrona): la elegida o, mientras no se haya probado, la primera candidata. */
 export function baseApi(): string {
-  return elegida ?? candidatas()[0] ?? '';
+  return elegida ?? candidatas()[0] ?? "";
 }
 
 /** A qué servidor está conectada la app, para mostrarlo en Ajustes. */
-export function servidor(): { base: string | null; tipo: 'local' | 'en-linea' | null; nombre: string } {
-  if (!elegida) return { base: null, tipo: null, nombre: 'Sin conexión' };
+export function servidor(): {
+  base: string | null;
+  tipo: "local" | "en-linea" | null;
+  nombre: string;
+} {
+  if (!elegida) return { base: null, tipo: null, nombre: "Sin conexión" };
   const local = esLocalhost() && elegida === apiLocal();
-  return { base: elegida, tipo: local ? 'local' : 'en-linea', nombre: local ? 'Local' : 'En línea' };
+  return {
+    base: elegida,
+    tipo: local ? "local" : "en-linea",
+    nombre: local ? "Local" : "En línea",
+  };
 }
 
 export class ErrorApi extends Error {
@@ -142,7 +231,7 @@ export const sesion = {
 };
 
 function avisarSesion(): void {
-  window.dispatchEvent(new CustomEvent('peon:sesion'));
+  window.dispatchEvent(new CustomEvent("peon:sesion"));
 }
 
 /**
@@ -150,8 +239,10 @@ function avisarSesion(): void {
  * si ni el servidor local ni el en línea responden, se devuelve la última copia (las noticias y páginas siguen
  * visibles). Lo protegido nunca se guarda.
  */
-const RESPALDO = 'peon:respaldo:';
-const esPublica = (metodo: string, ruta: string): boolean => metodo === 'GET' && /^(noticias|info)(\?|\/|$)/.test(ruta) && !ruta.includes('todas=1');
+const RESPALDO = "peon:respaldo:";
+const esPublica = (metodo: string, ruta: string): boolean =>
+  metodo === "GET" && /^(noticias|info)(\?|\/|$)/.test(ruta) &&
+  !ruta.includes("todas=1");
 
 function guardarRespaldo(ruta: string, datos: unknown): void {
   try {
@@ -169,7 +260,11 @@ function leerRespaldo<T>(ruta: string): T | undefined {
   }
 }
 
-export async function api<T = unknown>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
+export async function api<T = unknown>(
+  metodo: string,
+  ruta: string,
+  cuerpo?: unknown,
+): Promise<T> {
   try {
     const datos = await apiDirecta<T>(metodo, ruta, cuerpo);
     if (esPublica(metodo, ruta)) guardarRespaldo(ruta, datos);
@@ -183,11 +278,20 @@ export async function api<T = unknown>(metodo: string, ruta: string, cuerpo?: un
   }
 }
 
-async function apiDirecta<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
+async function apiDirecta<T>(
+  metodo: string,
+  ruta: string,
+  cuerpo?: unknown,
+): Promise<T> {
   const headers: Record<string, string> = {};
-  if (cuerpo !== undefined) headers['content-type'] = 'application/json';
+  if (cuerpo !== undefined) headers["content-type"] = "application/json";
   if (sesion.token) headers.authorization = `Bearer ${sesion.token}`;
-  const pedir = (base: string) => fetch(`${base}/${ruta}`, { method: metodo, headers, body: cuerpo === undefined ? null : JSON.stringify(cuerpo) });
+  const pedir = (base: string) =>
+    fetch(`${base}/${ruta}`, {
+      method: metodo,
+      headers,
+      body: cuerpo === undefined ? null : JSON.stringify(cuerpo),
+    });
   let base = await elegirServidor();
   if (!base) throw new ErrorApi(0, SIN_SERVIDOR);
   let r: Response;
@@ -211,8 +315,12 @@ async function apiDirecta<T>(metodo: string, ruta: string, cuerpo?: unknown): Pr
     datos = texto;
   }
   if (!r.ok) {
-    const msg = datos && typeof datos === 'object' && 'error' in datos ? String((datos as { error: unknown }).error) : datos && typeof datos === 'object' && 'message' in datos ? String((datos as { message: unknown }).message) : `Error ${r.status}`;
-    if (r.status === 401 && ruta !== 'sesion') cerrarLocal();
+    const msg = datos && typeof datos === "object" && "error" in datos
+      ? String((datos as { error: unknown }).error)
+      : datos && typeof datos === "object" && "message" in datos
+      ? String((datos as { message: unknown }).message)
+      : `Error ${r.status}`;
+    if (r.status === 401 && ruta !== "sesion") cerrarLocal();
     throw new ErrorApi(r.status, msg);
   }
   return datos as T;
@@ -236,7 +344,7 @@ function cerrarLocal(): void {
 export async function cargarSesion(): Promise<Usuario | null> {
   if (!sesion.token) return null;
   try {
-    const r = await api<{ usuario: unknown }>('GET', 'sesion');
+    const r = await api<{ usuario: unknown }>("GET", "sesion");
     return fijarUsuario(r.usuario);
   } catch {
     cerrarLocal();
@@ -244,8 +352,14 @@ export async function cargarSesion(): Promise<Usuario | null> {
   }
 }
 
-export async function entrar(cedula: string, clave: string): Promise<Usuario | null> {
-  const r = await api<{ token: string; usuario: unknown }>('POST', 'sesion', { cedula, clave });
+export async function entrar(
+  cedula: string,
+  clave: string,
+): Promise<Usuario | null> {
+  const r = await api<{ token: string; usuario: unknown }>("POST", "sesion", {
+    cedula,
+    clave,
+  });
   sesion.token = r.token;
   escribir(CLAVE_TOKEN, r.token);
   const u = fijarUsuario(r.usuario);
@@ -253,15 +367,21 @@ export async function entrar(cedula: string, clave: string): Promise<Usuario | n
   return u;
 }
 
-export async function cambiarClave(actual: string, nueva: string): Promise<void> {
-  const r = await api<{ usuario: unknown }>('PUT', 'sesion/clave', { actual, nueva });
+export async function cambiarClave(
+  actual: string,
+  nueva: string,
+): Promise<void> {
+  const r = await api<{ usuario: unknown }>("PUT", "sesion/clave", {
+    actual,
+    nueva,
+  });
   fijarUsuario(r.usuario);
   avisarSesion();
 }
 
 export async function salir(): Promise<void> {
   try {
-    await api('DELETE', 'sesion');
+    await api("DELETE", "sesion");
   } catch { /* la sesión local se cierra igual */ }
   cerrarLocal();
 }
@@ -271,7 +391,9 @@ export async function salir(): Promise<void> {
  * y con la clave temporal también (el backend responde 403 a lo demás hasta que la cambie).
  */
 export function usuarioActivo(): Usuario | null {
-  return sesion.usuario && !sesion.usuario.claveTemporal ? sesion.usuario : null;
+  return sesion.usuario && !sesion.usuario.claveTemporal
+    ? sesion.usuario
+    : null;
 }
 
 /** ¿El usuario tiene este interruptor? (el backend manda: esto solo oculta lo que no podría usar). */
@@ -292,29 +414,43 @@ function engancharTipo(tipo: string): void {
   if (ya.has(tipo)) return;
   ya.add(tipo);
   enganchados.set(fuente, ya);
-  fuente.addEventListener(tipo, ((e: MessageEvent) => {
-    let datos: unknown = null;
-    try {
-      datos = JSON.parse(String(e.data));
-    } catch { /* evento ilegible */ }
-    for (const fn of oyentes.get(tipo) ?? []) fn(datos);
-  }) as EventListener);
+  fuente.addEventListener(
+    tipo,
+    ((e: MessageEvent) => {
+      let datos: unknown = null;
+      try {
+        datos = JSON.parse(String(e.data));
+      } catch { /* evento ilegible */ }
+      for (const fn of oyentes.get(tipo) ?? []) fn(datos);
+    }) as EventListener,
+  );
 }
 
 function conectar(): void {
-  if (fuente && tokenFuente === sesion.token && fuente.url.startsWith(baseApi())) return;
-  fuente?.close();
-  fuente = null;
-  tokenFuente = sesion.token;
-  if (!sesion.token || !baseApi()) return;
-  fuente = new EventSource(`${baseApi()}/eventos?token=${encodeURIComponent(sesion.token)}`);
-  // Si el servidor deja de responder, se vuelve a elegir (local → en línea); el evento `peon:servidor` reconecta.
-  fuente.addEventListener('error', () => void elegirServidor(true));
-  for (const tipo of oyentes.keys()) engancharTipo(tipo);
+  if (!sesion.token) return;
+  const token = sesion.token;
+  // Se espera a que el servidor este elegido: si no, la conexion se abriria contra la direccion relativa
+  // («./api» en la pagina publicada), que no es el API y se queda en un 404.
+  void (async () => {
+    const base = await elegirServidor();
+    if (!base || token !== sesion.token) return;
+    if (fuente && tokenFuente === token && fuente.url.startsWith(base)) return;
+    fuente?.close();
+    fuente = null;
+    tokenFuente = token;
+    const s = new EventSource(`${base}/eventos?token=${encodeURIComponent(token)}`);
+    fuente = s;
+    // Si el servidor deja de responder, se vuelve a elegir (local → en línea); el evento `peon:servidor` reconecta.
+    s.addEventListener("error", () => void elegirServidor(true));
+    for (const tipo of oyentes.keys()) engancharTipo(tipo);
+  })();
 }
 
 /** Escucha un tipo de evento en vivo (`registro`, `cambio`, `chat`…). Devuelve la función para soltarlo. */
-export function escuchar(tipo: string, fn: (datos: unknown) => void): () => void {
+export function escuchar(
+  tipo: string,
+  fn: (datos: unknown) => void,
+): () => void {
   const set = oyentes.get(tipo) ?? new Set();
   set.add(fn);
   oyentes.set(tipo, set);
@@ -324,9 +460,9 @@ export function escuchar(tipo: string, fn: (datos: unknown) => void): () => void
 }
 
 // Si cambia el servidor (p. ej. se cayó el local y pasó al en línea), la conexión en vivo se rehace contra el nuevo.
-window.addEventListener('peon:servidor', () => conectar());
+window.addEventListener("peon:servidor", () => conectar());
 
-window.addEventListener('peon:sesion', () => {
+window.addEventListener("peon:sesion", () => {
   if (sesion.token) return conectar();
   fuente?.close();
   fuente = null;
